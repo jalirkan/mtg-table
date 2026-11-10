@@ -91,7 +91,7 @@ import path from 'node:path';
 import { engineEnv, runPool, type EngineEnv, type MatchJob, type MatchResult, type ProgressMsg, type RecordSpec } from './engine.ts';
 import type { PlayExploreTag } from './playexplore.ts';
 import { fileLines } from './lines.ts';
-import { labPath, recipePath, shownPath } from './labdata.ts';
+import { labArg, labPath, recipePath, shownPath } from './labdata.ts';
 import type { Ledger } from './censusplay.ts';
 import { checksParallel, checksSerial, type CheckInputs, type CheckParts, type GuardrailCheck, COUNTED_GUARDRAILS } from './atlaschecks.ts';
 export { COUNTED_GUARDRAILS, emptyGuardrails, forgePayCapOf, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, guardrailPass, mergeGuardrails, type GuardrailCheck } from './atlaschecks.ts';
@@ -208,9 +208,12 @@ export const LEAK_RETESTS = 4;
 export const LEAK_RETEST_BUDGET_MS = 600_000;
 
 /**
- * D529: this many no-leak checks in one atlas run that moved and were not resolved as a leak (non-deterministic plus
- * unresolved) is a problem: one such branch is Forge's race, but a real leak mechanism would show on many checks, and J186-J203
- * saw one moved check in all their nights.
+ * D529: the NIGHT cap.  This many no-leak checks over a whole night -- every spine's atlas run, summed by `nightLeakChecks` --
+ * that moved and were not resolved as a leak (non-deterministic plus unresolved) is a problem: one such branch is Forge's race,
+ * but a real leak mechanism would show on many checks, and J186-J203 saw one moved check in all their nights.  It is not a
+ * per-run rule: a run is one spine, which carries about two checks (J203: 128 over 62 spines; only a unit's first chunk, i0 0,
+ * carries one), so three in one run would almost never happen.  `leakChecksReport` counts a run's own; the cap is read only
+ * over the night (`nightLeakChecks`, `tools/cubelab.sh atlas-leaks`).
  */
 export const LEAK_UNRESOLVED_CAP = 3;
 
@@ -224,11 +227,12 @@ export interface LeakCounts {
 }
 
 /**
- * D529: the no-leak checks read: counts, problems and warnings.  A leak (`leakSame: false`), a retest out of its budget, a fork the
- * copier did not reproduce, a redeal that left seat B's cards where they were though it could move two or more, a control that
- * swapped cards and left the digest where it was, and `LEAK_UNRESOLVED_CAP` or more unresolved moves are problems; one
- * non-deterministic or unresolved check, a redeal with fewer than two cards to move, a control with nothing to swap are warnings.
- * `leakFaults` counts the problems that are not leaks (the cap as one), so a job's verdict can read it beside `leaks`.
+ * D529: one atlas run's no-leak checks read: counts, problems and warnings.  A leak (`leakSame: false`), a retest out of its
+ * budget, a fork the copier did not reproduce, a redeal that left seat B's cards where they were though it could move two or more,
+ * and a control that swapped cards and left the digest where it was are problems; a non-deterministic or unresolved check, a
+ * redeal with fewer than two cards to move, a control with nothing to swap are warnings.  `leakFaults` counts the run's problems
+ * that are not leaks.  The night cap (LEAK_UNRESOLVED_CAP) is not read here: a run is one spine; `nightLeakChecks` sums the
+ * runs' counts and applies it.
  */
 export function leakChecksReport(rows: BranchRow[]): { counts: LeakCounts; problems: string[]; warnings: string[] } {
   const leak = rows.filter((r) => r.leakSame !== undefined);
@@ -240,7 +244,6 @@ export function leakChecksReport(rows: BranchRow[]): { counts: LeakCounts; probl
   const redealFault = redealStill.filter((r) => (r.leakRedealable ?? 0) >= 2), redealNothing = redealStill.filter((r) => (r.leakRedealable ?? 0) < 2);
   const controlStill = d529.filter((r) => r.controlForkMoved === false);
   const controlFault = controlStill.filter((r) => (r.controlSwap ?? 0) > 0), controlEmpty = controlStill.filter((r) => (r.controlSwap ?? 0) === 0);
-  const capped = nd.length + unres.length >= LEAK_UNRESOLVED_CAP;
   const seen = (r: BranchRow): string => (r.leakRetest ? ` (${r.leakRetest.base} base / ${r.leakRetest.redeal} redeal replays, ${r.leakRetest.baseDistinct} / ${r.leakRetest.redealDistinct} distinct outcomes, ${r.leakRetest.shared} shared)` : '');
   const first = (xs: BranchRow[]): string => `${xs[0]?.key}${xs.length > 1 ? ', ...' : ''}`;
   const problems: string[] = [];
@@ -253,7 +256,6 @@ export function leakChecksReport(rows: BranchRow[]): { counts: LeakCounts; probl
   if (unstable.length) problems.push(`${unstable.length} no-leak check(s) whose replays of one side disagreed on the fork digest among themselves: the copier did not reproduce the fork from its seed, not a leak (D529): ${first(unstable)}${seen(unstable[0] as BranchRow)}`);
   if (redealFault.length) problems.push(`${redealFault.length} no-leak check(s) whose redeal left seat B's hand and library where they were on the copy, with ${redealFault[0]?.leakRedealable} card(s) it could move: the check tested nothing (D529): ${first(redealFault)}`);
   if (controlFault.length) problems.push(`${controlFault.length} no-leak check(s) whose negative control swapped ${controlFault[0]?.controlSwap} card(s) of seat A's hand and left the fork digest where it was: the digest did not see the change (D529): ${first(controlFault)}`);
-  if (capped) problems.push(`${nd.length + unres.length} no-leak checks in this atlas moved and were not resolved as a leak (${nd.length} non-deterministic, ${unres.length} unresolved): ${LEAK_UNRESOLVED_CAP} or more is a problem, since a leak would show on many checks (D529): ${first([...nd, ...unres])}`);
   if (nd.length) warnings.push(`${nd.length} of ${leak.length} no-leak check(s) moved on the first redealt replay but are not a leak: the fork digests agreed and the base's and the redeal's outcomes overlap on the retest, a branch Forge does not replay exactly from its seed (D529): ${first(nd)}${seen(nd[0] as BranchRow)}`);
   if (unres.length) warnings.push(`${unres.length} of ${leak.length} no-leak check(s) moved and are unresolved: the outcome sets were disjoint but the base itself varied, which many outcomes give by chance (D529): ${first(unres)}${seen(unres[0] as BranchRow)}`);
   if (redealNothing.length) warnings.push(`${redealNothing.length} no-leak check(s) where seat B had fewer than two cards the redeal could move: nothing to test (D529): ${first(redealNothing)}`);
@@ -264,9 +266,80 @@ export function leakChecksReport(rows: BranchRow[]): { counts: LeakCounts; probl
     leakRetestIncomplete: incomplete.length, leakForkUnstable: unstable.length, leakForkChecked: d529.length,
     leakRedealApplied: d529.filter((r) => r.leakRedealApplied === true).length, leakRedealNothing: redealNothing.length,
     leakControlForkMoved: d529.filter((r) => r.controlForkMoved === true).length, leakControlEmpty: controlEmpty.length,
-    leakFaults: incomplete.length + unstable.length + redealFault.length + controlFault.length + (capped ? 1 : 0),
+    leakFaults: incomplete.length + unstable.length + redealFault.length + controlFault.length,
   };
   return { counts, problems, warnings };
+}
+
+/** D529: one run as the night reads it -- a name (its atlas.json's path) and its atlas.json's `checks`, null when it has none. */
+export interface NightLeakRun { name: string; checks: Partial<LeakCounts> | null }
+
+/** D529: the night's no-leak checks: the runs' counts summed, the night cap applied, `ok` when there is no leak and no fault. */
+export interface NightLeakReport {
+  runs: number; runsWithChecks: number; counts: LeakCounts; capped: boolean; ok: boolean; problems: string[]; warnings: string[];
+}
+
+const LEAK_COUNT_KEYS: Array<keyof LeakCounts> = ['leakChecks', 'leaks', 'leakControlsMoved', 'leakMoved', 'leakNondeterministic', 'leakUnresolved',
+  'leakRetestIncomplete', 'leakForkUnstable', 'leakForkChecked', 'leakRedealApplied', 'leakRedealNothing', 'leakControlForkMoved', 'leakControlEmpty', 'leakFaults'];
+
+/**
+ * D529: the night-level rule over every spine's atlas run.  Each run's `checks` (atlas.json, `leakChecksReport`'s counts) are
+ * summed key by key (a key a run lacks, as a run written before D529 lacks the new ones, counts 0).  Non-deterministic plus
+ * unresolved checks over the night reaching LEAK_UNRESOLVED_CAP is a problem, counted as one more in the night's `leakFaults`;
+ * a run with a leak or a fault is a problem naming the run; a run with no checks is a warning (`runsWithChecks` says how many
+ * had them).  `ok` is `leaks == 0 && leakFaults == 0`: what a night job's verdict checks, through `tools/cubelab.sh atlas-leaks`.
+ */
+export function nightLeakChecks(runs: NightLeakRun[]): NightLeakReport {
+  const counts = Object.fromEntries(LEAK_COUNT_KEYS.map((k) => [k, 0])) as unknown as LeakCounts;
+  const problems: string[] = [];
+  const warnings: string[] = [];
+  const moved: string[] = [];
+  let runsWithChecks = 0;
+  for (const r of runs) {
+    if (!r.checks) { warnings.push(`${r.name}: no checks in its atlas.json, not read (D529)`); continue; }
+    runsWithChecks++;
+    for (const k of LEAK_COUNT_KEYS) counts[k] += Number(r.checks[k] ?? 0) || 0;
+    const leaks = Number(r.checks.leaks ?? 0) || 0, faults = Number(r.checks.leakFaults ?? 0) || 0;
+    if (leaks) problems.push(`${r.name}: ${leaks} of ${r.checks.leakChecks ?? '?'} no-leak check(s) a leak (D529)`);
+    if (faults) problems.push(`${r.name}: ${faults} no-leak check fault(s), not a leak: its atlas.json's problems name each (D529)`);
+    const m = (Number(r.checks.leakNondeterministic ?? 0) || 0) + (Number(r.checks.leakUnresolved ?? 0) || 0);
+    if (m) moved.push(`${r.name} (${m})`);
+  }
+  const nu = counts.leakNondeterministic + counts.leakUnresolved;
+  const capped = nu >= LEAK_UNRESOLVED_CAP;
+  if (capped) {
+    counts.leakFaults += 1;
+    problems.push(`${nu} no-leak checks over the night's ${runsWithChecks} atlas run(s) moved and were not resolved as a leak (${counts.leakNondeterministic} non-deterministic, ${counts.leakUnresolved} unresolved): ${LEAK_UNRESOLVED_CAP} or more is a problem, since a leak would show on many checks (D529, the night cap): ${moved.slice(0, 5).join(', ')}${moved.length > 5 ? ', ...' : ''}`);
+  } else if (nu) {
+    warnings.push(`${nu} no-leak check(s) over the night moved and were not resolved as a leak, under the night cap of ${LEAK_UNRESOLVED_CAP} (D529): ${moved.join(', ')}`);
+  }
+  return { runs: runs.length, runsWithChecks, counts, capped, ok: counts.leaks === 0 && counts.leakFaults === 0, problems, warnings };
+}
+
+/**
+ * D529: `tools/cubelab.sh atlas-leaks <atlas.json | spine folder>...`, no engine.  Reads every spine's atlas.json (a folder means
+ * its atlas.json; a relative var/ path is re-rooted under LAB_DATA_DIR, D450), applies `nightLeakChecks` and prints its report as
+ * one JSON object on stdout (the counts at its top level: `leaks`, `leakFaults`, `leakNondeterministic`, ...); exit 0 when `ok`,
+ * 3 when the night has a leak or a fault (the JSON is printed either way), 2 when a file cannot be read.  A night job's verdict runs it over every spine's atlas.json and checks `leaks == 0` and `leakFaults == 0`
+ * (or `ok`) instead of summing the runs' checks itself.
+ */
+export function atlasLeaksCommand(repo: string, pos: string[], say: (s: string) => void): number {
+  if (!pos.length) { process.stderr.write('atlas-leaks: name every spine\'s atlas.json (or its folder)\n'); return 2; }
+  const runs: NightLeakRun[] = [];
+  for (const p of pos) {
+    const at = labArg(repo, p, 'read');
+    const file = fs.existsSync(at) && fs.statSync(at).isDirectory() ? path.join(at, 'atlas.json') : at;
+    let doc: { checks?: unknown };
+    try { doc = JSON.parse(fs.readFileSync(file, 'utf8')) as { checks?: unknown }; } catch (e) {
+      process.stderr.write(`atlas-leaks: ${file}: ${e instanceof Error ? e.message : String(e)}\n`);
+      return 2;
+    }
+    runs.push({ name: p, checks: doc.checks && typeof doc.checks === 'object' ? doc.checks as Partial<LeakCounts> : null });
+  }
+  const r = nightLeakChecks(runs);
+  // the counts flat beside the rest, so a job's metrics read `leaks` and `leakFaults` at the top
+  say(JSON.stringify({ runs: r.runs, runsWithChecks: r.runsWithChecks, ...r.counts, capped: r.capped, ok: r.ok, problems: r.problems, warnings: r.warnings }));
+  return r.ok ? 0 : 3;
 }
 
 /** D529: `MTGTABLE_ATLAS_LEAK_RETEST` as the bridge reads it -- unset or empty, or one of LEAK_RETEST_MODES; anything else throws. */
@@ -1225,8 +1298,8 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
   if (truncated.length) problems.push(`${truncated.length} frame log(s) could not be read (gzip: ${[...new Set(truncated.map((t) => t.why))].join('; ')}) and were left out of the checks -- a worker killed mid-branch leaves its logs truncated: ${truncated.slice(0, 5).map((t) => t.log).join(', ')}${truncated.length > 5 ? ', ...' : ''}`);
   const forkBad = bRows.filter((r) => r.forkProblems.length);
   if (forkBad.length) problems.push(`${forkBad.length} branch fork(s) were not the position: ${forkBad[0]?.key}: ${forkBad[0]?.forkProblems.join('; ')}`);
-  // D529: the no-leak checks read -- `leakSame` false only for a leak; the checks that tested nothing or could not finish, and three
-  // or more unresolved moves, are problems too; one move read as non-determinism is a warning
+  // D529: the no-leak checks read -- `leakSame` false only for a leak; the checks that tested nothing or could not finish are
+  // problems too; a move read as non-determinism or unresolved is a warning (the night cap over them is `nightLeakChecks`'s)
   const leak = bRows.filter((r) => r.leakSame !== undefined);
   const leakRead = leakChecksReport(leak);
   problems.push(...leakRead.problems);
@@ -1589,6 +1662,12 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
       `D529: ${leg} ${r.key}: no leak, digests equal, the redeal reached the copy, the control moved the digest (${JSON.stringify({ leakSame: r.leakSame, leakForkSame: r.leakForkSame, leakRedealApplied: r.leakRedealApplied, leakRedealable: r.leakRedealable, controlForkMoved: r.controlForkMoved, controlSwap: r.controlSwap })})`);
   }
   want(leakRows.length >= c.leakChecks + 2, `D529: the legs' no-leak checks were found (${leakRows.length})`);
+  // D529 (the second skeptic): the row rule above lets a row with too few cards to move, or nothing to swap, pass as it stands, so
+  // it would pass with the redeal and the control never testing anything; at least one row of the legs must show each happening
+  const redealApplied = leakRows.filter(({ r }) => r.leakRedealApplied === true).length;
+  const controlMovedRows = leakRows.filter(({ r }) => r.controlForkMoved === true).length;
+  want(redealApplied >= 1, `D529: the redeal reached the copy on at least one no-leak check (${redealApplied} of ${leakRows.length})`);
+  want(controlMovedRows >= 1, `D529: the control moved the fork digest on at least one no-leak check (${controlMovedRows} of ${leakRows.length})`);
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
   say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${cuts.summary}; ${replay.summary}; ${onlyLeg.summary}; ${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
   return fails.length ? 1 : 0;

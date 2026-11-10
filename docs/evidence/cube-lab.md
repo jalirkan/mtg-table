@@ -519,8 +519,19 @@ alone a leak, no budget), under `nice -n 19`, inside J204's `alone` match (the c
 | the self-test's main leg alone (`atlas`, seed 4515, its flags) | exit 0 in 2 min 50 s; the control's digest moved in 8 of 8; its 16 branch rows equal the self-test's in every field but `ms`, `bytes` (D451: frame cut points ride a 500 ms clock) and the new field |
 | `npm --prefix web run test:node` | 1,917 tests, 1,907 pass, 10 skipped, 0 fail |
 
-The review's version (the redeal's before-half, the three-way rule, the budget, the night cap, the perturbed leg) ran
-engine-free only: `tools/lint-bridge.sh`, `tsc --noEmit`, `web/test/cubelab-atlas-leak.test.ts` and the atlas tests
-with the fake `java`, `tools/atlas/tests`, `node tools/decisions.mjs check`, `tools/public-check.sh`. Its Java has not
-been compiled or run; `bridge/build.sh` (with `DecisionSelfTest`'s D529 cases) and one atlas self-test wait for J204's
-end.
+The review's version (the redeal's before-half, the three-way rule, the budget, the night cap, the perturbed leg),
+commit `0b35422d`, ran engine-free first (`tools/lint-bridge.sh`, `tsc --noEmit`, `web/test/cubelab-atlas-leak.test.ts`
+and the atlas tests with the fake `java`, `tools/atlas/tests`, `node tools/decisions.mjs check`,
+`tools/public-check.sh`), then on the engine on 2026-11-10, about 01:15–01:22 EST, after J204 had left the CPU:
+
+| what | result |
+|---|---|
+| `bridge/build.sh` | rc 0: lint OK, `DecisionSelfTest` 356 checks, 0 failures (its D529 cases among them), build OK |
+| `tools/cubelab.sh atlas-selftest --jobs 1` | rc 0, `atlas-selftest: OK`, no FAIL line: the forced no-leak retest 5 / 5 replays, 1 / 1 distinct, `same`; the perturbed one 5 / 5 replays, 1 shared, `nondeterministic`; a wrong token exit 4; 16 forks, 8 no-leak checks, 38 frame logs, 558 rows |
+
+A second skeptic's review then moved the night cap from one atlas run (one spine, about two checks, so three could
+almost never happen) to the night (`nightLeakChecks`, `tools/cubelab.sh atlas-leaks`; D529 point 5), and added to the
+atlas self-test one assertion that at least one no-leak row had the redeal reach the copy and one had the control move
+the digest. Those changes ran engine-free only (`web/test/cubelab-atlas-leak.test.ts`, `node tools/decisions.mjs
+check`), with a lab job alone on the CPU: the self-test's new assertion has not run. The full gate, `bridge/build.sh`
+and the atlas self-test run on the merged tree at the merge.

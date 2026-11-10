@@ -7,9 +7,11 @@
  * with it:
  *
  *  - `leakChecksReport`: a leak, a retest out of its budget, a fork the copier did not reproduce, a redeal that tested nothing,
- *    a control that did not move the digest, and LEAK_UNRESOLVED_CAP moves read as non-determinism or unresolved are problems
- *    (all but the leak counted in `leakFaults`); one non-deterministic or unresolved check, a redeal with fewer than two cards
- *    to move, a control with nothing to swap are warnings; a row from before D529 is read as it was;
+ *    a control that did not move the digest are problems (all but the leak counted in `leakFaults`); a non-deterministic or
+ *    unresolved check, a redeal with fewer than two cards to move, a control with nothing to swap are warnings, however many
+ *    one run has; a row from before D529 is read as it was;
+ *  - `nightLeakChecks` and `tools/cubelab.sh atlas-leaks`: the runs' counts summed, the night cap (LEAK_UNRESOLVED_CAP) over
+ *    the night's non-deterministic plus unresolved checks, a run's leaks and faults passed through;
  *  - the bridge's constants and the TS copies agree (RETESTS, RETEST_BUDGET_MS); the switch's unknown value is refused;
  *  - the command, through the real pool and a fake `java` (as cubelab-atlas-only.test.ts), the worker reporting each kind of
  *    check: non-determinism (a warning, exit 0, `leaks` 0); a systematic redeal (a leak, exit 3); a moved fork digest (a leak,
@@ -25,8 +27,8 @@ import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
-  atlasCommand, checkLeakRetestEnv, LEAK_RETEST_BUDGET_MS, LEAK_RETESTS, LEAK_UNRESOLVED_CAP, leakChecksReport,
-  type BranchRow, type DecisionListing, type LeakRetest,
+  atlasCommand, atlasLeaksCommand, checkLeakRetestEnv, LEAK_RETEST_BUDGET_MS, LEAK_RETESTS, LEAK_UNRESOLVED_CAP, leakChecksReport, nightLeakChecks,
+  type BranchRow, type DecisionListing, type LeakCounts, type LeakRetest,
 } from '../../tools/cubelab/atlas.ts';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -80,16 +82,70 @@ test('D529, leakChecksReport: what is a problem, what a warning, and what leakFa
   assert.match(lk.problems[0] ?? '', /^2 of 2 no-leak check\(s\) moved when only seat B's hidden cards did \(k-lk: 5 base and 5 redeal replays share no outcome, the base reproduced\)$/);
 });
 
-test('D529, the night cap: LEAK_UNRESOLVED_CAP moves read as non-determinism or unresolved in one atlas are a problem; one fewer is not', () => {
+test('D529, one run carries no cap: LEAK_UNRESOLVED_CAP or more moves in one atlas run are warnings, its leakFaults 0', () => {
   assert.equal(LEAK_UNRESOLVED_CAP, 3);
   const moves = (n: number): BranchRow[] => Array.from({ length: n }, (_, k) => d529(`k${k}`, { leakMoved: true, leakRetest: retest(k % 2 ? 'unresolved' : 'nondeterministic', 2, 2, k % 2 ? 0 : 1) }));
-  const under = leakChecksReport([...moves(LEAK_UNRESOLVED_CAP - 1), d529('k-same', {})]);
-  assert.deepEqual([under.problems, under.counts.leakFaults], [[], 0]);
-  const at = leakChecksReport(moves(LEAK_UNRESOLVED_CAP));
-  assert.equal(at.problems.length, 1);
-  assert.match(at.problems[0] ?? '', /^3 no-leak checks in this atlas moved and were not resolved as a leak \(2 non-deterministic, 1 unresolved\): 3 or more is a problem/);
-  assert.deepEqual([at.counts.leakFaults, at.counts.leaks], [1, 0]);
-  assert.equal(at.warnings.length, 2, 'the two warnings stay beside the problem');
+  const at = leakChecksReport(moves(LEAK_UNRESOLVED_CAP + 1));
+  assert.deepEqual([at.problems, at.counts.leakFaults, at.counts.leaks], [[], 0, 0]);
+  assert.deepEqual([at.counts.leakNondeterministic, at.counts.leakUnresolved, at.warnings.length], [2, 2, 2]);
+});
+
+/** One run's atlas.json checks as leakChecksReport writes them, every count 0 but what `c` says. */
+const runChecks = (c: Partial<LeakCounts>): Partial<LeakCounts> => ({ leakChecks: 2, leaks: 0, leakControlsMoved: 2, leakMoved: 0, leakNondeterministic: 0, leakUnresolved: 0,
+  leakRetestIncomplete: 0, leakForkUnstable: 0, leakForkChecked: 2, leakRedealApplied: 2, leakRedealNothing: 0, leakControlForkMoved: 2, leakControlEmpty: 0, leakFaults: 0, ...c });
+
+test('D529, the night cap: nightLeakChecks sums the runs and applies LEAK_UNRESOLVED_CAP over the night', () => {
+  // ten non-deterministic checks over ten runs trip it
+  const ten = nightLeakChecks(Array.from({ length: 10 }, (_, k) => ({ name: `s${k}/atlas.json`, checks: runChecks({ leakMoved: 1, leakNondeterministic: 1 }) })));
+  assert.equal(ten.capped, true);
+  assert.equal(ten.ok, false);
+  assert.deepEqual([ten.runs, ten.runsWithChecks, ten.counts.leakChecks, ten.counts.leakNondeterministic, ten.counts.leaks, ten.counts.leakFaults], [10, 10, 20, 10, 0, 1]);
+  assert.equal(ten.problems.length, 1);
+  assert.match(ten.problems[0] ?? '', /^10 no-leak checks over the night's 10 atlas run\(s\) moved and were not resolved as a leak \(10 non-deterministic, 0 unresolved\): 3 or more is a problem.*the night cap.*s0\/atlas\.json \(1\)/);
+  // two over two runs do not: a warning
+  const two = nightLeakChecks([{ name: 'a', checks: runChecks({ leakNondeterministic: 1 }) }, { name: 'b', checks: runChecks({ leakNondeterministic: 1 }) }]);
+  assert.deepEqual([two.capped, two.ok, two.problems, two.counts.leakFaults], [false, true, [], 0]);
+  assert.match(two.warnings[0] ?? '', /^2 no-leak check\(s\) over the night moved .* under the night cap of 3/);
+  // unresolved counts with non-deterministic
+  const mix = nightLeakChecks([{ name: 'a', checks: runChecks({ leakNondeterministic: 1 }) }, { name: 'b', checks: runChecks({ leakUnresolved: 2 }) }]);
+  assert.deepEqual([mix.capped, mix.counts.leakNondeterministic, mix.counts.leakUnresolved, mix.counts.leakFaults], [true, 1, 2, 1]);
+  assert.match(mix.problems[0] ?? '', /\(1 non-deterministic, 2 unresolved\)/);
+  // leaks and leakFaults pass through, summed, each run named
+  const bad = nightLeakChecks([
+    { name: 'a', checks: runChecks({ leaks: 1 }) }, { name: 'b', checks: runChecks({ leaks: 2, leakFaults: 1, leakRetestIncomplete: 1 }) },
+    { name: 'c', checks: runChecks({ leakFaults: 2, leakForkUnstable: 2 }) }, { name: 'd', checks: null },
+  ]);
+  assert.deepEqual([bad.runs, bad.runsWithChecks, bad.counts.leaks, bad.counts.leakFaults, bad.counts.leakRetestIncomplete, bad.counts.leakForkUnstable, bad.capped, bad.ok],
+    [4, 3, 3, 3, 1, 2, false, false]);
+  assert.deepEqual(bad.problems.map((p) => p.split(':')[0]), ['a', 'b', 'b', 'c']);
+  assert.match(bad.warnings[0] ?? '', /^d: no checks in its atlas\.json, not read/);
+  // a run from before D529 (no new keys) counts 0 for them; a clean night is ok
+  const old = nightLeakChecks([{ name: 'old', checks: { leakChecks: 2, leaks: 0, leakControlsMoved: 2 } }, { name: 'new', checks: runChecks({}) }]);
+  assert.deepEqual([old.ok, old.problems, old.warnings, old.counts.leakChecks, old.counts.leakFaults], [true, [], [], 4, 0]);
+});
+
+test('D529, atlas-leaks: every spine\'s atlas.json read (a folder means its atlas.json), one JSON object, exit 0 / 3 / 2', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cubelab-atlas-leaks-'));
+  try {
+    const put = (name: string, c: Partial<LeakCounts>): string => {
+      fs.mkdirSync(path.join(root, name), { recursive: true });
+      fs.writeFileSync(path.join(root, name, 'atlas.json'), JSON.stringify({ checks: { problems: [], ...runChecks(c) } }));
+      return path.join(root, name);
+    };
+    const s = Array.from({ length: 3 }, (_, k) => put(`s${k}`, { leakNondeterministic: 1 }));
+    const said: string[] = [];
+    assert.equal(atlasLeaksCommand(REPO, [s[0]!, path.join(s[1]!, 'atlas.json')], (x) => said.push(x)), 0);
+    const ok = JSON.parse(said[0] ?? '') as Record<string, unknown>;
+    assert.deepEqual([ok.runs, ok.leakChecks, ok.leaks, ok.leakFaults, ok.leakNondeterministic, ok.capped, ok.ok], [2, 4, 0, 0, 2, false, true]);
+    said.length = 0;
+    assert.equal(atlasLeaksCommand(REPO, s, (x) => said.push(x)), 3, 'three over three runs: the night cap');
+    const capped = JSON.parse(said[0] ?? '') as Record<string, unknown>;
+    assert.deepEqual([capped.leaks, capped.leakFaults, capped.capped, capped.ok, (capped.problems as string[]).length], [0, 1, true, false, 1]);
+    assert.equal(atlasLeaksCommand(REPO, [path.join(root, 'missing')], () => undefined), 2);
+    assert.equal(atlasLeaksCommand(REPO, [], () => undefined), 2);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test('D529, the bridge\'s constants and the TS copies agree; the switch takes unset, always or perturb only', () => {

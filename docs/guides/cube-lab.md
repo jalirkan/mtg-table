@@ -1433,10 +1433,17 @@ like this one, not a fault in the atlas.
   redealt replay whose outcome moved is not yet a leak: base and redeal are each replayed four more times,
   and only outcome sets that share nothing, with the base reproduced, are (`checks.leaks`); sets that
   overlap are a branch Forge 2.0.14 does not replay exactly from its seed (`checks.leakNondeterministic`)
-  and disjoint sets with a varying base are `checks.leakUnresolved`, both warnings, three of them in one
-  atlas a problem; a retest out of its budget, a fork the copier did not reproduce and a check that tested
-  nothing are problems counted in `checks.leakFaults`. Every rows file and frame log is checked as D450's
-  are. A problem exits 3.
+  and disjoint sets with a varying base are `checks.leakUnresolved`, both warnings in the run's own
+  `atlas.json`; a retest out of its budget (whatever it had read, a partial leak included), a fork the copier
+  did not reproduce and a check that tested nothing are problems counted in `checks.leakFaults`. Every rows
+  file and frame log is checked as D450's are. A problem exits 3.
+- **A night's no-leak checks** (D529): one atlas run is one spine, with about two checks, so the night cap —
+  three non-deterministic plus unresolved checks **over the night** is a problem — is read over every spine
+  together: `tools/cubelab.sh atlas-leaks var/lab-jNNN/runs/*/atlas.json` (no engine; a spine's folder
+  works too) sums every run's leak counts, applies the cap (one more `leakFaults`), and prints one JSON
+  object, the counts at its top level (`leaks`, `leakFaults`, `leakNondeterministic`, `leakUnresolved`, …,
+  `capped`, `ok`, `problems`, `warnings`); exit 3 on a leak or a fault. A night job's verdict calls it and
+  checks `leaks == 0` and `leakFaults == 0`, rather than summing the runs' `checks` itself.
 - **`atlas.json`** (strict): the plan and the pair's table, phase A's outcome distribution, game length
   and the rollouts a ± 2-point interval needs; per decision every option's value under each continuation
   (Wilson), each map's regret (best − played, a paired bootstrap interval), the rank correlation between

@@ -1,4 +1,4 @@
-## D529 — the atlas's no-leak check tells a leak from a branch Forge does not replay exactly: the redeal must reach the copy before the determinize and leave the fork equal after it, and a first redealt replay that moved is replayed four more times a side — a leak only when the outcome sets share nothing and the base reproduced; non-determinism and unresolved moves are warnings, three of them in one atlas a problem (amends D451 point 6)
+## D529 — the atlas's no-leak check tells a leak from a branch Forge does not replay exactly: the redeal must reach the copy before the determinize and leave the fork equal after it, and a first redealt replay that moved is replayed four more times a side — a leak only when the outcome sets share nothing and the base reproduced; non-determinism and unresolved moves are warnings, three of them over a night a problem (amends D451 point 6)
 
 *Branch `pc/atlas-leak-recheck`, off main `137b2bf6` (D528's merge). `node tools/decisions.mjs next` printed D529, the
 number this lane was handed. Amends D451 point 6 (the fork's checks, the no-leak check). Touches
@@ -8,7 +8,9 @@ the self-test), a new `web/test/cubelab-atlas-leak.test.ts`, the release's colum
 the cube-lab guide, the evidence and PLAN.md; nothing a branch game, a phase A game or a baseline plays changes (*Why
 it lands between landings*, below). A skeptic's review of the first version (twelve items, none blocking) is folded
 in: the three-way rule after a retest, the redeal's before-half, the control's digest per row, the retest's budget,
-the night cap and the perturbed self-test leg came from it.*
+the night cap and the perturbed self-test leg came from it. A second skeptic's review (one blocker, the night cap
+enforced per atlas run where a run is one spine, and three fixes) is folded in too: the cap is now a night-level rule
+in code (point 5), and points 1, 4, 6 and 7 carry its notes.*
 
 **2026-11-09**
 
@@ -51,8 +53,10 @@ the night cap and the perturbed self-test leg came from it.*
    - **before equal** between base and redeal (`leakRedealApplied: false`): the redeal reached nothing and the check
      tested nothing — a problem when seat B had two or more cards the redeal could move (`leakRedealable`), a warning
      when it had fewer (nothing to test). The real-game redeal is drawn again, up to 8 times from the same seeded
-     source (`REDEAL_TRIES`), while a draw leaves seat B's cards where they were, so a problem here is a fault, not
-     chance;
+     source (`REDEAL_TRIES`), while a draw leaves seat B's cards where they were, so at real library sizes a problem
+     here is a fault, not chance. *(Second review, note 7.)* With exactly 2 cards to move, a draw leaves them in place
+     with probability ½ and all 8 do with 1/256, so at that size "the redeal tested nothing" can be chance (about 0.4%
+     of such checks); with 3 cards it is 1/6⁸, and it is negligible beyond;
    - **after different** between a stable base and a stable redeal: the redeal reached the fork, **a leak**, whatever
      the outcomes (`leakForkSame: false`), even when no outcome moved;
    - **after different among one side's own replays** (the base's digests disagree among themselves, or the
@@ -88,16 +92,31 @@ the night cap and the perturbed self-test leg came from it.*
    every first move, and a larger K lowers the catch further. The mitigating argument: the redeal is one fixed
    arrangement, so a leak on a branch that replays exactly gives the same different outcome every time and is caught
    at any K — and by the digest before any outcome is read, if the arrangement reaches the fork at all. And the
-   night cap below.
+   night cap below, which reads every spine of the night together.
 5. **The night cap** (`LEAK_UNRESOLVED_CAP` = 3 in `tools/cubelab/atlas.ts`): non-deterministic plus unresolved checks
-   reaching 3 in one atlas run is a problem. One such branch is Forge's race; a real leak mechanism would show on many
-   checks, and J186–J203 saw one moved check in all their nights.
+   reaching 3 **over a night** — every spine's atlas run summed — is a problem. One such branch is Forge's race; a real
+   leak mechanism would show on many checks, and J186–J203 saw one moved check in all their nights. **It is a
+   night-level rule, not a per-run one** (the second review's blocker): one atlas run is one spine, and only a unit's
+   first chunk (`i0` 0) carries a check, so a run holds about two (J203: 128 over 62 spines) and three in one run would
+   almost never happen. So each run's `atlas.json` counts its own (`leakNondeterministic`, `leakUnresolved`, as
+   warnings, never a problem however many), and the cap is applied where the runs are read together:
+   `nightLeakChecks` in `tools/cubelab/atlas.ts`, exposed as **`tools/cubelab.sh atlas-leaks <atlas.json | spine
+   folder>...`** (no engine). It sums every run's leak counts key by key, applies the cap (one more `leakFaults` when
+   it trips), names each run with a leak or a fault, and prints one JSON object with the counts at its top level
+   (`leaks`, `leakFaults`, `leakNondeterministic`, `leakUnresolved`, …, `capped`, `ok`, `problems`, `warnings`); exit
+   0 when `leaks` and `leakFaults` are both 0, 3 otherwise, 2 when a file cannot be read. **A night job's verdict calls
+   it** over every spine's `atlas.json` and checks `leaks == 0` and `leakFaults == 0` from its output, instead of
+   summing the runs' `checks` itself (J186–J203's job files summed `leaks` and `leakChecks` in their own Python, which
+   would not see the cap).
 6. **The retest has a wall budget** (`LeakVerdict.RETEST_BUDGET_MS` = 600 s). A pair of replays starts only while the
    time spent plus two replays at the branch deadline (`--branch-timeout`, 120 s) fits in it, so the retest never runs
    past it. J148's longest unit took 976 s (D459), its no-leak check's first three replays included: 976 + 600 = 1,576
    s, about 26 minutes, inside the 30-minute unit watchdog (`UNIT_TIMEOUT_MIN_DEFAULT`). A retest that runs out is
    **`incomplete`** — "moved, retest incomplete", a problem — never left for the watchdog to kill the unit. J203's moved
-   branch took 11.7 s, so its retest would take about a minute and a half.
+   branch took 11.7 s, so its retest would take about a minute and a half. *(Second review, note 6.)* The budget is
+   fixed while `--branch-timeout` is not: a pair starts only while spent + 2 × branch timeout ≤ 600 s, so above 300 s
+   no retest pair starts (at 300 s at most the first) and every moved check reads `incomplete`; all four pairs fit only
+   when the replays are short of the deadline (at 120 s, four pairs of full-deadline replays would not).
 7. **Reporting.** `leakSame` keeps meaning what the lab's verdicts already read — **false only for a leak**, by the
    rules above — so `checks.leaks` and the runner's `v.checks.leaks == 0` are unchanged in meaning and in every reader.
    On the row that carried the check: `leakMoved` (the first redealt replay moved: D451's `leakSame`, negated),
@@ -108,8 +127,11 @@ the night cap and the perturbed self-test leg came from it.*
    `leakNondeterministic`, `leakUnresolved`, `leakRetestIncomplete`, `leakForkUnstable`, `leakForkChecked`,
    `leakRedealApplied`, `leakRedealNothing`, `leakControlForkMoved`, `leakControlEmpty`, and **`leakFaults`**: the
    problems that are not leaks (an incomplete retest, an unstable fork, a redeal that tested nothing, a control that
-   did not move the digest, and the night cap as one). A job's verdict that should fail on those reads
-   `v.checks.leakFaults == 0` beside `v.checks.leaks == 0`; `checks.leaks` alone does not see them. Each problem line
+   did not move the digest; the night cap is not a run's, point 5). *(Second review, note 5.)* `incomplete` wraps
+   whatever the retest had read when it stopped, a partial leak reading included, so a check that might have been a
+   leak and ran out of budget lands in `leakFaults`, not `leaks` — which is why a night reads `leakFaults` as a
+   problem beside `leaks`. A night job's verdict reads both through `tools/cubelab.sh atlas-leaks` (point 5):
+   `leaks == 0` and `leakFaults == 0` over the night; `checks.leaks` alone does not see the faults. Each problem line
    names its case and its first row's key; the warnings are `checks.warnings` (D478's addendum: "worth a look, never
    exit 3"), and `atlas.md`'s checks paragraph counts both. A row written before D529 carries `leakSame` in D451's
    meaning (false on any first move) and none of the new keys; before J203 no night's row had it false (J203's
@@ -162,7 +184,7 @@ mean over branches, and such a night failed `atlas.problems` until now; the nigh
 - **Another K.** K trades the two errors of point 4 against each other: eight a side cuts the two-outcome worst false
   leak from 0.39% to 0.0015% but doubles the cost on a moved check and lowers the catch of a partial leak on a
   non-deterministic branch from r⁴ to r⁸ (6% to 0.4% at r = 0.5); three raises the false leak to 1.6%. Four, with the
-  base required to reproduce and the night cap behind it, keeps both small.
+  base required to reproduce and the night cap (over the night's spines) behind it, keeps both small.
 - **Making a moved check a warning outright.** The no-leak check is the one J203's job kept on purpose; a systematic
   difference must still fail the night.
 
@@ -171,18 +193,24 @@ outcomes and J203's shape, a leak with the base reproduced and with a varying re
 no outcome moving, a fork unstable on one side, same with and without a forced retest, a move with no retest, the
 refusal) and the retest on a fake clock (four pairs inside the budget; two pairs then `incomplete`; none then
 `incomplete`). `web/test/cubelab-atlas-leak.test.ts`: `leakChecksReport`'s problems, warnings and `leakFaults` for each
-case; the night cap at 2 and 3; the bridge's constants and the switch's values; and the command through the real pool
+case, and none of them a cap however many moves one run has; `nightLeakChecks` (ten non-deterministic checks over ten
+runs trip the night cap, two over two do not, unresolved counts with non-deterministic, leaks and `leakFaults` pass
+through summed, a run with no checks a warning, a run from before D529 read with 0 for the new keys) and
+`atlas-leaks` on files (a folder or its `atlas.json`, exit 0, 3 at the cap, 2 on a missing file or none named); the
+bridge's constants and the switch's values; and the command through the real pool
 and a fake `java`, a check of each kind (non-determinism and unresolved exit 0, a leak by the retest and by the digest
 exit 3, an incomplete retest, an unstable fork and a redeal that tested nothing exit 3 with `leaks` 0), and an unknown
 switch value refused. `tools/cubelab.sh atlas-selftest`: every no-leak check of every leg, row by row — no leak, the
-digests equal, the redeal applied, the control's digest moved — the `--only` leg's forced retest (`same`, 5 / 5, one
+digests equal, the redeal applied, the control's digest moved — and at least one row where the redeal reached the
+copy and one where the control moved the digest (the row rule alone excuses a row with too few cards to move or none
+to swap, so it would pass with neither ever happening; added on the second review, not yet run), the `--only` leg's forced retest (`same`, 5 / 5, one
 signature a side) and the `--only-perturb` leg (`nondeterministic`, one warning, exit 0). The evidence is
 `docs/evidence/cube-lab.md` §17.
 
 **Residuals.**
 
 - **A partial leak on a non-deterministic branch is caught rarely** (point 4). None is known; the warnings name every
-  such check, and the night cap turns three into a problem.
+  such check, and the night cap turns three over a night into a problem.
 - **The digest lists ids, not each card's state** (counters, tapped, attachments). A redeal moves only cards in
   hidden zones, which the ids hold; `forkProblems` holds the rest of the position, D451's way. What the before/after
   pair does not hold is a leak through state outside the zones (an AI's memory of a card, a card's remembered objects)
@@ -192,8 +220,9 @@ signature a side) and the `--only-perturb` leg (`nondeterministic`, one warning,
 - **The retest's real-game coverage is the self-test's two forced legs**: a check that moves on its own has run the
   loop only in the 58-replay diagnosis's instrumented copy; the first night with one is its first unforced run, and
   its worker log names it (`[atlas] <key>: the no-leak check's first redealt replay moved; retest …`).
-- **The job verdicts**: `v.checks.leaks == 0` does not see the new faults; a job that should fail on them adds
-  `v.checks.leakFaults == 0` (point 7).
+- **The job verdicts**: a night job's own sum of `checks.leaks` (J186–J203's) sees neither the faults nor the night
+  cap; a job from D529 on calls `tools/cubelab.sh atlas-leaks` over every spine's `atlas.json` and checks `leaks == 0`
+  and `leakFaults == 0` (points 5 and 7).
 - **D528 point 6 names "a D529"** as the closing decision of the random-rollout track, if J204 closes it. This lane
   was handed D529 and `decisions.mjs next` printed it; D530 is the random-v6 lane's, so the closing draft takes D531
   or later, and PLAN.md's follow-up 47 says so.
