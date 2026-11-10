@@ -16,9 +16,11 @@ arms to diagnose, not both losing badly), or a J208 confirmation fails and D532 
 finds a candidate whose confirmation holds, or closes the track (both arms losing badly), this lane is shelved,
 unmerged, and this number stays unused (D200).*
 
-**Status: written, UNCOMPILED, unbuilt, unpiloted, ungated, unplayed.** J208 (past its pilot, playing) held the
-machine alone (`alone: yes`) while this was written, so no Java ran: no javac, no `bridge/build.sh`, no self-test, no pilot. Every fact only J208
-can supply is marked TODO(J208); every fact only the build and the pilot can supply is marked TODO(build).
+**Status: built, piloted, reviewed by a skeptic, gated and merged onto main `429ccd9e`; the gate's line is in the
+merge commit. Unplayed: J209 plays it.** J208 held the machine alone (`alone: yes`) while this was written, so the Java
+was written and reviewed uncompiled; J208 finished at 15:36 on 2026-11-10 with `v9` 1 at margin 40 (Context), and the
+build and the pilot ran after it (the evidence list at the end). The facts J208 supplied and the facts the build and
+the pilot supplied are filled in where the first draft marked them.
 
 **2026-11-10**
 
@@ -40,20 +42,31 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
   | random-v6 (J205 a) | `search-v2-rrandom4-lcb-m40` | D350's `override=lcb`, z 1, at margin 40 | −35.4 [−49.5, −21.5] | loses badly |
   | random-v6 (J205 b) | `search-v2-rrandom4-lcb-m60` | the same at margin 60 | −34.3 [−47.8, −20.9] | loses badly |
   | random-v7 (J206) | `search-v2-rrandom4them-lcb-m40` | the rollout's opponent alone random (`random4-them`) | −23.2 [−34.7, −11.7] | worse, not badly |
-  | random-v8 (J208 a) | `search-v2-rrandom4them-m40` | J206's arm on the margin rule (no lcb), margin 40 | TODO(J208) | TODO(J208) |
-  | random-v8 (J208 b) | `search-v2-rrandom4them` | the same at search-v2's own margin, 20 | TODO(J208) | TODO(J208) |
+  | random-v8 (J208 a) | `search-v2-rrandom4them-m40` | J206's arm on the margin rule (no lcb), margin 40 | −19.1 [−30.3, −8.0] | worse, not badly |
+  | random-v8 (J208 b) | `search-v2-rrandom4them` | the same at search-v2's own margin, 20 | −19.7 [−31.0, −8.4] | worse, not badly |
 
-  Every number above but J208's is from the runner's lines as J199's to J206's summaries
-  (`~/code/pc-results/results/J199`–`J206/summary.md`) and D532's Context state them.
+  Every number above is from the runner's lines as J199's to J206's summaries
+  (`~/code/pc-results/results/J199`–`J206/summary.md`) and D532's Context state them, J208's from its own
+  (`results/J208/summary.md`, `verdict.json` and `report.md`).
 - **J207 and J208.** D532 drafted the random-v8 night as J207. J207 failed in its pilot on one metric line of the job
   file itself (a `${k}` inside a `node -e` metric, which `systemd-run` expanded to nothing, so it read `match-.json`),
   before any rated game, and was reposted unchanged as J208 on the same pin `429ccd9e`; J208's matches write
   `var/ai-ladder/match-J208a.json` and `match-J208b.json` and its verdict `var/j208/verdict.json`. Everything D532
   says of J207 is, for this file, J208's; random-v9's night is therefore J209. D532's file is not edited.
-- **J208's reading of random-v8**: TODO(J208) — each arm's score, Elo and interval, its reading under D532 point 4,
-  `v9` and `v9Margin` from `var/j208/verdict.json`, and each side's overrides by kind and direction beside J206's.
-  **The condition this file merges on**: J208's verdict carries `v9` 1 (or a J208 candidate's confirmation failed and
-  D532 point 4 names the margin from J208's two points); TODO(J208): which, and the margin, 40 or 20.
+- **J208's reading of random-v8** (2026-11-10, both matches complete, 1,200 of 1,200 each, 0 draws, errors and
+  timeouts, every check passing): (a) `search-v2-rrandom4them-m40` scored 0.4725 [0.4566, 0.4884], −19.1 Elo
+  [−30.3, −8.0], NOT SHOWN, worse, not badly; (b) `search-v2-rrandom4them` scored 0.4717 [0.4555, 0.4879], −19.7 Elo
+  [−31.0, −8.4], NOT SHOWN, worse, not badly. Neither is a candidate and neither loses badly, so D532 point 4 sends
+  the track here: `var/j208/verdict.json` carries `v9` 1 and `v9Margin` 40, the margin of (a), the arm with the higher
+  point (by 0.6 Elo, far inside either interval: the two margins are not told apart). **The condition this file merges
+  on is met by `v9` 1, at margin 40**; J209 plays `search-v2-rmix4them-m40`. Overrides by kind (priority / attack /
+  block) and the priority directions (from a pass / to another play / to a pass, of priority decisions): (a) 15.3% /
+  14.1% / 17.5% and 6.70% / 5.58% / 3.03%; (b) 20.1% / 17.7% / 22.0% and 8.87% / 6.99% / 4.29%; J206's arm (lcb at 40)
+  11.2% / 8.5% / 11.6% and 5.11% / 4.17% / 1.94%; search-v2's side in J208's two matches 19.1% / 14.6–15.3% /
+  18.0% and 8.05–8.08% / 6.27–6.34% / 4.68–4.81%. As D532 point 7 expected, not registered: the from-pass excess
+  of the both-seats-random arm at margin 40 (J202 (b): 16.4%) is absent under the margin rule with the opponent alone random, at
+  either margin. Information, deciding nothing, each about ±19 between two lines: (a) minus J206's arm +4.1, (a) minus
+  J202 (b) +1.8, (b) minus (a) −0.6.
 - **What D532 point 5 fixed, and what it left here.** Fixed: "Each candidate's rollouts alternate, within a round,
   between search-v2's own Forge rollout (both seats Forge's Default AI) and a `random4-them` rollout (the opponent
   random-v4), the first rollout Forge's, at the margin rule and the margin point 4 names"; the reason (J194's
@@ -108,7 +121,7 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
    average of the two kinds' means, since *n*F and *n*R differ by at most one in a decision where every round scored
    the candidate. Pruning, racing and `Anytime.best` read the same pooled differences, whose spread now includes any
    difference between the kinds. Nothing in the verdict, the budget, the pruning or the racing reads the kind.
-3. **The Java** (uncompiled; TODO(build)). **New:** in `SearchConfig`, the value `mix4-them` in `ROLLOUTS` and in the
+3. **The Java** (built: `./bridge/build.sh` green on the lane; the evidence list). **New:** in `SearchConfig`, the value `mix4-them` in `ROLLOUTS` and in the
    unknown-value message; `rolloutMix()`; `mixRoundRandom(round)` (`(round & 1) == 1`); `rolloutRandomThemIn(round)`
    = `rolloutRandomThem() || rolloutMix() && mixRoundRandom(round)`; `rolloutRandomSeat()` gives `mix4-them`
    random-v4 (`Config.randomV4Block()`, `random4-them`'s); `parseLive` refuses it (`... || c.rolloutMix()`, "measurement
@@ -144,7 +157,7 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
    `,rollout=mix4-them`; `configOnly` against search-v2 and against `random4-them` (the field `rollout` alone), the
    margin-40 arm against `search-v2-rrandom4them-m40` (`rollout` alone) and against the margin-20 arm (`margin`
    alone); neither carries lcb; `parseLive` refuses it and still takes `default`; an unknown value is refused naming
-   `mix4-them`. 21 checks, so the build's count should read D532's 371 plus 21, **392**: TODO(build).
+   `mix4-them`. 21 checks, so the build's count reads D532's 371 plus 21, **392**: `decision selftest: 392 check(s), 0 failure(s)`.
 5. **Two arms**, kind `search`, D532's two arms with the rollout value alone changed; each note says "for
    measurement, never the live seat". Both are registered now, so the names and hashes exist before any rated game;
    **one plays**, the one point 7 names.
@@ -232,7 +245,7 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
    or `search.lcb.*` on search-v2's side and no `search.lcb.*` on the arm's. The cost of a decision near search-v2's
    and J206's (J206: 16.28 rollouts a decision against search-v2's 15.45, 50.0 ms a rollout against 51.7), since both
    kinds seat Forge's continuation for the searching seat. **What is not predicted:** the arm's override rates against
-   J208's arm at the same margin (TODO(J208): J208's rates), and whether the two kinds disagree often. The disagreement
+   J208's arm at the same margin (J208 (a): 15.3% / 14.1% / 17.5% by kind, from a pass 6.70%), and whether the two kinds disagree often. The disagreement
    counters say how often the Forge rounds and the random rounds pointed opposite ways on the candidate the verdict
    read; they give a rate, never which kind was right, and no override rate says which overrides win games.
 10. **The hashes rule (D525 point 3) holds**: a config hash is the seat config's text and the code is pinned by the
@@ -281,18 +294,30 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
   over metrics computed as the runner would: on the synthetic night 49 of 49 pass; in the pilot the 18 that fail are
   exactly the ones that need the JVM (the build, the 4 games) or `origin/main`, each reading its default 0, none
   UNKNOWN. No `metrics:` line carries a `$`.
-- **The build** (`./bridge/build.sh`: the lint's self-test, the lint, javac, the decision self-test): TODO(build).
-- **The pilot** (4 games of the arm against `search-v1-anytime`, one worker; the mix counters on the arm's side alone,
-  Forge and random rounds about equal, no `search.lcb.*`): TODO(build).
-- **The gate** (`./tools/check-all.sh` on the merged tree): TODO(build).
+- **A skeptic's read of the uncompiled lane** (an independent review of the diff as a compiler would read it, while
+  J208 played): one check of the new self-test could never be true (it asked `SearchConfig.toString()` for the
+  ladder's `,seed=0,`) and would have failed the build; fixed before the first compile, with three wording errors in
+  this file and PLAN. Its other findings were that both callers of the rollout pass the real round index, that no
+  earlier value reads it, and that the counters reach the batch line as their neighbours do.
+- **The build** (`./bridge/build.sh` on the lane after J208 ended: the lint's self-test, the lint, javac, the
+  self-tests): `build OK`, first compile, `decision selftest: 392 check(s), 0 failure(s)`.
+- **The pilot** (4 games of `search-v2-rmix4them-m40` against `search-v1-anytime`, one worker, on the lane): 4 of 4
+  complete, 0 errors; the arm searched 100 decisions on 715 rounds, **383 Forge rounds and 332 random ones** (3.83 and
+  3.32 a decision), 1,057 Forge rollouts and 848 random ones, their sum the arm's 1,905 `search.rollouts`;
+  `search.rr.rollouts` 857, at least the random count; no `search.mix.*` or `search.rr.*` on search-v2's side and no
+  `search.lcb.*` on either; 19.05 rollouts a decision against search-v2's 18.1. Of the 34 decisions where the best
+  alternative had a paired difference of each kind, the two kinds disagreed in sign on 3. Four games say the counters
+  are wired, nothing about strength.
+- **The gate** (`./tools/check-all.sh` on the merged tree, from a deleted `bridge/out`): its line is in the merge
+  commit's message.
 
 **What is unverified.**
 
-- **Everything that needs the JVM**: that the Java compiles; that the self-test passes; that `SearchPolicy`'s static
-  initialization, which the self-test now triggers earlier (`rolloutLimits` and the counters' helpers are static
-  methods of `SearchPolicy`; `randomSeat()`'s cases, through `decisionClock`, already initialized it later in the same run), behaves the same; that
-  the pilot's batch lines carry the `search.mix.*` keys as read; and that search-v2's side and every earlier arm play
-  as before, which point 3 argues from the code and the self-test's guard checks on the seats alone. TODO(build).
+- **That search-v2's side and every earlier arm play as before.** Point 3 argues it from the code, the self-test's
+  guard checks it on the seats alone, and the pilot shows search-v2's side with no mix or random counter; no earlier
+  arm was replayed against its own recorded games. (`SearchPolicy`'s static initialization, which the self-test now
+  triggers earlier, `randomSeat()`'s cases having initialized it later in the same run through `decisionClock`, made
+  no difference to the build: every self-test passed.)
 - **That pooling two kinds of leaf is a sensible estimator.** It is the rule chosen (point 2), not a measured one; the
   disagreement counters describe the night, they do not validate the rule.
 
