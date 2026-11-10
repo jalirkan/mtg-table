@@ -1,0 +1,28 @@
+==== J204 pilot4 started 2026-11-09T21:08:52-05:00 in unit lab-J204-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-rrandom4-m60 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-rrandom4-m60 vs search-v1-anytime (match:j204-pilot:20261110T020853-3749383, seed 15900000, 1 pair(s))
+  done   w0 search-v2-rrandom4-m60 2-2 search-v1-anytime (0 draws) in 158 s
+  4 decisive games (2 pairs): search-v2-rrandom4-m60 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-rrandom4-m60 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-rrandom4-m60: 80 decisions searched in 4 games, 23 changed Forge's answer (28.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-rrandom4-m60 by kind: p 21/49, a 2/18, b 0/13
+search-v2-rrandom4-m60 time per decision: 876.86 ms (p+a+b); by kind p 883.339, a 856.962, b 879.99
+search-v1-anytime: 82 decisions searched in 4 games, 20 changed Forge's answer (24.4%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 15/53, a 4/19, b 1/10
+search-v1-anytime time per decision: 931.292 ms (p+a+b); by kind p 1001.253, a 876.466, b 664.67
+{"run":"20261110T020853-3749383","games":4,"aRolloutsPerDecision":21.64,"bRolloutsPerDecision":16.91,"ratio":1.28,"aRrRollouts":1750,"bRrRollouts":0,"aV2Fires":4743,"aV3Fires":19,"aV4Fires":5,"aPolicy":0,"aPolicyGames":0,"bPolicy":0,"bPolicyGames":0,"aPerRollout":{"cardTargetOffered":0.444,"costTargetAvoided":0.0006,"land":0.3743,"noRepeatNoOp":0.0086,"noRepeatRefused":0.0006,"refusedCast":0.0006,"targetCountTrimmed":0.0023,"v2_castSomething":0.1811,"v2_chumpBlock":0.0709,"v2_dominatedAttacker":0.1274,"v2_lethalAttack":0.0069,"v2_lethalBlock":0.0429,"v2_ownStack":2.1383,"v2_targetSide":0.1429,"v3_goodBlock":0.0109,"v4_goodBlockLethal":0.0011,"v4_goodBlockRefused":0.0017,"xDrawn":0.0029,"zeroXLeftOut":0.0343}}
+match policy-outlet vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 policy-outlet vs search-v1-anytime (match:j204-pilot:20261110T021131-3888637, seed 15900000, 1 pair(s))
+  done   w0 policy-outlet 1-3 search-v1-anytime (0 draws) in 58 s
+  4 decisive games (2 pairs): policy-outlet scores 25.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+policy-outlet scores 25.0% [95% 0.0%, 74.0%] = -191 Elo [-Infinity, +182] against search-v1-anytime
+policy-outlet: no searched decisions
+search-v1-anytime: 67 decisions searched in 4 games, 14 changed Forge's answer (20.9%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 12/42, a 1/16, b 1/9
+search-v1-anytime time per decision: 758.488 ms (p+a+b); by kind p 841.823, a 638.564, b 582.789
+{"run":"20261110T021131-3888637","games":4,"aRolloutsPerDecision":null,"bRolloutsPerDecision":17.99,"ratio":null,"aRrRollouts":0,"bRrRollouts":0,"aV2Fires":0,"aV3Fires":0,"aV4Fires":0,"aPolicy":0,"aPolicyGames":0,"bPolicy":0,"bPolicyGames":0,"aPerRollout":{}}
+{"run":"20261110T020853-3749383","games":4,"lost":2,"won":2,"other":0,"aCfgOther":0,"meanTurnsLost":16.5,"meanTurnsWon":18.5}
