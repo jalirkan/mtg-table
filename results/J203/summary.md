@@ -38,9 +38,19 @@ Set iii (the judges split, 32 decisions) was not branched, as planned. 10,710 br
 moved when only seat B's hidden cards were dealt again; the negative control moved as it must). Unlike J200's
 over-strict problems gate, this check is one I kept on purpose, and it is the first no-leak check to move on any
 atlas night. It does not touch the readings: the decision is in the control set, both its options scored 1.0, so it is
-a tie in set ii whether it is kept or dropped, and set i has no decision on that spine. The cause (a real read of
-hidden cards by Forge's AI, a card seat A legitimately knew that the check moved, or non-determinism) is being
-diagnosed on a one-worker reproduction; the finding will be added here. The second atlas problem (J191/b-s08, one unit
+a tie in set ii whether it is kept or dropped, and set i has no decision on that spine. **The cause, diagnosed the same
+night: it is not a leak; the branch is not deterministic.** On a one-worker reproduction the determinized copy's hands
+and libraries were identical (ids, in order) for the base and the redealt replays, so the redeal never reaches the
+branch. Replayed 58 times with nothing changed, the branch itself came out one of two ways (base flipped as often as
+the redeal: 4 of 18, 2 of 22, 0 of 18), and one run reproduced the night's exact failure. The first difference is
+turn 27: Goblin Rabblemaster forces Goblin Engineer and a Goblin token to attack a planeswalker, Forge 2.0.14's
+`AiAttackController` adds forced attackers from one `CompletableFuture.supplyAsync` each, in whichever order the
+threads finish, and `AiBlockController` then hands the best blocker to whichever of two equal-power attackers came
+first. No hidden information is involved, so the published rows and labels stand; the cost is that such a branch
+cannot be replayed exactly from its seed (an upper bound of 281 of J203's 10,720 branch games, 2.6%, in 6 of 62
+spines, had a qualifying forced attack; Forge's 5 s AI timeouts, 201 this night, can do the same). The fix is in the
+check: when the redealt replay differs, the base is replayed once more, and a base that moves too is reported as
+non-determinism, not as a leak (the next mtg-table decision). The second atlas problem (J191/b-s08, one unit
 whose replay diverged at d10) is the control decision the validity rule already excluded.
 
 **What it decides.** Nothing closes. The outside-knowledge result stands where J200 put it: on high-stakes decisions
