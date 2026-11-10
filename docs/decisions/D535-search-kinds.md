@@ -2,7 +2,7 @@
 
 *Branch `pc/search-kinds`, off main `4e823718` (D533's merge, the pin of J209). The lane reserved D534 and D535
 (D200): D534 is the random-rollout track's closing decision, written when J209 is read, and stays unused if J209
-finds a candidate; this is D535. Seven ladder players, one test, this file and PLAN's rows. **Nothing under
+finds a candidate; this is D535. Six ladder players, one test, this file and PLAN's rows. **Nothing under
 `bridge/src` changes**: `what=` is a `SearchConfig` key the ladder already passes (`KINDS.search.params.what`), and
 `SearchPolicy` already honours it (`wantsPriority` is false without `p`; `chooseAttack` and `chooseBlock` return
 Forge's answer at once without `a` or `b`). The live seat, the atlas's random seat (D508's frozen population), every
@@ -50,18 +50,20 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
    | ab | `search-v2-no-p` | `ab` | `d8508f47552b` | attacks and blocks |
    | pb | `search-v2-no-a` | `pb` | `ba2eafaee6fb` | priority and blocks |
    | pa | `search-v2-no-b` | `pa` | `59505e241363` | priority and attacks |
-   | pab | `search-v2-all` | `pab` | `cdd55e02a89c` | everything (search-v2 itself) |
+   | pab | `search-v1-anytime` | `pab` | `cdd55e02a89c` | everything (search-v2 itself) |
 
    Each arm's seat config is `Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=<w>,seed=0,anytime=1`.
-2. **`search-v2-all` is search-v2 under a second name, on purpose.** A match's deals go by its two names
-   (`Session.spec`, `usedBseeds(a, b)`): `search-v1-anytime` against `forge-default` has played blocks
-   114,900,000–114,900,149 already (J194 (a)) and would take the next 150. Under a new name the same config plays
-   the same 600 deals as the other seven corners, on the night's own pin. The config and the hash are
-   search-v1-anytime's exactly (`what: pab` is the default written out), the ratings fold the two names into one
-   identity (`hashIndex`: the first registered player with a hash, and `search-v1-anytime` is first), and the
-   name is never a candidate.
-3. **The same deals for every corner.** Seven matchups are new names on this host and take blocks
-   114,900,000–114,900,149 of the match base, the deals of J194 (a), J101 and the random-rollout track. A deal is
+2. **The `all` corner is `search-v1-anytime` itself, and its match is played in a ladder folder of its own.** A
+   match's batch seeds go by its two players (`Session.spec`, `usedBseeds`): `search-v1-anytime` against
+   `forge-default` has played blocks 114,900,000–114,900,149 in this host's ladder folder already (J194 (a)) and
+   would take the next 150 there, other deals than the other seven corners'. So the night plays that one match with
+   `--dir var/j210-all`, an empty folder on the same host name: the seed base is the host's, the folder holds no
+   earlier game, and the match takes the same 150 blocks. Its rows stay out of `var/ai-ladder/results`, where the
+   same deals of the same matchup are J194 (a)'s already. **A second name for search-v2's config was written first
+   and is rejected** (below): the ladder cannot play one.
+3. **The same deals for every corner.** The other seven matchups (`policy-outlet` and the six arms, each against
+   `forge-default`) have never been played on this host and take blocks 114,900,000–114,900,149 of the match base in
+   `var/ai-ladder`, the deals of J194 (a), J101 and the random-rollout track. A deal is
    D321's key, (batch seed, deck pair, the game's block of four, the half), which does not carry the run, so one
    deal is the same two games (seats swapped) in every corner's match. An arm's **pair score** on a deal is its
    wins over its decisive games there (draws dropped, as `pairScores` does).
@@ -114,6 +116,14 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
   additive reading (ALONE, LAST, INTERACTION) needs every corner on one scale. Forge Default is the anchor.
 - **Only the three leave-one-out arms.** Cheaper by four hours, and blind to overlap: if attacks and blocks each
   look unneeded alone, only `only-p` says whether dropping both is safe.
+- **A second name for search-v2 (`search-v2-all`, the same params and hash), so that its matchup is new and takes
+  the shared blocks in `var/ai-ladder`.** This lane's first commit registered it. The ladder cannot play it: a
+  finished game's sides are named by config hash (`Session.side`, `identity`: the first registered player with
+  the hash, so `search-v1-anytime`), while a batch's seed is looked up by the players' names (`Session.spec`). The
+  alias's finished batches would never count as used under its own name, so the match would deal the same seven
+  or so batch seeds over and over, and the match line's `aWins` and score (`side(r, 'a') === A.name`) would count
+  no game for it. Found by reading `session.ts` before the job was written; the player was removed, and the test
+  now holds every corner's hash to one registered player.
 - **Reusing J194 (a) as the `all` corner.** It is the same config on the same deals, but at pin `72302c69`, before
   D523 to D533 touched `SearchPolicy`; each of those says no earlier value's behaviour changed and the decision
   self-test holds it, yet the cleanest pab is one played on the night's own pin, and the replication is worth its

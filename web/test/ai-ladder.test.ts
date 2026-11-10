@@ -1130,7 +1130,7 @@ test('D533: search-v2-rmix4them-m40 and search-v2-rmix4them are D532\'s two arms
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
-test('D535: the seven kind arms are search-v2 with what= alone changed, and search-v2-all is search-v2 under a second name', () => {
+test('D535: the six kind arms are search-v2 with what= alone changed, and no second name carries a corner\'s hash', () => {
   const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
   const reg = players(raw, REPO);
   const by = new Map(reg.map((x) => [x.name, x]));
@@ -1165,17 +1165,13 @@ test('D535: the seven kind arms are search-v2 with what= alone changed, and sear
   }
   assert.equal(new Set(arms.map(([, w]) => w)).size, 6, 'six different partial corners');
   assert.equal(new Set(arms.map(([, , h]) => h)).size, 6);
-  // the pab corner: the same config and the same hash under a second name, so its match takes the shared deals
-  const all = by.get('search-v2-all')!;
-  const allRaw = raw.players.find((y) => y.name === 'search-v2-all')!;
-  assert.deepEqual(allRaw.params, { ...v2raw.params, what: 'pab' });
-  assert.deepEqual(all.resolved, v2.resolved);
-  assert.equal(all.cfg, v2.cfg);
-  assert.equal(all.hash, v2.hash);
-  assert.match(allRaw.note ?? '', /never the live seat/);
-  const names = raw.players.map((y) => y.name);
-  assert.ok(names.indexOf('search-v1-anytime') < names.indexOf('search-v2-all'),
-    'search-v1-anytime is registered first, so the hash still names it (hashIndex)');
+  // the pab corner is search-v1-anytime itself. A second name for its config would be rated as the first
+  // (Session.side goes by hash) while its batch seeds go by name (Session.spec), so its match would replay
+  // the same few seeds and count no win for it: every corner's hash names exactly one registered player.
+  for (const h of [v2.hash, by.get('policy-outlet')!.hash, ...arms.map(([, , x]) => x)]) {
+    assert.equal(reg.filter((x) => x.hash === h).length, 1, `one registered player has the hash ${h}`);
+  }
+  assert.equal(by.get('search-v2-all'), undefined, 'no alias of search-v2 is registered');
   assert.equal(by.get('policy-outlet')!.hash, 'e350d94649a4', 'the corner with no search keeps its hash');
   assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
