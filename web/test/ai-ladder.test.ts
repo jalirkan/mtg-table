@@ -1062,7 +1062,7 @@ test('D532: search-v2-rrandom4them-m40 and search-v2-rrandom4them are random4-th
   assert.deepEqual(br.params, { ...v2raw.params, rollout: 'random4-them' }, "its params are search-v2's plus rollout random4-them alone");
   assert.equal(raw.players.find((y) => y.name === 'search-v2-rrandom4')!.params.margin, undefined, 'search-v2-rrandom4 has no margin key either');
   assert.deepEqual(b!.resolved, { ...v2.resolved, rollout: 'random4-them' }, "its resolved params are search-v2's plus the rollout");
-  assert.equal(b!.resolved.margin, 20, "the margin resolves to search-v2's 20, as search-v2's and search-v2-rrandom4's do");
+  assert.equal(by.get('search-v2-rrandom4them')!.resolved.margin, 20, "the margin resolves to search-v2's 20, as search-v2's and search-v2-rrandom4's do");
   assert.equal(by.get('search-v2-rrandom4')!.resolved.margin, 20);
   assert.equal(b!.cfg, `${v2.cfg},rollout=random4-them`, "the seat config is search-v2's with ,rollout=random4-them appended");
   assert.equal(b!.cfg, by.get('search-v2-rrandom4')!.cfg!.replace(/,rollout=random4$/, ',rollout=random4-them'),
