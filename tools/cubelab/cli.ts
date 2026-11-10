@@ -18,6 +18,7 @@
 //   atlas   (--deck-a <dck> --deck-b <dck> | --pair auto) --seed S --jobs K --out <dir> [--turn-cap 40] [--rollouts 10000]
 //           [--branch-random 200] [--branch-forge 40] [--decisions all|N] [--options 8] [--chunk 25]   the move atlas (atlas.ts, D451)
 //           [--only <file>]   D524: only the decisions and options a JSON list [{d, options, tokens?}] names (exit 4: the baseline lists otherwise)
+//   atlas-leaks <atlas.json | spine folder>...   D529: every spine's no-leak checks summed and the night cap applied, one JSON object; no engine
 //   sample  --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff> --seed S --count N --out <dir>
 //           [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   stratified cube documents from the census (sample.ts, D445)
 //   ratings init <cube.md> [--out <tsv>] [--force]
@@ -162,6 +163,7 @@ function usage(msg?: string): never {
                         [--only <file>]   (D524: a JSON list [{d, options, tokens?}]; only those decisions at those options, option 0 among them;
                         exit 4 if the baseline lists other tokens at a d; not with --decisions or the cuts; --branch-random 0 allowed)
        tools/cubelab.sh atlas-selftest [--jobs 2]   (D451: a tiny atlas, its forks, no-leak checks and guardrails asserted)
+       tools/cubelab.sh atlas-leaks <atlas.json | spine folder>...   (D529, no engine: the night's no-leak checks, the night cap; JSON, exit 3 on a leak or fault)
        tools/cubelab.sh seat-identity [--write]     (D451: the Forge, search and explore seats play origin/main's games)
        tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
@@ -466,6 +468,7 @@ async function main(): Promise<number> {
     case 'balance-model': return (await import('./balance-model-cmd.ts')).balanceModelCommand(REPO, f, say);   // the library card model and the balanced-cube generator (D473)
     case 'atlas': return (await import('./atlas.ts')).atlasCommand(REPO, f, say);   // the move atlas (D451)
     case 'atlas-selftest': return (await import('./atlas.ts')).atlasSelftest(REPO, f, say);   // D451: the fork, the no-leak check, the guardrails
+    case 'atlas-leaks': return (await import('./atlas.ts')).atlasLeaksCommand(REPO, pos, say);   // D529: the night's no-leak checks over every spine's atlas.json
     case 'seat-identity': return (await import('./seatidentity.ts')).seatIdentityCommand(REPO, f, say);   // D451: the Forge and search seats untouched
     case 'ratings':
       if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);

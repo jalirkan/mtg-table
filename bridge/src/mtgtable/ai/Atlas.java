@@ -88,6 +88,14 @@ import mtgtable.SeatRecorder;
  * not move; the negative control, the atlas seat's own hand swapped with its
  * library, must (its state
  * at the fork reads its hand; a swap that changes no card's name cannot show).
+ * D529: "must not move" is read by {@link LeakVerdict}.  The fork digest
+ * ({@link #forkDigest}: the determinized copy, every zone of both seats card id
+ * by card id) must be the base's, or the redeal reached the fork, a leak; and
+ * when the first redealt replay's outcome moved, base and redeal are each
+ * replayed {@link LeakVerdict#RETESTS} more times: outcome sets that share
+ * nothing are a leak, sets that overlap a branch Forge 2.0.14 does not replay
+ * exactly from its seed (its attack AI's per-attacker futures race, J203), a
+ * warning.
  *
  * <p><b>A branch that throws</b> (D465): a {@code RuntimeException} or an
  * {@code Error} -- {@code OutOfMemoryError} above all -- is caught at the
@@ -370,12 +378,88 @@ public final class Atlas {
         public int targetCountTrimmed;
         public int costTargetAvoided;
         public final List<String> forkProblems = new ArrayList<>();
-        /** The no-leak check: null not run; true the branch did not move when the opponent's hidden cards did. */
+        /**
+         * The no-leak check: null not run; true the branch did not move when the
+         * opponent's hidden cards did.  D529: false only for a leak by
+         * {@link LeakVerdict}'s rule (stable fork digests that differ, or disjoint
+         * outcomes with the base reproduced).
+         */
         public Boolean leakSame;
         /** Its negative control: true when the atlas seat's own hand swapped DID move it. */
         public Boolean controlMoved;
+        /** D529: the first redealt replay's outcome differed from the first base's (D451's leakSame, negated). */
+        public Boolean leakMoved;
+        /** D529: every replay's fork digest (the copy AFTER the determinize) was the first base's. */
+        public Boolean leakForkSame;
+        /**
+         * D529: seat B's hand and library, card id by card id, on the copy BEFORE the determinize differed between
+         * the base and the redeal: the redeal reached the copy, so the check tested something.
+         */
+        public Boolean leakRedealApplied;
+        /** D529: the cards of seat B's hand and library the real-game redeal could move (those seat A may not look at). */
+        public int leakRedealable;
+        /** D529: the control's fork digest differed from the base's (the control's swap is in the fork). */
+        public Boolean controlForkMoved;
+        /** D529: the cards the control swapped between seat A's hand and its library (0: an empty hand or library). */
+        public int controlSwap;
+        /** D529: the verdict over the retest, when one ran (the first pair moved, or the retest was forced); else null. */
+        public LeakVerdict.Result leakRetest;
         public GameLedger ledger;
         public String key;
+    }
+
+    /** D529: the self-test's switch on the no-leak check's retest ({@link #leakRetestMode}). */
+    enum LeakRetestMode {
+        /** A lab night: the retest runs only when the first redealt replay moved. */
+        OFF,
+        /** The retest on every check whose digests agree (the self-test's {@code --only} leg). */
+        ALWAYS,
+        /** The first redealt replay's signature perturbed, so the moved path runs (the self-test's perturb leg). */
+        PERTURB
+    }
+
+    /**
+     * D529: {@code MTGTABLE_ATLAS_LEAK_RETEST} in the worker's environment -- unset or empty on a lab night,
+     * {@code always} or {@code perturb} in the atlas self-test's legs only; any other value is an error (the check
+     * fails to run, a problem), never read as off.
+     */
+    static LeakRetestMode leakRetestMode() {
+        final String v = System.getenv("MTGTABLE_ATLAS_LEAK_RETEST");
+        if (v == null || v.isEmpty()) {
+            return LeakRetestMode.OFF;
+        }
+        switch (v) {
+            case "always":
+                return LeakRetestMode.ALWAYS;
+            case "perturb":
+                return LeakRetestMode.PERTURB;
+            default:
+                throw new IllegalStateException("MTGTABLE_ATLAS_LEAK_RETEST=" + v + " is not always, perturb or unset (D529)");
+        }
+    }
+
+    /** D529: how many times the no-leak check's real-game redeal is drawn again while it leaves seat B's cards where they were. */
+    static final int REDEAL_TRIES = 8;
+
+    /**
+     * D529: one replay of the no-leak check: its outcome signature (fork state, result, rows), its fork digest (the
+     * copy after the determinize), seat B's hidden arrangement on the copy before it, and the cards its real-game
+     * change could move (the redeal's redealable cards, the control's swapped ones; -1 for the base).
+     */
+    record Replay(String sig, String digest, String hiddenBefore, int moved) {
+        LeakVerdict.Sample sample() {
+            return new LeakVerdict.Sample(sig, digest);
+        }
+    }
+
+    /** D529: what a no-leak replay's {@link #play} reads off its copy at the fork. */
+    static final class ForkProbe {
+        /** Seat A's state at the fork, after the determinize (D451's probe). */
+        final StringBuilder state = new StringBuilder();
+        /** Seat B's hand and library, card id by card id in order, before the determinize. */
+        String hiddenBefore = "";
+        /** {@link #forkDigest} after the determinize. */
+        String digest = "";
     }
 
     /** Branch {@code i}'s seed at decision {@code d}: the same for every option (common random numbers). */
@@ -520,17 +604,55 @@ public final class Atlas {
          * a scratch folder) after the opponent's real hand and library were dealt
          * again in the real game, its result and the atlas seat's rows must be the
          * same; with the atlas seat's own hand swapped instead, they must not.
+         * D529: each replay also records seat B's hidden arrangement on the copy
+         * before the determinize (it must differ between base and redeal: the
+         * redeal reached the copy) and the fork digest after it (it must not:
+         * the determinize deals seat B's hidden cards from their canonical
+         * order); when the first redealt replay moved with the digests agreeing,
+         * base and redeal are replayed {@link LeakVerdict#RETESTS} more times
+         * each, alternately, inside {@link LeakVerdict#RETEST_BUDGET_MS}, and
+         * {@link LeakVerdict#retest} reads all of them.
          */
         private void leakCheck(final Player ai, final SearchPolicy.Cand cand, final Branch b, final long seed,
                                final DecisionInfo d) {
             try {
+                final LeakRetestMode mode = leakRetestMode();
                 final Path tmp = java.nio.file.Files.createTempDirectory("atlas-leak");
                 try {
-                    final String base = rowsOf(ai, cand, seed, tmp.resolve("base"), d, null);
-                    final String swapped = rowsOf(ai, cand, seed, tmp.resolve("swapped"), d, Boolean.FALSE);
-                    final String own = rowsOf(ai, cand, seed, tmp.resolve("own"), d, Boolean.TRUE);
-                    b.leakSame = base != null && base.equals(swapped);
-                    b.controlMoved = own != null && !own.equals(base);
+                    final Replay base = rowsOf(ai, cand, seed, tmp.resolve("base"), d, null);
+                    final Replay redeal = rowsOf(ai, cand, seed, tmp.resolve("swapped"), d, Boolean.FALSE);
+                    final Replay own = rowsOf(ai, cand, seed, tmp.resolve("own"), d, Boolean.TRUE);
+                    final LeakVerdict.Sample b0 = base.sample();
+                    final LeakVerdict.Sample r0 = mode == LeakRetestMode.PERTURB
+                            ? new LeakVerdict.Sample(redeal.sig() + "perturbed by MTGTABLE_ATLAS_LEAK_RETEST=perturb (D529 self-test)\n",
+                                    redeal.digest())
+                            : redeal.sample();
+                    final boolean retest = LeakVerdict.needsRetest(b0, r0)
+                            || mode != LeakRetestMode.OFF && b0.digest().equals(r0.digest());
+                    final int[] n = {0};
+                    // alternate the two sides, so whatever drifts over the minutes (load, the JIT) falls on both
+                    final LeakVerdict.Result v = retest
+                            ? LeakVerdict.retest(b0, r0,
+                                    () -> rowsOf(ai, cand, seed, tmp.resolve("base" + n[0]++), d, null).sample(),
+                                    () -> rowsOf(ai, cand, seed, tmp.resolve("swapped" + n[0]++), d, Boolean.FALSE).sample(),
+                                    LeakVerdict.RETEST_BUDGET_MS, unit.branchTimeoutMs, () -> System.nanoTime() / 1_000_000L)
+                            : LeakVerdict.classify(List.of(b0), List.of(r0));
+                    b.leakSame = v.leakSame();
+                    b.leakMoved = v.moved;
+                    b.leakForkSame = v.forkSame;
+                    b.leakRetest = retest ? v : null;
+                    b.leakRedealApplied = !redeal.hiddenBefore().equals(base.hiddenBefore());
+                    b.leakRedealable = redeal.moved();
+                    b.controlMoved = !own.sig().equals(base.sig());
+                    b.controlForkMoved = !own.digest().equals(base.digest());
+                    b.controlSwap = own.moved();
+                    if (v.moved || v.kind != LeakVerdict.Kind.SAME) {
+                        System.err.println("[atlas] " + b.key + ": the no-leak check's first redealt replay "
+                                + (v.moved ? "moved" : "did not move") + (retest ? "; retest " + v.baseReplays + " base / "
+                                + v.redealReplays + " redeal replays, " + v.baseDistinct + " / " + v.redealDistinct
+                                + " distinct outcome(s), " + v.shared + " shared" : "") + ": " + v.kind.wire
+                                + (mode == LeakRetestMode.OFF ? "" : " (forced: " + mode + ")") + " (D529)");
+                    }
                 } finally {
                     try (var w = java.nio.file.Files.walk(tmp)) {
                         w.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
@@ -543,14 +665,19 @@ public final class Atlas {
 
         /**
          * Play the branch with rows only into {@code dir} and return the atlas
-         * seat's rows (but their wall time) and the result; {@code swapOwn} null =
-         * no swap, false = the opponent's hidden cards redealt first, true = the
-         * atlas seat's own hand swapped with its library first (the control).
+         * seat's rows (but their wall time) and the result, and (D529) what
+         * {@link ForkProbe} read off the copy and the cards the real-game change
+         * could move; {@code swapOwn} null = no swap, false = the opponent's
+         * hidden cards redealt first (drawn again, up to {@link #REDEAL_TRIES}
+         * times from the same seeded source, while a draw leaves them where they
+         * were), true = the atlas seat's own hand swapped with its library first
+         * (the control).
          */
-        private String rowsOf(final Player ai, final SearchPolicy.Cand cand, final long seed, final Path dir,
+        private Replay rowsOf(final Player ai, final SearchPolicy.Cand cand, final long seed, final Path dir,
                               final DecisionInfo d, final Boolean swapOwn) throws IOException {
             final Game g = ai.getGame();
             final List<Runnable> restore = new ArrayList<>();
+            int moved = -1;
             if (swapOwn != null) {
                 final Random rng = new Random(seed ^ 0x5AA5L);
                 for (final Player p : g.getPlayers()) {
@@ -570,6 +697,7 @@ public final class Atlas {
                         final List<Card> fromLib = new ArrayList<>(l0);
                         Collections.shuffle(fromLib, rng);
                         final int n = Math.min(h0.size(), fromLib.size());
+                        moved = n;
                         final List<Card> newHand = new ArrayList<>(fromLib.subList(0, n));
                         final List<Card> newLib = new ArrayList<>(fromLib.subList(n, fromLib.size()));
                         newLib.addAll(h0);
@@ -578,18 +706,24 @@ public final class Atlas {
                     } else {
                         // D498: what the atlas seat may look at (a revealed top card) stays put, as the
                         // Determinizer keeps it; moving it would be a public change, not a hidden one
-                        Determinizer.redealHidden(p, ai, true, rng);
+                        final String before = arrangement(p);
+                        for (int t = 0; t < REDEAL_TRIES; t++) {
+                            moved = h0.size() + l0.size() - Determinizer.redealHidden(p, ai, true, rng);
+                            if (moved < 2 || !arrangement(p).equals(before)) {
+                                break;   // D529: nothing to move, or the cards moved
+                            }
+                        }
                     }
                 }
             }
             final Path rowsBefore = DistillRows.dir();
             try {
                 DistillRows.useDir(dir);
-                final StringBuilder probe = new StringBuilder();
+                final ForkProbe probe = new ForkProbe();
                 final Branch x = Atlas.play(ai, cand, 0, 0, seed, unit, "leak", new LinkedHashMap<>(), null, null, true, probe);
                 DistillRows.close();
                 // the atlas seat's state at the fork, then the result, then its rows
-                final StringBuilder sb = new StringBuilder(probe).append('\n').append("result " + x.result + " turns " + x.turns
+                final StringBuilder sb = new StringBuilder(probe.state).append('\n').append("result " + x.result + " turns " + x.turns
                         + (x.error == null ? "" : " error " + x.error) + "\n");
                 final Path f = DistillRows.file(dir);
                 if (java.nio.file.Files.exists(f)) {
@@ -599,7 +733,7 @@ public final class Atlas {
                         }
                     }
                 }
-                return sb.toString();
+                return new Replay(sb.toString(), probe.digest, probe.hiddenBefore, moved);
             } finally {
                 DistillRows.useDir(rowsBefore);
                 for (final Runnable r : restore) {
@@ -689,6 +823,19 @@ public final class Atlas {
         }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
+            if (b.leakMoved != null) {
+                // D529: the first redealt replay's move and the fork digest, apart from the verdict
+                j.n("leakMoved", b.leakMoved).n("leakForkSame", Boolean.TRUE.equals(b.leakForkSame))
+                        .n("leakRedealApplied", Boolean.TRUE.equals(b.leakRedealApplied)).n("leakRedealable", (long) b.leakRedealable)
+                        .n("controlForkMoved", Boolean.TRUE.equals(b.controlForkMoved)).n("controlSwap", (long) b.controlSwap);
+            }
+            if (b.leakRetest != null) {
+                final LeakVerdict.Result v = b.leakRetest;
+                j.key("leakRetest").obj().n("base", (long) v.baseReplays).n("redeal", (long) v.redealReplays)
+                        .n("baseDistinct", (long) v.baseDistinct).n("redealDistinct", (long) v.redealDistinct)
+                        .n("shared", (long) v.shared).n("verdict", v.kind.wire)
+                        .end();
+            }
         }
         j.key("forkProblems").arr();
         for (final String p : b.forkProblems) {
@@ -740,10 +887,14 @@ public final class Atlas {
         return play(ai, cand, o, i, seed, unit, key, fields, framesDir, name, rows, null);
     }
 
-    /** {@link #play}, and with {@code probe} the atlas seat's state at the fork (after the redeal) appended to it. */
+    /**
+     * {@link #play}, and with {@code probe} (the no-leak check's replays only) the atlas seat's state at the fork
+     * (after the redeal), and (D529) seat B's hidden arrangement before the determinize and the copy's
+     * {@link #forkDigest} after it.
+     */
     static Branch play(final Player ai, final SearchPolicy.Cand cand, final int o, final int i, final long seed,
                        final Unit unit, final String key, final Map<String, Object> fields, final File framesDir,
-                       final String name, final boolean rows, final StringBuilder probe) {
+                       final String name, final boolean rows, final ForkProbe probe) {
         final Branch b = new Branch();
         b.option = o;
         b.i = i;
@@ -782,6 +933,9 @@ public final class Atlas {
                 }
             }
             cand.install(cp, copy, aiCopy, forcing);
+            if (probe != null) {
+                probe.hiddenBefore = hiddenArrangement(copy, aiCopy);   // D529: the redeal's half, before the determinize
+            }
             Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
             cand.afterDeterminize(cp, copy, aiCopy);
             b.standIns = cp.unmapped();
@@ -790,7 +944,8 @@ public final class Atlas {
             b.damageLkiLost = cp.damageLkiLost().size();
             b.forkProblems.addAll(forkProblems(game, ai, copy, aiCopy));
             if (probe != null) {
-                probe.append(java.util.Arrays.toString(DistillFeatures.state(aiCopy)));
+                probe.state.append(java.util.Arrays.toString(DistillFeatures.state(aiCopy)));
+                probe.digest = forkDigest(copy, seed);
             }
             if (framesDir != null) {
                 b.ledger = GameLedger.attach(copy);
@@ -1016,6 +1171,69 @@ public final class Atlas {
         m.put("closeCall", 0.0);
         m.put("opening", false);
         return m;
+    }
+
+    /** D529: a player's hand and library, card id by card id in order (the no-leak check's redeal must change it). */
+    static String arrangement(final Player p) {
+        final StringBuilder sb = new StringBuilder("H[");
+        for (final Card c : p.getZone(ZoneType.Hand).getCards(false)) {
+            sb.append(c.getId()).append(',');
+        }
+        sb.append("] L[");
+        for (final Card c : p.getZone(ZoneType.Library).getCards(false)) {
+            sb.append(c.getId()).append(',');
+        }
+        return sb.append(']').toString();
+    }
+
+    /** D529: every seat but {@code seat}'s {@link #arrangement}, on the copy before the determinize. */
+    static String hiddenArrangement(final Game copy, final Player seat) {
+        final StringBuilder sb = new StringBuilder();
+        for (final Player p : copy.getPlayers()) {
+            if (p != seat) {
+                sb.append(p.getName()).append(' ').append(arrangement(p)).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    /** D529: the zones of each seat a fork digest lists, card id by card id in order. */
+    private static final ZoneType[] DIGEST_ZONES = {ZoneType.Hand, ZoneType.Library, ZoneType.Battlefield, ZoneType.Graveyard,
+        ZoneType.Exile, ZoneType.Command};
+
+    /**
+     * D529: the no-leak check's structural half -- the determinized copy at the
+     * fork as text: the branch's seed, the turn and phase, and for each seat its
+     * life and every zone's cards by id in order (a face-down card marked
+     * {@code d}), then the stack's sources.  Two replays of one branch whose
+     * digests differ did not start from the same fork; for a base and a redeal
+     * that is seat B's real hidden cards reaching the branch.  Ids only, never a
+     * name: the digest is compared in memory and never written.  On the game
+     * thread, on the copy, as the rest of {@link #play}.
+     */
+    static String forkDigest(final Game copy, final long seed) {
+        final PhaseHandler ph = copy.getPhaseHandler();
+        final StringBuilder sb = new StringBuilder("seed ").append(seed).append(" turn ").append(ph.getTurn()).append(' ')
+                .append(ph.getPhase());
+        for (final Player p : copy.getPlayers()) {
+            sb.append('\n').append(p.getName()).append(" life ").append(p.getLife());
+            for (final ZoneType z : DIGEST_ZONES) {
+                final PlayerZone zone = p.getZone(z);
+                sb.append(' ').append(z).append('[');
+                if (zone != null) {
+                    for (final Card c : zone.getCards(false)) {
+                        sb.append(c.getId()).append(c.isFaceDown() ? "d," : ",");
+                    }
+                }
+                sb.append(']');
+            }
+        }
+        sb.append("\nstack[");
+        for (final forge.game.spellability.SpellAbilityStackInstance si : copy.getStack()) {
+            final Card c = si.getSourceCard();
+            sb.append(c == null ? "?" : c.getId() + (c.isFaceDown() ? "d" : "")).append(',');
+        }
+        return sb.append(']').toString();
     }
 
     /**

@@ -153,11 +153,109 @@ public final class DecisionSelfTest {
         rolloutRandomV4Them();
         explore();
         randomSeat();
+        leakVerdict();
 
         System.out.println("decision selftest: " + checks + " check(s), " + failures + " failure(s)");
         if (failures > 0) {
             System.exit(1);
         }
+    }
+
+    /**
+     * D529: the atlas's no-leak verdict on strings ({@link LeakVerdict}, no
+     * engine).  A branch whose base and redeal replays both flip between the
+     * same two outcomes is non-determinism, a warning; a redeal whose outcomes
+     * share nothing with a base that reproduced is a leak, and with a base that
+     * varies is unresolved; a fork digest that moved is a leak even when no
+     * outcome did, and a side whose digests disagree among themselves is the
+     * copier not reproducing (fork unstable), never a leak; J203's own shape
+     * (the first pair differs, the retest overlaps) is not a leak; and the
+     * retest's wall budget, on a fake clock, stops it early as incomplete.
+     */
+    private static void leakVerdict() {
+        // both sides non-deterministic over the same two outcomes: a warning, never a leak
+        final LeakVerdict.Result nd = LeakVerdict.classify(samples("F", "X", "X", "Y", "X", "X"), samples("F", "Y", "X", "X", "X", "Y"));
+        check(nd.kind == LeakVerdict.Kind.NONDETERMINISTIC && nd.leakSame() && nd.moved && nd.forkSame,
+                "D529: base and redeal both flipping over X and Y is non-determinism, not a leak (" + nd.kind + ")");
+        check(nd.baseReplays == 5 && nd.redealReplays == 5 && nd.baseDistinct == 2 && nd.redealDistinct == 2 && nd.shared == 2,
+                "D529: what was seen: 5 and 5 replays, 2 and 2 distinct, 2 shared");
+        // J203's run 4 shape: the first base on the rare outcome, the rest on the common one
+        final LeakVerdict.Result j203 = LeakVerdict.classify(samples("F", "Y", "X", "X", "X", "X"), samples("F", "X", "X", "X", "X", "X"));
+        check(j203.kind == LeakVerdict.Kind.NONDETERMINISTIC, "D529: J203's shape is non-determinism (" + j203.kind + ")");
+        // a redeal systematically different from a base that reproduced: a leak
+        final LeakVerdict.Result leak = LeakVerdict.classify(samples("F", "X", "X", "X", "X", "X"), samples("F", "Y", "Y", "Y", "Y", "Y"));
+        check(leak.kind == LeakVerdict.Kind.LEAK && !leak.leakSame() && leak.shared == 0, "D529: a redeal that always moves is a leak (" + leak.kind + ")");
+        // ... and one whose redeal varies, as long as the base reproduced and the two never meet
+        final LeakVerdict.Result leak2 = LeakVerdict.classify(samples("F", "X", "X", "X", "X", "X"), samples("F", "Y", "Z", "Y", "Y", "Z"));
+        check(leak2.kind == LeakVerdict.Kind.LEAK, "D529: disjoint sets with the base reproduced are a leak (" + leak2.kind + ")");
+        // disjoint sets with a base that varies (many outcomes, timeouts): unresolved, never a leak
+        final LeakVerdict.Result unres = LeakVerdict.classify(samples("F", "A", "B", "C", "D", "E"), samples("F", "V", "W", "X", "Y", "Z"));
+        check(unres.kind == LeakVerdict.Kind.UNRESOLVED && unres.leakSame(), "D529: disjoint sets with a varying base are unresolved (" + unres.kind + ")");
+        // the fork digest moved, the outcome did not: a leak, on the first pair alone
+        final LeakVerdict.Result fork = LeakVerdict.classify(samples("F", "X"), samples("G", "X"));
+        check(fork.kind == LeakVerdict.Kind.LEAK && !fork.forkSame && !fork.moved, "D529: a fork digest that moved is a leak with no outcome moving (" + fork.kind + ")");
+        check(!LeakVerdict.needsRetest(new LeakVerdict.Sample("X", "F"), new LeakVerdict.Sample("Y", "G")), "D529: a moved digest needs no retest");
+        // a base whose digests disagree among themselves: the copier, never a leak
+        final List<LeakVerdict.Sample> unstableBase = new ArrayList<>(samples("F", "X", "X", "X", "X", "X"));
+        unstableBase.set(2, new LeakVerdict.Sample("X", "G"));
+        final LeakVerdict.Result drift = LeakVerdict.classify(unstableBase, samples("F", "Y", "X", "X", "X", "Y"));
+        check(drift.kind == LeakVerdict.Kind.FORK_UNSTABLE && drift.leakSame() && !drift.forkSame, "D529: base digests that disagree are fork-unstable (" + drift.kind + ")");
+        // nothing moved: the same, with or without a (forced) retest
+        final LeakVerdict.Result same = LeakVerdict.classify(samples("F", "X"), samples("F", "X"));
+        check(same.kind == LeakVerdict.Kind.SAME && same.leakSame() && !same.moved && same.forkSame, "D529: nothing moved is the same (" + same.kind + ")");
+        final LeakVerdict.Result same5 = LeakVerdict.classify(samples("F", "X", "X", "X", "X", "X"), samples("F", "X", "X", "X", "X", "X"));
+        check(same5.kind == LeakVerdict.Kind.SAME && same5.baseDistinct == 1 && same5.redealDistinct == 1, "D529: a forced retest where nothing moved is the same (" + same5.kind + ")");
+        check(!LeakVerdict.needsRetest(new LeakVerdict.Sample("X", "F"), new LeakVerdict.Sample("X", "F"))
+                && LeakVerdict.needsRetest(new LeakVerdict.Sample("X", "F"), new LeakVerdict.Sample("Y", "F")), "D529: a retest only when the first pair moved");
+        // the first pair moved and no retest was played: D451's rule, a leak
+        final LeakVerdict.Result bare = LeakVerdict.classify(samples("F", "X"), samples("F", "Y"));
+        check(bare.kind == LeakVerdict.Kind.LEAK, "D529: a move with no retest stays a leak (" + bare.kind + ")");
+        boolean threw = false;
+        try {
+            LeakVerdict.classify(samples("F", "X"), List.of());
+        } catch (final IllegalArgumentException e) {
+            threw = true;
+        }
+        check(threw, "D529: a side with no replay is refused");
+        check(LeakVerdict.Kind.FORK_UNSTABLE.wire.equals("forkUnstable") && LeakVerdict.Kind.NONDETERMINISTIC.wire.equals("nondeterministic"),
+                "D529: the row's verdict spellings");
+        // the retest on a fake clock: every replay takes 100 ms; within the budget it plays all four pairs
+        final long[] now = {0};
+        final int[] played = {0};
+        final LeakVerdict.Side b = () -> { now[0] += 100; played[0]++; return new LeakVerdict.Sample("X", "F"); };
+        final LeakVerdict.Side r = () -> { now[0] += 100; played[0]++; return new LeakVerdict.Sample(played[0] % 4 == 0 ? "Y" : "X", "F"); };
+        try {
+            final LeakVerdict.Result full = LeakVerdict.retest(new LeakVerdict.Sample("X", "F"), new LeakVerdict.Sample("Y", "F"), b, r,
+                    10_000, 100, () -> now[0]);
+            check(full.kind == LeakVerdict.Kind.NONDETERMINISTIC && full.baseReplays == 5 && full.redealReplays == 5 && played[0] == 8,
+                    "D529: a retest inside its budget plays four pairs and reads all ten replays (" + full.kind + ", " + played[0] + ")");
+            // a budget of 550 ms at 100 ms a replay: a pair starts only while spent + 200 <= 550 (0, 200), so two pairs, then incomplete
+            now[0] = 0;
+            played[0] = 0;
+            final LeakVerdict.Result cut = LeakVerdict.retest(new LeakVerdict.Sample("X", "F"), new LeakVerdict.Sample("Y", "F"), b, r,
+                    550, 100, () -> now[0]);
+            check(cut.kind == LeakVerdict.Kind.INCOMPLETE && cut.baseReplays == 3 && cut.redealReplays == 3 && played[0] == 4 && now[0] <= 550,
+                    "D529: a retest out of its budget stops before a pair it cannot finish, incomplete (" + cut.kind + ", " + played[0]
+                    + " replays, " + now[0] + " ms)");
+            // a budget below one pair: no retest replay at all, incomplete
+            now[0] = 0;
+            played[0] = 0;
+            final LeakVerdict.Result none = LeakVerdict.retest(new LeakVerdict.Sample("X", "F"), new LeakVerdict.Sample("Y", "F"), b, r,
+                    150, 100, () -> now[0]);
+            check(none.kind == LeakVerdict.Kind.INCOMPLETE && played[0] == 0 && none.baseReplays == 1, "D529: no time for a pair is incomplete (" + none.kind + ")");
+        } catch (final java.io.IOException e) {
+            check(false, "D529: the fake retest threw " + e);
+        }
+        check(LeakVerdict.RETEST_BUDGET_MS == 600_000L && LeakVerdict.RETESTS == 4, "D529: the retest's constants");
+    }
+
+    /** D529: one replay a signature, every one with the fork digest {@code digest}. */
+    private static List<LeakVerdict.Sample> samples(final String digest, final String... sigs) {
+        final List<LeakVerdict.Sample> out = new ArrayList<>();
+        for (final String s : sigs) {
+            out.add(new LeakVerdict.Sample(s, digest));
+        }
+        return out;
     }
 
     /**
