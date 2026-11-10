@@ -10527,7 +10527,8 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    **Read**: J205 read it 2026-11-10: (a) `search-v2-rrandom4-lcb-m40` −35.4 Elo [−49.5, −21.5] and (b)
    `search-v2-rrandom4-lcb-m60` −34.3 [−47.8, −20.9], both NOT SHOWN, losing badly; SIGNAL (a) − J204 (b) +49.0
    [28.3, 69.7] (±20.7), SIGNAL SHOWN. The lcb rule cut every kind of override, attack, block and to-pass overrides to
-   about half of search-v2's rates, and left a from-pass excess; the two-losing count is 1, the track is open and
+   between two fifths and two thirds of search-v2's rates (7.8% against 14.8%, 11.5% against 18.0%, 1.88% against
+   4.87%), and left a from-pass excess; the two-losing count is 1, the track is open and
    random-v7 is next (D531, follow-up 50).
 
 50. **D531's random-v7 is registered and unplayed: J206, the opponent alone random (`rollout=random4-them`).**
@@ -11147,7 +11148,7 @@ Its follow-up is the cube lab's 49 ([the list](#fu-cube-lab)).
 ## random-v7: the opponent alone random in the search's rollouts (2026-11-10, D531)
 
 **Status: registered, built and piloted, unplayed; J205 read both arms to diagnose with the track open, so it
-merges, alone and first, and J206 is pinned to that merge.** Branch `pc/rollout-random-v7` off main
+merges, alone and first, behind the full gate, and J206 is pinned to that merge.** Branch `pc/rollout-random-v7` off main
 `1e72a8ec`. `docs/decisions/D531-random-v7-them.md` is the decision, D523's iteration loop's sixth iteration, the one
 D530 point 7 pre-registered: J202's and J199's direction counts put the excess overrides at priority on the searching
 seat's own random continuation, so random-v7 gives that seat Forge's continuation back and keeps the random opponent.

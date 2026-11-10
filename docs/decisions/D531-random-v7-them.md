@@ -60,8 +60,8 @@ are filled in below.*
   that were already at search-v2's rates fell well under them (attack 7.8% against 14.8%, block 11.5% against 18.0%,
   to a pass 1.88% against 4.87%); the arm held 37.9% of what the margin rule would have overridden and scored −14.5 on
   the point (about ±19) against the margin rule on the same deals. It decides nothing here, since random-v7 was
-  pre-registered before J205 and is what D530 point 7 says it is; it is why the arm's attack, block and to-pass rates
-  are in J206's report beside the from-pass one.
+  pre-registered before J205 and is what D530 point 7 says it is; J206's report carries the arm's attack, block and
+  to-pass rates beside the from-pass one, as J205's did.
 - **What D530 point 7 fixed, and what is left to fix here.** random-v7 is "`rollout=random4-them` — the rollout's
   *opponent* seat plays random-v4 (`Config.randomV4Block()`), the *searching* seat plays its own continuation as
   search-v2's rollouts do (Forge's Default AI) — on the deciding arm's verdict unchanged (`override=lcb,z=1` at
