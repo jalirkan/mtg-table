@@ -2,7 +2,7 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-10T09:44:52-05:00
+- time: 2026-11-10T09:49:27-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: idle
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
@@ -10,7 +10,7 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
 - running: nothing
 - cores: 0 of 14 in use (the running jobs' widths; 16 threads)
-- load: 2.91; memory 8.3/30.5 GB, swap 4106 MB, pressure 0% (lab budget 23.4 GB)
+- load: 3.28; memory 9.3/30.5 GB, swap 4104 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J206 failed at 2026-11-10T09:31:02-05:00: cma.played 1200 · cma.score 0.467 · cma.lo 0.45 · cma.hi 0.483 · cma.elo -23.2 · cma.eloLo -34.7 · cma.eloHi -11.7 · cma.aSearch.msPerDecision 934.297 · cma.bSearch.msPerDecision 916.771 · roa.aRolloutsPerDecision 16.28 · roa.bRolloutsPerDecision 15.45 · roa.ratio 1.054 · roa.aLcb.overrode 3034 · roa.aLcb.held 1669 · roa.aLcb.none 23615 · roa.aLcbHeldShare 0.355 · roa.aPriorityShare.fromPass 0.051 · roa.bPriorityShare.fromPass 0.08 · roa.aPerRollout.v2_ownStack 0.435 · roa.aPerRollout.v3_goodBlock 0.016 · roa.aRrFailures 0 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 1 · v.a.losesBadly 0 · v.a.candidate 0 · v.a.sameDeals 1 · v.signal.diff 61.2 · v.signal.hw 19.1 · v.signal.lo 42.1 · v.signal.hi 80.3 · v.signal.signalShown 1 · v.signal.signalAgainst 0 · v.signal.noSignal 0 · v.signal.signalInconclusive 0 · v.j205.count 0 · v.signalInconclusiveCount 0 · v.countCloses 0 · v.j205.iterationLosesBadly 1 · v.iterationLosesBadly 0 · v.loopStops 0 · v.trackCloses 0 · v.closingWaits 0 · v.keepsOpen 1 · v.confirm 0 · v.newDecision 1 · v.replayBaseline 0 · v.aMinusJ205a 12.2 · v.aMinusJ202b -2.3 · bsa.min 114900000 · bs4.min 114900000 · v.repost 0 · wa.lost 640
