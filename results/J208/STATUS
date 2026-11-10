@@ -3,6 +3,7 @@ runner: forgecoach-runner 5876b554
 started: 2026-11-10T10:51:25-05:00
 phase: commands 1/3
 mtg-table: 429ccd9
-workers: 6 (sized 7: min(cores 7, memory 9, max_workers 7); peak 2.00 GB per worker (declared; measured 1.19), budget 21.4 GB)
+workers: 7 (sized 7: min(cores 7, memory 9, max_workers 7); peak 2.00 GB per worker (declared; measured 1.19), budget 21.4 GB)
 peak_worker_rss_gb: 1.19
 pressure-1: 2026-11-10T12:08:33-05:00 drop to 6 worker(s): some avg10 1.6%, swap-in 19603/s, job 8.6/21.4 GB
+pressure-2: 2026-11-10T12:13:42-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 37/s, job 6.7/21.4 GB
