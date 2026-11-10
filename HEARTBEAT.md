@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-09T18:59:32-05:00
+- time: 2026-11-09T19:04:12-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
-- running: J203 commands 1/3, 1593/10720 lines, 2221.7/h, ETA 2026-11-09T23:06:02-05:00, 6 worker(s), 7 core(s)
+- running: J203 commands 1/3, 1813/10720 lines, 2572.5/h, ETA 2026-11-09T22:31:57-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 14.86; memory 14.8/30.5 GB, swap 5031 MB, pressure 0% (lab budget 23.4 GB)
+- load: 35.21; memory 18.9/30.5 GB, swap 5022 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J202 done at 2026-11-09T18:05:48-05:00: cma.played 1200 · cma.score 0.443 · cma.lo 0.423 · cma.hi 0.464 · cma.elo -39.5 · cma.eloLo -53.9 · cma.eloHi -25.3 · cma.aSearch.msPerDecision 934.609 · cma.bSearch.msPerDecision 927.982 · roa.aRolloutsPerDecision 17.43 · roa.bRolloutsPerDecision 15.27 · roa.ratio 1.141 · roa.aPerRollout.v2_lethalBlock 0.014 · roa.aPerRollout.v2_chumpBlock 0.048 · roa.aPerRollout.v2_ownStack 2.384 · roa.aPerRollout.v3_goodBlock 0.021 · roa.aPerRollout.v3_goodBlockIllegal 0 · roa.aPerRollout.v4_goodBlockLethal 0.002 · roa.aPerRollout.v4_goodBlockRefused 0.023 · roa.aRrFailures 150 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 0 · v.a.losesBadly 1 · v.a.candidate 0 · cmb.played 1200 · cmb.score 0.47 · cmb.lo 0.451 · cmb.hi 0.489 · cmb.elo -20.9 · cmb.eloLo -34.1 · cmb.eloHi -7.7 · cmb.aSearch.msPerDecision 897.677 · cmb.bSearch.msPerDecision 888.822 · rob.aRolloutsPerDecision 18.01 · rob.bRolloutsPerDecision 15.88 · rob.ratio 1.134 · rob.aPerRollout.v2_lethalBlock 0.014 · rob.aPerRollout.v2_chumpBlock 0.054 · rob.aPerRollout.v2_ownStack 2.455 · rob.aPerRollout.v3_goodBlock 0.023 · rob.aPerRollout.v3_goodBlockIllegal 0 · rob.aPerRollout.v4_goodBlockLethal 0.003 · rob.aPerRollout.v4_goodBlockRefused 0.029 · rob.aRrFailures 29 · v.b.shown 0 · v.b.inconclusive 0 · v.b.indistinguishable 0 · v.b.worseNotBadly 1 · v.b.losesBadly 0 · v.b.candidate 0 · v.confirm 0 · v.iterate 1 · v.principleInDoubt 1 · v.iterationLosesBadly 0 · v.j201.v3LosesBadly 1 · v.loopStops 0 · wa.lost 668 · wb.lost 636
