@@ -17,10 +17,12 @@ night's pilot run after J211 finishes. Nothing here states or depends on J211's 
 **Context.**
 
 - **What search-v2's rollouts see.** Every rollout of search-v2 (`search-v1-anytime`, `turns=0`, `aturns` unset)
-  ends with the AI's own turn: `limit = startTurn + horizonTurns` (`SearchPolicy.java:3134`), so a main-phase play,
-  an attack or a block is scored before the opponent untaps (D351 says so of the default). The score is a heuristic
+  ends with the turn its decision is made in: `limit = startTurn + horizonTurns` (`SearchPolicy.java:3134`). That is
+  the AI's own turn for a main-phase play (the search looks at priority only in its own main phases with an empty
+  stack, `:567-575`) and for an attack, which are scored before the opponent untaps (D351 says so of the default),
+  and the opponent's turn for a block, which is scored before the AI's own next turn. The score is a heuristic
   leaf, not a win estimate (`SearchPolicy.leaf`, `:3338`): life on a curve, poison, an empty library, Forge's
-  `evalCard` for each permanent, and 40 points a card in hand (`:3355`). So the opponent's reply is never played: a
+  `evalCard` for each permanent, and 40 points a card in hand (`:3355`). So the reply to a play or an attack is never played: a
   held card is worth 40 points and can only look worse than a permanent the leaf credits, an attack is valued with
   no crack-back, and passing is valued at this turn's end.
 - **What J210's priority corner shows** (`search-v2-only-p` against Forge Default, 1,200 games; the counters
@@ -55,10 +57,12 @@ night's pilot run after J211 finishes. Nothing here states or depends on J211's 
    | `search-v2-t1-x3` | `turns=1`, `aturns=0`, `budgetMs=4500` | next turn / this turn / next turn | 4.5 s | `Default+outlets+search:ms=4500,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=0,anytime=1` | `ce99b41f9898` |
 
    B in every match is `search-v1-anytime` (`cdd55e02a89c`, `...turns=0,...,what=pab,seed=0,anytime=1`). "Next
-   turn" is the end of the opponent's turn after this one: an attack's rollout sees the crack-back, a main-phase
-   play's sees the opponent's answer and attack.
+   turn" is the end of the turn after the one the decision is made in. For a main-phase play and an attack that is
+   the opponent's turn: an attack's rollout sees the crack-back, a main-phase play's sees the opponent's answer and
+   attack. For a block, declared in the opponent's turn, it is the AI's own next turn: the block's rollout sees what
+   the AI does back with what the block left it, not a reply of the opponent's.
 2. **Config only, and why the t1 arms write `aturns=0`.** `aturns` unset is −1 and then follows `turns`
-   (`SearchConfig.horizonFor`, `SearchConfig.java:485`; its doc comment, "default: the same as `turns`"), so
+   (`SearchConfig.horizonFor`, `SearchConfig.java:485`; the field's doc, `:158`, "-1 = horizonTurns (D351)"), so
    `turns=1` alone would deepen attacks too, which is not the arm described. The ladder omits `aturns` at its
    default and passes it when set (`kinds.ts:107`, `cfg`), so `aturns: 0` in the params reaches the seat config as
    `aturns=0`. `SearchConfig` takes `turns` and `aturns` up to 4 and `ms` from 50 to 60,000. A new case in
@@ -155,7 +159,8 @@ night's pilot run after J211 finishes. Nothing here states or depends on J211's 
     (priority and blocks near three times search-v2's 935 ms, attacks about 1.3 s), about 4.0 h and 4.7 h if
     decisions run nearer their 4.5 s. The recording about 0.9 h (J194 (a): 1,200 such games in 1.27 h, plus D347's
     12%), the pilot about 0.5 h: about 11 h in all, 13 h if memory pressure holds the night at 5 or 6 workers as it
-    held J210. Each match stops itself (`--hours` 4.5, 4 and 7), the recording at 2 h.
+    held J210. Each match stops itself (`--hours` 4.5, 4 and 7.5), the recording at 2 h; `t1-x3` with every searched
+    decision at its full 4.5 s and J210's memory pressure on top would take about 7.4 h, the reason for its 7.5.
 
 **Rejected.**
 

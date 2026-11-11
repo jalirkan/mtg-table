@@ -10689,8 +10689,9 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    ±12 by deal). **Open:** J211 at the merge's pin, about 9 h, `alone: yes`, and its read.
 
 55. **D537 plays the search one turn further: three config-only arms against search-v2, 1,200 games each.**
-   (2026-11-11, D537.) search-v2's rollouts end with the AI's own turn (`turns=0`), so the opponent's reply is
-   never played and a held card is worth the leaf's 40 points. `search-v2-t1` (`63c35e9f7d5b`) plays priority and
+   (2026-11-11, D537.) search-v2's rollouts end with the turn the decision is made in (`turns=0`: the AI's own for a
+   play or an attack, the opponent's for a block), so the reply to a play or an attack is never played and a held
+   card is worth the leaf's 40 points. `search-v2-t1` (`63c35e9f7d5b`) plays priority and
    block rollouts to the end of the next turn at search-v2's 1.5 s (attacks as now, `aturns=0` written out because
    an unset `aturns` follows `turns`), `search-v2-a1` (`3cf65e94df28`) plays attack rollouts one turn further, and
    `search-v2-t1-x3` (`ce99b41f9898`) is `t1` at 4.5 s with the round cap left at 12, about search-v2's evidence a
@@ -11432,8 +11433,9 @@ J211 held the machine alone (no Java, no build and no test beside it; the hashes
 ladder's `configHash`; the self-test, the ladder test and the gate run after J211). `docs/decisions/D537-search-horizon.md`
 is the decision. Under `bridge/src` only `DecisionSelfTest.java` changes, by a check method.
 
-- **The question**: whether search-v2 is stronger when its rollouts see the opponent's next turn, the one value
-  axis never matched on the anytime search (D536 point 10).
+- **The question**: whether search-v2 is stronger when its rollouts play one turn further (the opponent's next
+  turn after a play or an attack, the AI's own next turn after a block), the one value axis never matched on the
+  anytime search (D536 point 10).
 - **The arms**: `search-v2-t1` (priority and blocks one turn deeper at 1.5 s), `search-v2-a1` (attacks one turn
   deeper), `search-v2-t1-x3` (`t1` at 4.5 s, the round cap still 12); every other parameter search-v2's.
 - **The readings**: D519's four at 1,200 games, written before any game; the cost and ms of play a rollout beside
