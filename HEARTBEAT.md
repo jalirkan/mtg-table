@@ -2,7 +2,7 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-11T02:36:01-05:00
+- time: 2026-11-11T02:40:34-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: idle
 - ALERT: J210 started with 6 of 7 workers at 2026-11-10T21:08:07-05:00, as many as fit (MemAvailable 23.9 GB, 3.33 GB a worker); raised toward 7 as memory frees
@@ -10,7 +10,7 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
 - running: nothing
 - cores: 0 of 14 in use (the running jobs' widths; 16 threads)
-- load: 5.72; memory 6.6/30.5 GB, swap 7779 MB, pressure 0.05% (lab budget 23.4 GB)
+- load: 2.36; memory 6.7/30.5 GB, swap 6976 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J210 done at 2026-11-11T02:04:06-05:00: mn.played 1200 · mn.elo 2.9 · mb.elo 13.9 · ma.elo 28.4 · mp.elo 63.2 · mab.elo 36 · mpb.elo 64.4 · mpa.elo 88.1 · mall.played 1200 · mall.elo 89.4 · mall.eloLo 73.9 · mall.eloHi 105.1 · v.whole.mean 0.122 · v.whole.lo 0.101 · v.whole.hi 0.143 · v.gate 1 · v.alone.p.mean 0.086 · v.alone.a.mean 0.037 · v.alone.b.mean 0.016 · v.alone.p.adds 1 · v.alone.a.adds 1 · v.alone.b.adds 1 · v.last.p.mean 0.074 · v.last.a.mean 0.034 · v.last.b.mean 0.002 · v.last.p.needed 1 · v.last.a.needed 1 · v.last.b.needed 0 · v.interaction.mean -0.017 · v.replication.mean 0.003 · v.candidates 1 · v.takenIndex 6 · v.readings 14 · v.allNight 1
