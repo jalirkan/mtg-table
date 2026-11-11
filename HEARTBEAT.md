@@ -2,19 +2,21 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-11T11:34:24-05:00
+- time: 2026-11-11T11:34:39-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
+- state: idle
 - ALERT: J210 started with 6 of 7 workers at 2026-11-10T21:08:07-05:00, as many as fit (MemAvailable 23.9 GB, 3.33 GB a worker); raised toward 7 as memory frees
 - ALERT: J208 started with 6 of 7 workers at 2026-11-10T13:12:14-05:00, as many as fit (MemAvailable 25.1 GB, 3.64 GB a worker); raised toward 7 as memory frees
-- running: J211 commands 2/2, 4792/4800 games, 576.6/h, ETA 2026-11-11T11:35:14-05:00, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 3.79; memory 8.5/30.5 GB, swap 5959 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 3.6; memory 8.5/30.5 GB, swap 5958 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J210 done at 2026-11-11T02:04:06-05:00: mn.played 1200 · mn.elo 2.9 · mb.elo 13.9 · ma.elo 28.4 · mp.elo 63.2 · mab.elo 36 · mpb.elo 64.4 · mpa.elo 88.1 · mall.played 1200 · mall.elo 89.4 · mall.eloLo 73.9 · mall.eloHi 105.1 · v.whole.mean 0.122 · v.whole.lo 0.101 · v.whole.hi 0.143 · v.gate 1 · v.alone.p.mean 0.086 · v.alone.a.mean 0.037 · v.alone.b.mean 0.016 · v.alone.p.adds 1 · v.alone.a.adds 1 · v.alone.b.adds 1 · v.last.p.mean 0.074 · v.last.a.mean 0.034 · v.last.b.mean 0.002 · v.last.p.needed 1 · v.last.a.needed 1 · v.last.b.needed 0 · v.interaction.mean -0.017 · v.replication.mean 0.003 · v.candidates 1 · v.takenIndex 6 · v.readings 14 · v.allNight 1
+- last finished: J211 done at 2026-11-11T11:34:38-05:00: cm.played 4800 · cm.score 0.497 · cm.lo 0.489 · cm.hi 0.504 · cm.elo -2.2 · cm.eloLo -7.4 · cm.eloHi 3.1 · v.holds 1 · v.fails 0 · v.inconclusive4800 0 · v.indistinguishable 1 · v.measuredLoss 0 · v.measuredGain 0 · v.aSecPerGame 19.345 · v.bSecPerGame 21.554 · v.costRatio 0.898 · v.secSaved 2.209 · cm.aSearch.msPerDecision 905.487 · cm.bSearch.msPerDecision 915.802 · v.aSearched 102548 · v.bSearched 112970 · v.aBlocksSearched 0 · v.bBlocksSearched 9674 · v.liveSeatCandidate 1 · bs.min 931900000 · bs.max 931900599
 
 ## Messages
+
+- FOLLOW-UP READY [J211@2026-11-11T11:34:38-05:00] (the runner, for the cloud session): J211 is done; write and post the template morning-read. It decides: whether search-v2 without its block search (what=pa, `search-v2-no-b`) is at most 10 Elo weaker than search-v2 (what=pab, `search-v1-anytime`, the live seat), measured head to head with 95% confidence at 4,800 games on deals neither has played (D536 points 5 to 9). NO-BLOCK SEAT HOLDS makes search-v2-no-b a live-seat candidate: a seat-queue row with the measured point, interval and seconds saved, for the owner's one word (D509), never this job's change. NO-BLOCK SEAT FAILS says the block search is worth more than 10 Elo head to head; the arm stays registered and is not retried. INCONCLUSIVE AT 4,800: not adopted and not played again. Whatever the reading, the match is the sharpest measure there is of what the block search is worth (about +-5 Elo against J210's +-12 by deal), the next lane reads it, and this job never changes the live seat: SearchConfig.LIVE_DEFAULTS stays `what=pab`. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J210@2026-11-11T02:04:06-05:00] (the runner, for the cloud session): J210 is done; write and post the template morning-read. It decides: D535 points 5 and 6, from the night's eight match lines and their rows, paired by deal (D535 point 4), every threshold compared in ten-thousandths of score. WHOLE = the all corner's pair score minus the none corner's, the search's whole gain: its lower end not above 0 means something is broken, nothing else is read and the night is diagnosed first. ALONE for each of priority, attacks and blocks (only-k minus none): ADDS ALONE, HURTS ALONE or NOT SHOWN ALONE. LAST for each (all minus no-k): NEEDED, HURTS or NOT SHOWN NEEDED. INTERACTION and REPLICATION (all minus J194 (a)'s rows) are information only. The faster-seat candidate rule: a partial arm X is a candidate when all minus X has its point at or under +0.014 score with WHOLE above 0; among several the one with the least search time a game is taken forward, and it earns a 4,800-game head-to-head against search-v1-anytime as its own job under its own decision (J198's shape). No candidate is the expected reading: the table then says where the next lane's compute goes (D535 point 7). No reading of this night changes the live seat (D509: a seat-queue row and the owner's). Ledger: LEDGER.md. Delete this line once posted.
 

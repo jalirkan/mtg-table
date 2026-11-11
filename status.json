@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "updated": "2026-11-11T11:34:24-05:00",
- "heartbeat": "2026-11-11T11:34:24-05:00",
+ "updated": "2026-11-11T11:34:39-05:00",
+ "heartbeat": "2026-11-11T11:34:39-05:00",
  "paused": false,
- "state": "running",
+ "state": "idle",
  "alerts": [
   {
    "at": "2026-11-10T21:08:07-05:00",
@@ -26,199 +26,60 @@
    "text": "J208 started with 6 of 7 workers at 2026-11-10T13:12:14-05:00, as many as fit (MemAvailable 25.1 GB, 3.64 GB a worker); raised toward 7 as memory frees"
   }
  ],
- "idleSince": null,
- "idleReason": null,
+ "idleSince": "2026-11-11T11:34:39-05:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 3.79,
+  "load1": 3.6,
   "memUsedGb": 8.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5959,
+  "swapUsedMb": 5958,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 14
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Search without block search: one fixed 4,800-game match",
    "publicEst": "~9 h (one night)",
    "id": "J211",
    "title": "The no-block seat: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v2-no-b, search-v2 searching priority and attack decisions and leaving blocks to Forge, against search-v1-anytime (search-v2, the live seat, searching all three), on deal blocks no match has played (--host j211, 931,900,000-931,900,599), with D536's pre-registered reading: NO-BLOCK SEAT HOLDS, NO-BLOCK SEAT FAILS or INCONCLUSIVE AT 4,800. This job never changes the live seat",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-11-11T02:53:56-05:00",
-   "elapsed": 31228,
-   "done": 4792,
-   "total": 4800,
-   "unit": "games",
-   "ratePerHour": 576.6,
-   "eta": "2026-11-11T11:35:14-05:00",
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-11-11T11:32:56-05:00",
-   "memGb": 0.01,
-   "live": {
-    "cm.played": 0,
-    "cm.score": 0,
-    "cm.lo": 0,
-    "cm.hi": 0,
-    "cm.elo": 0,
-    "cm.eloLo": 0,
-    "cm.eloHi": 0,
-    "v.holds": 0,
+   "status": "done",
+   "finished": "2026-11-11T11:34:38-05:00",
+   "headline": "cm.played 4800 · cm.score 0.497 · cm.lo 0.489 · cm.hi 0.504 · cm.elo -2.2 · cm.eloLo -7.4 · cm.eloHi 3.1 · v.holds 1 · v.fails 0 · v.inconclusive4800 0 · v.indistinguishable 1 · v.measuredLoss 0 · v.measuredGain 0 · v.aSecPerGame 19.345 · v.bSecPerGame 21.554 · v.costRatio 0.898 · v.secSaved 2.209 · cm.aSearch.msPerDecision 905.487 · cm.bSearch.msPerDecision 915.802 · v.aSearched 102548 · v.bSearched 112970 · v.aBlocksSearched 0 · v.bBlocksSearched 9674 · v.liveSeatCandidate 1 · bs.min 931900000 · bs.max 931900599",
+   "numbers": {
+    "cm.played": 4800,
+    "cm.score": 0.4969,
+    "cm.lo": 0.4893,
+    "cm.hi": 0.5045,
+    "cm.elo": -2.2,
+    "cm.eloLo": -7.4,
+    "cm.eloHi": 3.1,
+    "v.holds": 1,
     "v.fails": 0,
     "v.inconclusive4800": 0,
-    "v.indistinguishable": 0,
+    "v.indistinguishable": 1,
     "v.measuredLoss": 0,
     "v.measuredGain": 0,
-    "v.aSearched": -1,
-    "v.bSearched": -1,
-    "v.aBlocksSearched": -1,
-    "v.bBlocksSearched": -1,
-    "v.liveSeatCandidate": 0,
-    "bs.min": 0,
-    "bs.max": 0,
-    "bs.blocks": 0,
-    "bs.fullBlocks": 0,
-    "bs.games": 0,
-    "bs.games_per_h": 0,
-    "bs.otherGames": -1,
-    "cm.errors": 0,
-    "cm.timeouts": 0,
-    "elapsed_s": 31205,
-    "j211_err": 1,
-    "j211_games": 4792,
-    "peak_worker_rss_gb": 1.2,
-    "pressure_events": 14,
-    "ro.aBlocks": -1,
-    "ro.aDecisions": 0,
-    "ro.bBlocks": -1,
-    "ro.bDecisions": 0,
-    "ro.games": 0,
-    "ro.games_per_h": 0,
-    "v.aKinds": 0,
-    "v.bKinds": 0
-   },
-   "liveHeadline": [
-    "cm.played",
-    "cm.score",
-    "cm.lo",
-    "cm.hi",
-    "cm.elo",
-    "cm.eloLo",
-    "cm.eloHi",
-    "v.holds",
-    "v.fails",
-    "v.inconclusive4800",
-    "v.indistinguishable",
-    "v.measuredLoss",
-    "v.measuredGain",
-    "v.aSearched",
-    "v.bSearched",
-    "v.aBlocksSearched",
-    "v.bBlocksSearched",
-    "v.liveSeatCandidate",
-    "bs.min",
-    "bs.max"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-11-11T03:23:25-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 1.7
-    },
-    {
-     "at": "2026-11-11T03:30:27-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-11T05:58:06-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 2.3
-    },
-    {
-     "at": "2026-11-11T06:05:50-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-11T08:43:10-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 6.8
-    },
-    {
-     "at": "2026-11-11T08:44:30-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.1
-    },
-    {
-     "at": "2026-11-11T08:51:32-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-11T08:57:32-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-11T09:12:53-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 8.4
-    },
-    {
-     "at": "2026-11-11T09:14:20-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 3.2
-    },
-    {
-     "at": "2026-11-11T09:21:34-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-11T09:31:29-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-11T11:19:11-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0.2
-    },
-    {
-     "at": "2026-11-11T11:24:17-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J211-run2"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+    "v.aSecPerGame": 19.345,
+    "v.bSecPerGame": 21.554,
+    "v.costRatio": 0.8975,
+    "v.secSaved": 2.209,
+    "cm.aSearch.msPerDecision": 905.487,
+    "cm.bSearch.msPerDecision": 915.802,
+    "v.aSearched": 102548,
+    "v.bSearched": 112970,
+    "v.aBlocksSearched": 0,
+    "v.bBlocksSearched": 9674,
+    "v.liveSeatCandidate": 1,
+    "bs.min": 931900000,
+    "bs.max": 931900599
+   }
+  },
   {
    "publicTitle": "Which decisions make the search strong: priority, attacks or blocks",
    "publicEst": "~6 h (eight matches)",
@@ -1724,28 +1585,6 @@
     "mt.nCandidates": 1
    },
    "detail": "check: runs.drafts == 2000 * st.expected (runs.drafts = 10020, st.expected = 5); played == st.planned (played = 20040, st.planned = 20000)"
-  },
-  {
-   "publicTitle": "Omega balance, night 0: J145 again on fresh seeds",
-   "publicEst": "~2 to 3 h",
-   "id": "J159",
-   "title": "Omega balance, night 0 of the registered swap rule -- J145 again on fresh seeds, the cube unchanged: the same three arms on the Omega 180 with Forge Default piloting every game ((A) 2,000 lab-vs-lab grid drafts plus 600 each for the human-pick model and Forge's ranks, drafts 816,500,001 and up; (B) each draft's two decks played twice, game seeds 1,661 / 1,662 / 1,663 x 1,000,000 + g; (C) 2,000 decks from Omega's list by decks --cube in 8,000 games, seed 1665), none coinciding with J145's (D447 point 9); J145's read unchanged, plus the swap rule's night-0 reading: UG CONFIRMED if UG's arm-B (lab-vs-lab) payoff interval sits below .5 on this night's data alone, else UG NOT CONFIRMED and the swap programme stops; colour verdicts and qualifying pairs (400+ arm-B deck-games) reported as the gates' baseline; pull reported, not judged; no swap registered or made",
-   "status": "done",
-   "finished": "2026-10-24T02:01:58-04:00",
-   "headline": "played 14400 · engine_errors 0 · g0.code 0 · g0.ug.est 0.453 · g0.ug.lo 0.406 · g0.ug.hi 0.5 · g0.ug.n 470 · g0.nColoursOff 0 · g0.nQualifying 7 · g0.nPairsOff 0 · bal.verdict.code 1",
-   "numbers": {
-    "played": 14400,
-    "engine_errors": 0,
-    "g0.code": 0,
-    "g0.ug.est": 0.4532,
-    "g0.ug.lo": 0.4057,
-    "g0.ug.hi": 0.5,
-    "g0.ug.n": 470,
-    "g0.nColoursOff": 0,
-    "g0.nQualifying": 7,
-    "g0.nPairsOff": 0,
-    "bal.verdict.code": 1
-   }
   }
  ],
  "runner": {
