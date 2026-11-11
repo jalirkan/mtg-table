@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-11T12:33:37-05:00",
- "heartbeat": "2026-11-11T12:33:37-05:00",
+ "updated": "2026-11-11T12:34:01-05:00",
+ "heartbeat": "2026-11-11T12:34:01-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -29,14 +29,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.86,
-  "memUsedGb": 8.7,
+  "load1": 3.32,
+  "memUsedGb": 9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5852,
+  "swapUsedMb": 5851,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 3,
   "coresTotal": 14
  },
  "running": [
@@ -46,21 +46,21 @@
    "id": "J212",
    "title": "The search's horizon (D537, config only, no play change): three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) of search-v2 with its rollouts played one turn further against search-v1-anytime (search-v2, the live seat), each in a ladder folder of its own on blocks 114,900,000-114,900,149 -- search-v2-t1 (priority and block rollouts to the end of the next turn at 1.5 s), search-v2-a1 (attack rollouts one turn further at 1.5 s), search-v2-t1-x3 (t1 at 4.5 s, the round cap still 12) -- each read by D519's four readings at 1,200 games, pre-registered in D537; then, information only, 720 recorded games of search-v2 against Forge Default summarised. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/5",
    "started": "2026-11-11T12:33:37-05:00",
-   "elapsed": 0,
+   "elapsed": 25,
    "done": 0,
    "total": 3600,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 7,
+   "workers": 3,
+   "workersMax": 3,
+   "cores": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-11T12:33:37-05:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "mt1.played": 0,
     "mt1.elo": 0,
@@ -138,7 +138,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J212-prepare"
+   "detail": "lab-J212-pilot1"
   }
  ],
  "queue": [
