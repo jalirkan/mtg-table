@@ -1,19 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-11-10T19:31:02-05:00",
- "heartbeat": "2026-11-10T19:31:02-05:00",
+ "updated": "2026-11-10T19:31:27-05:00",
+ "heartbeat": "2026-11-10T19:31:27-05:00",
  "paused": false,
- "state": "degraded",
+ "state": "running",
  "alerts": [
-  {
-   "at": "2026-11-10T19:31:02-05:00",
-   "id": "J210",
-   "kind": "memory-wait",
-   "needGb": 4,
-   "availGb": 20.6,
-   "freeGb": 17.6,
-   "text": "J210 waits on memory held outside the lab slice since 2026-11-10T19:31:02-05:00 (MemAvailable 20.6 GB, need 4 GB)"
-  },
   {
    "at": "2026-11-10T13:12:14-05:00",
    "id": "J208",
@@ -48,11 +39,11 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.13,
-  "memUsedGb": 9.8,
+  "load1": 5.52,
+  "memUsedGb": 6.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 4105,
-  "pressure": 7.14,
+  "pressure": 2.59,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -67,19 +58,19 @@
    "cpu": "heavy",
    "phase": "commands 3/9",
    "started": "2026-11-10T18:36:19-05:00",
-   "elapsed": 3283,
+   "elapsed": 3307,
    "done": 2392,
    "total": 9600,
    "unit": "games",
    "ratePerHour": 2446.8,
-   "eta": "2026-11-10T22:27:48-05:00",
+   "eta": "2026-11-10T22:28:12-05:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-10T19:27:42-05:00",
-   "memGb": 1.15,
+   "memGb": 0.01,
    "live": {
     "mn.played": 1200,
     "mn.elo": 2.9,
@@ -160,7 +151,8 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": []
+   "pressureEvents": [],
+   "detail": "lab-J210-run3"
   }
  ],
  "queue": [],
