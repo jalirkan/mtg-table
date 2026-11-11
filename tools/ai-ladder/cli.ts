@@ -15,7 +15,7 @@ import { KINDS, parseValue, testOnly, type ParamValue } from './kinds.ts';
 import { emptyTally, matchSummary, tallyBatch, tallyLine } from './match.ts';
 import { decide, LEAGUE_DEFAULTS, loadLeague, poolOf, saveLeague, type LeagueState } from './league.ts';
 import { buildLadder, renderHtml, type SprtLog, type TuneLog } from './report.ts';
-import { ANCHOR, addPlayer, nextName, resolvePlayer, writeRegistry, type Player } from './registry.ts';
+import { ANCHOR, addPlayer, loadRegistry, nextName, resolvePlayer, writeRegistry, type Player } from './registry.ts';
 import { blockKey, type GameRecord } from './results.ts';
 import { choose, hostBase, mkey, SCHED_DEFAULTS, type SchedPlayer, type SchedState } from './schedule.ts';
 import { Session } from './session.ts';
@@ -32,6 +32,7 @@ const EXPERIMENTS = 'docs/evidence/experiments.jsonl';
 const USAGE = `ai-ladder -- rate AI configs against each other and stock Forge (D318-D321)
 
   ai-ladder.sh list
+  ai-ladder.sh cfg     NAME                                          (the player's config hash and ai-bench seat config, tab-separated; D538)
   ai-ladder.sh run     --hours H [--jobs J] [--max-games N] [--players a,b,...]
   ai-ladder.sh ratings [--bootstrap N] [--set FILE|all]
   ai-ladder.sh sprt    A B [--elo0 0] [--elo1 20] [--alpha 0.05] [--beta 0.05] [--max-games 4000] [--jobs J]
@@ -593,6 +594,26 @@ function cmdCheck(a: Args): number {
   return fails.length ? 1 : 0;
 }
 
+/**
+ * cfg NAME: the player's config hash and its ai-bench seat config, tab-separated, on one line (D538: the label probe,
+ * tools/label-probe.sh, seats the player from it).  Reads the registry only: no deck set, no engine.  Exit 1, with the
+ * reason on stderr, for a player this checkout cannot play.
+ */
+function cmdCfg(a: Args): number {
+  const name = a.pos[0];
+  if (!name) throw new Error('cfg wants a player name');
+  const file = resolve(REPO, str(a, 'registry', 'tools/ai-ladder/players.json'));
+  const def = loadRegistry(file).players.find((p) => p.name === name);
+  if (!def) throw new Error(`no player ${name} in ${file}`);
+  const p = resolvePlayer(def, REPO);
+  if (!p.cfg) {
+    console.error(`ai-ladder cfg: ${name} is unavailable here: ${p.unavailable}`);
+    return 1;
+  }
+  console.log(`${p.hash}\t${p.cfg}`);
+  return 0;
+}
+
 /** decksets-collect <run-dir>...: the shell drafted with the cube lab; split and write the two sets. */
 function cmdDecksetsCollect(a: Args): void {
   const pairs = a.pos.flatMap((d) => draftsOf(resolve(REPO, d)));
@@ -608,6 +629,7 @@ async function main(): Promise<number> {
   const a = parseArgs(rest);
   switch (cmd) {
     case 'list': cmdList(a); break;
+    case 'cfg': return cmdCfg(a);
     case 'run': await cmdRun(a, rest); break;
     case 'ratings': printRatings(session(a, 10, existsSync(resolve(REPO, CONFIRM_SET)) ? CONFIRM_SET : 'tools/ai-bench/pairs-cube.txt'), num(a, 'bootstrap', 0)); break;
     case 'sprt': await cmdSprt(a, rest); break;
