@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T22:32:07-05:00",
- "heartbeat": "2026-11-10T22:32:07-05:00",
+ "updated": "2026-11-10T22:36:45-05:00",
+ "heartbeat": "2026-11-10T22:36:45-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -49,8 +49,8 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 13.37,
-  "memUsedGb": 17,
+  "load1": 13.49,
+  "memUsedGb": 16.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 4092,
   "pressure": 0,
@@ -68,19 +68,19 @@
    "cpu": "heavy",
    "phase": "commands 6/9",
    "started": "2026-11-10T18:36:19-05:00",
-   "elapsed": 14147,
-   "done": 6664,
+   "elapsed": 14426,
+   "done": 6728,
    "total": 9600,
    "unit": "games",
-   "ratePerHour": 1017.7,
-   "eta": "2026-11-11T01:25:13-05:00",
+   "ratePerHour": 1003.8,
+   "eta": "2026-11-11T01:28:26-05:00",
    "workers": 6,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T22:32:07-05:00",
-   "memGb": 6.93,
+   "dataUpdated": "2026-11-10T22:35:21-05:00",
+   "memGb": 6.57,
    "live": {
     "mn.played": 1200,
     "mn.elo": 2.9,
@@ -119,9 +119,9 @@
     "cf.corners": 0,
     "cf.lines": 0,
     "cf.ok": 0,
-    "elapsed_s": 14147,
+    "elapsed_s": 14406,
     "j210_err": 0,
-    "j210_games": 6664
+    "j210_games": 6728
    },
    "liveHeadline": [
     "mn.played",
