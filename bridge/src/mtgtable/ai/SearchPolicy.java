@@ -2154,13 +2154,19 @@ public final class SearchPolicy {
         if (r == null || !"a".equals(r.kind)) {
             return;
         }
+        final Map<Card, GameEntity> m = declaredAttack(combat, r.ai);
+        writeObserved(r, token(new AttackCand(m)), () -> new AttackCand(m), policy);
+    }
+
+    /** The attack {@code combat} now holds for {@code ai}: its attackers and whom each attacks (D538: the probe reads it too). */
+    static Map<Card, GameEntity> declaredAttack(final Combat combat, final Player ai) {
         final Map<Card, GameEntity> m = new LinkedHashMap<>();
         for (final Map.Entry<Card, GameEntity> e : combat.getAttackersAndDefenders().entrySet()) {
-            if (e.getKey().getController() == r.ai) {
+            if (e.getKey().getController() == ai) {
                 m.put(e.getKey(), e.getValue());
             }
         }
-        writeObserved(r, token(new AttackCand(m)), () -> new AttackCand(m), policy);
+        return m;
     }
 
     /** D450: the observing seat declared the blocks {@code combat} now holds. */
@@ -2170,15 +2176,21 @@ public final class SearchPolicy {
         if (r == null || !"b".equals(r.kind)) {
             return;
         }
+        final Map<Card, Card> m = declaredBlocks(combat, r.ai);
+        writeObserved(r, token(new BlockCand(m)), () -> new BlockCand(m), policy);
+    }
+
+    /** The blocks {@code combat} now holds for {@code ai}, blocker to attacker (D538: the probe reads them too). */
+    static Map<Card, Card> declaredBlocks(final Combat combat, final Player ai) {
         final Map<Card, Card> m = new LinkedHashMap<>();
         for (final Card a : combat.getAttackers()) {
             for (final Card b : combat.getBlockers(a)) {
-                if (b.getController() == r.ai) {
+                if (b.getController() == ai) {
                     m.putIfAbsent(b, a);
                 }
             }
         }
-        writeObserved(r, token(new BlockCand(m)), () -> new BlockCand(m), policy);
+        return m;
     }
 
     /** Drop a pending row (a decision that ended some other way). */
