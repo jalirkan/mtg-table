@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T23:00:11-05:00",
- "heartbeat": "2026-11-10T23:00:11-05:00",
+ "updated": "2026-11-10T23:03:24-05:00",
+ "heartbeat": "2026-11-10T23:03:24-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -49,10 +49,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 13.7,
-  "memUsedGb": 16.4,
+  "load1": 5.65,
+  "memUsedGb": 9.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4087,
+  "swapUsedMb": 4059,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -66,21 +66,21 @@
    "id": "J210",
    "title": "Where the search's strength is, by decision kind (D535, config only, no new Java): search-v2 with each of priority, attacks and blocks searched or left to Forge, all eight combinations, each one fixed 1,200-game match (600 mirrored pairs, D398, the confirm set, no stopping rule) against forge-default on the same 600 deals, each in a ladder folder of its own, read paired by deal (WHOLE, ALONE and LAST for each kind, INTERACTION, REPLICATION against J194 (a)'s rows) and by D535's faster-seat candidate rule; alone on the machine",
    "cpu": "heavy",
-   "phase": "commands 6/9",
+   "phase": "commands 7/9",
    "started": "2026-11-10T18:36:19-05:00",
-   "elapsed": 15832,
-   "done": 7144,
+   "elapsed": 16025,
+   "done": 7200,
    "total": 9600,
    "unit": "games",
-   "ratePerHour": 1020.8,
-   "eta": "2026-11-11T01:24:33-05:00",
-   "workers": 6,
+   "ratePerHour": 1021.9,
+   "eta": "2026-11-11T01:24:19-05:00",
+   "workers": 5,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T23:00:11-05:00",
-   "memGb": 6.77,
+   "dataUpdated": "2026-11-10T23:03:24-05:00",
+   "memGb": 0.01,
    "live": {
     "mn.played": 1200,
     "mn.elo": 2.9,
@@ -88,7 +88,7 @@
     "ma.elo": 28.4,
     "mp.elo": 63.2,
     "mab.elo": 36,
-    "mpb.elo": 0,
+    "mpb.elo": 64.4,
     "mpa.elo": 0,
     "mall.played": 0,
     "mall.elo": 0,
@@ -119,9 +119,9 @@
     "cf.corners": 0,
     "cf.lines": 0,
     "cf.ok": 0,
-    "elapsed_s": 15831,
+    "elapsed_s": 16024,
     "j210_err": 0,
-    "j210_games": 7144
+    "j210_games": 7200
    },
    "liveHeadline": [
     "mn.played",
@@ -187,7 +187,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J210-run6"
+   "detail": "lab-J210-run7"
   }
  ],
  "queue": [],
