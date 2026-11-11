@@ -129,3 +129,11 @@ and option 0 at every a and b row.
   decision that follows, which `AtlasProbe` ignores past d.
 - **Speed.** One replay per (decision, repeat): about the baseline's time to d plus one search budget. 605 decisions x 3
   repeats is 1,815 replays; `replayMs` in the smoke gives the real figure.
+
+## Left for the rebase onto main (after D537's merge)
+
+- PLAN's rows for D538 (the cube lab's next follow-up number after D537's, and the line 20 tally): not written on
+  this branch, because D537's branch edits the same lines.
+- `tools/CLAUDE.md`'s step 12n text and `check-all.sh`'s message still name `labels.py` and `compare.py` only;
+  `test_agreement.py` runs under the same step.
+- `node tools/decisions.mjs check` (not run beside J211).
