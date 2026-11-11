@@ -29,10 +29,13 @@
 # --workers K runs K JVMs, each with every K-th (decision, repeat) and a Forge
 # home of its own under var/label-probe/<run>/home-<i>/ (forge_home_make,
 # D129's rule), all appending to --out, one write a line.  A JVM that exits 3
-# (a stuck game thread) or 4 (its heap exhausted, D465) is started again, at
-# most three times.  RESUMES: run the same line again and it skips every row
-# --out holds for this player (but errors), after cutting off a torn last
-# line; a row of this player made with another seat config refuses the run.
+# (a stuck game thread) or 4 (its heap exhausted, D465) is started again, up
+# to twelve runs of a shard in all.  RESUMES: run the same line again and it
+# skips every row --out holds for this player, after cutting off a torn last
+# line; an error row is tried again once, and a second error at the same
+# (decision, repeat) is final; a row of this player made with another seat
+# config or --seed refuses the run.  Two --out files need two basenames: the
+# run's folder is var/label-probe/<basename>-<player>.
 # Logs: var/label-probe/<run>/shard-<i>.log (each probe's line, the match
 # lines, Forge's chatter).  Needs ./bridge/build.sh first (bridge/out).  Not in
 # the gate: it boots the engine and takes minutes to hours.
@@ -41,7 +44,7 @@ set -euo pipefail
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
 cd "$REPO_ROOT"
 
-usage() { sed -n '2,38p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,41p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
 workers=1 player="" out="" args=()
 while [ $# -gt 0 ]; do
@@ -114,7 +117,7 @@ for ((i = 0; i < workers; i++)); do
       jvm "$home" "${args[@]}" --player "$player" --seat "$seat" --hash "$hash" --shard "$i/$workers" \
         --out "$out" >> "$dir/shard-$i.log" 2>&1 || rc=$?
       attempt=$((attempt + 1))
-      if { [ "$rc" = 3 ] || [ "$rc" = 4 ]; } && [ "$attempt" -lt 3 ]; then
+      if { [ "$rc" = 3 ] || [ "$rc" = 4 ]; } && [ "$attempt" -lt 12 ]; then
         echo "label-probe: shard $i exited $rc; starting it again" >&2
         continue
       fi

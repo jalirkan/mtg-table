@@ -5,7 +5,10 @@
 unit, `ai-ladder.sh cfg`), the labels file, this file and PLAN's rows. **Written while J211 measured, alone: at the
 time of writing no line of the lane had been compiled or run**, so everything it says about the code is a plan
 until the build, the self-tests, gate step 12m and the smoke run of point 6 have passed. The live seat is meant to
-be unchanged (point 5); that is a claim the gate checks, not one this file can make.*
+be unchanged (point 5); that is a claim the gate checks, not one this file can make. **Amended the same morning,
+after a read-only review and before any probe row existed**: the rule of point 7 gained a condition and a narrower
+claim, point 6's stops got their words, and the read became one command whose output is the verdict. The rule can
+still change until J213 is posted, and only in this file; from the posting on it is fixed.*
 
 **Status: the labels are recorded. The probe is written and unbuilt. The validity night is registered and unplayed.**
 
@@ -65,8 +68,12 @@ be unchanged (point 5); that is a claim the gate checks, not one this file can m
 
    77 spines; 6 labelled decisions a spine at the median, 14 at most. **The set is not a random sample of the
    atlas**: round 2's rows are the confident decisions, which is where the judges leave Forge most (67 of 106).
-   Any share over the whole set carries that mix; point 7's statistic is a paired difference on one fixed set, which
-   the mix does not bias, and point 8 reads the unselected rows beside it.
+   Any share over the whole set carries that mix. Point 7's statistic is a paired difference on one fixed set, so
+   the mix cannot favour one player of a pair by itself, **but it does decide what the difference is about**: round
+   2's 106 labels were chosen where a rollout map was confident that Forge's move is beaten and the judges then
+   agreed with the map at most of them, so a search that leaves Forge there agrees with the label for the reason
+   J200 already measured. P1 over all 515 would largely restate J200. Point 7 therefore also requires P1's point to
+   be above 0 on the 409 labels nobody selected (`source` other than `round2`).
 3. **What the labels say against the atlas's own maps, with no new game** (computed once, after wave 1, from the
    file of point 2; it decides nothing).
    - Stratified back to the 1,003 rows, "play the agreed label, else Forge's move" gains **+0.0108 [+0.007, +0.015]**
@@ -93,12 +100,17 @@ be unchanged (point 5); that is a claim the gate checks, not one this file can m
    config hash and seat config), so a probe row and a ladder night name the same seat by the same hash; a rows file
    made under another seat config or seed is refused.
    `tools/atlas/agreement.py --labels LABELS ROWS…` is the read: per player the share of labelled decisions at
-   which it picks the label and the share at which it picks option 0, over all labels, by kind, and split by
-   whether the label is Forge's move; for each pair of players the paired difference in agreement; every interval
-   a 95% percentile bootstrap over spines from one shared draw. Its definitions (a decision counts once, by the mean
-   over its answered repeats; `off-atlas` is an answer that is never the label and never option 0; `ambiguous`,
-   `mismatch`, `unsupported` and `error` are no answer and are counted) are in its header and were fixed before any
-   row existed.
+   which it picks the label and the share at which it picks option 0, over all labels, by kind, split by whether
+   the label is Forge's move, and on the two halves of `--split FIELD=VALUE`; its **departure precision** (of the
+   answers that leave option 0, the share that land on the label, where the label is not Forge's move); its row
+   counts (rows, `ok`, `ok` on option 0, `searched`); for each pair named by `--pairs A:B,…` the paired difference
+   A − B **in the direction given**, on every subset; every interval a 95% percentile bootstrap over spines from one
+   shared draw, printed to four decimals and carried unrounded in `--json`. `--rule d538` prints point 6's stops and
+   point 7's word from the unrounded numbers. Its definitions (a decision counts once, by the mean over its answered
+   repeats; `off-atlas` is an answer that is never the label and never option 0, or with `--off-atlas drop` no
+   answer; `ambiguous`, `mismatch`, `unsupported` and `error` are no answer and are counted) are in its header and
+   were fixed before any row existed. A worker that stops inside a replay writes `error`, never `mismatch`; an
+   `error` row is tried once more and the second is final.
 5. **What the probe's position is and is not** (each a limit on point 7's reading, stated before it).
    - The player is asked on the live engine at the atlas hook, after Forge's AI has answered; the judges read seat
      A's view at the aligned state frame and both decklists. The player sees what a seat sees and reaches hidden
@@ -107,23 +119,40 @@ be unchanged (point 5); that is a claim the gate checks, not one this file can m
      generates more (`rank=prior gen=24`) or an outlet play the listing does not hold can answer `off-atlas`.
    - Forge's own random draws during the ask come from the observing seat's throwaway generator, the same in every
      repeat; only the search's seed differs between repeats. The outlet policy starts with no memory of the turn.
-   - The five players on a profile other than `Default` are `unsupported` and are not asked.
+   - The five players on a profile other than `Default` are `unsupported` and are not asked. A `+sim` or `+hybrid`
+     player is refused before a game starts (the seat parser exits 2), never written as a row.
+   - The ask is not side-effect free on the replay it sits in, and none of what it touches reaches a row or the
+     picture a later row is made from, because the hook ends that replay after the answer: the priority path runs
+     the player's target search on the real ability and puts the atlas seat's steer back; an outlet opportunity is
+     counted on the atlas seat's own counters and remembered in its once-a-turn set; Forge's quiet random generator
+     advances; `CubeLab.lastHook` keeps the hook reachable until the next game.
    - Search budgets are wall-clock: the probe runs at a ladder night's worker count, alone, or its picks are not
      the ladder seat's.
    - `PolicyControllerAi.choose` and two loops of `SearchPolicy` were refactored so the probe can call them. That
      is the seat path D509 froze: gate step 12m (`cubelab.sh seat-identity`) and `atlas-selftest` must pass with no
      `--write`, or the lane does not merge.
-6. **Before any reading: the run must be a measurement.** In this order, each a stop.
-   - `forge-default` picks option 0 at every `ok` row. It is Forge's own answer handed back, so anything else is a
-     fault in the mapping: the run is VOID, the fault is fixed and the night is replayed. Not a finding.
-   - `forge-default` and `policy-outlet` report `searched: false` at every row.
-   - Each of point 7's four players has an answer (`ok` or `off-atlas`) at 95% or more of the 515 labelled
-     decisions. Under that the night is not read until the missing rows are explained in writing.
+6. **Before any reading: the run must be a measurement.** In this order, each a stop that `--rule d538` prints in
+   place of point 7's word.
+   - **VOID**: `forge-default` has an `ok` row that is not option 0. It is Forge's own answer handed back, so
+     anything else is a fault in the mapping: the fault is fixed and the night is replayed. Not a finding.
+   - **NOT READ**: `forge-default` or `policy-outlet` has a row with `searched: true`; or one of point 7's four
+     players has an answer (`ok` or `off-atlas`) at fewer than 95% of the 515 labelled decisions; or a pair of the
+     rule shares no decision. The night is not read until the cause is explained in writing, and a replay after a
+     fix is read by the same rule.
 7. **The rule: does agreement track Elo?** One night (J213, after J212), alone, `{workers}` JVMs: the 605
-   decisions, 3 repeats for a search player and 1 for `forge-default` and `policy-outlet`, `--seed 538`; read with
-   `agreement.py --boot 4000 --seed 538` over the 515 labels. The statistic is the tool's pair line, **Δ(A, B) = the
-   mean over the labelled decisions both answered of (A's agreement − B's)**, with its 95% interval. Three pairs,
-   each the live search against a seat it has beaten by about 40 Elo or more in a 1,200-game match:
+   decisions, 3 repeats for a search player and 1 for `forge-default` and `policy-outlet`, `--seed 538`; read over
+   the 515 labels with one command, whose `rule.word` is the verdict:
+
+   ```
+   tools/atlas/agreement.py --labels fixtures/atlas/judged/labels-judged-v1.jsonl --boot 4000 --seed 538 \
+     --pairs search-v1-anytime:forge-default,search-v1-anytime:search-v2-rrandom,search-v1-anytime:search-v2-rrandom4 \
+     --split source=round2 --rule d538 --json ROWS…
+   ```
+
+   The statistic is the tool's pair line, **Δ(A, B) = the mean over the labelled decisions both answered of (A's
+   agreement − B's)**, A first, with its 95% interval; `off-atlas` counts as a miss. Every comparison below is strict
+   and on the unrounded number. Three pairs, each the live search against a seat it has beaten by about 40 Elo or
+   more in a 1,200-game match:
 
    | pair | A − B | measured, A over B [95%] | why it is in the rule |
    |---|---|---|---|
@@ -132,15 +161,20 @@ be unchanged (point 5); that is a claim the gate checks, not one this file can m
    | **P3** | `search-v1-anytime` − `search-v2-rrandom4` | +39.5 [+25.3, +53.9] (J202 a) | The same, on the guarded random seat's last version at margin 20. |
 
    The words, fixed now:
-   - **AGREEMENT TRACKS ELO**: P1's interval is above 0, P2's and P3's points are above 0, and at least one of
-     their two intervals is above 0.
+   - **AGREEMENT TRACKS ELO**: P1's interval is above 0, **P1's point is above 0 on the labels whose `source` is
+     not `round2`** (409 of the 515), P2's and P3's points are above 0, and at least one of their two intervals is
+     above 0.
    - **AGREEMENT DOES NOT TRACK ELO**: any of the three intervals is wholly below 0 (a seat measured about 40 Elo
      or more stronger agrees with the judges *less*).
    - **INCONCLUSIVE** otherwise.
 
-   P2 and P3 alone would pass for a dull reason — a noisier search leaves Forge more often and most labels are
-   Forge's move — and P1 alone could pass on the search's departures while saying nothing about a second seat.
-   The conjunction is what the word needs. No other pair, subset or player enters the verdict.
+   **What TRACKS would and would not say.** Suppose the labels were only Forge's move plus the judges' noise. Then
+   every seat that leaves Forge loses agreement, P1 is below 0, and P2 and P3 are above 0 for a dull reason: the
+   noisier search leaves Forge more often. So P2 and P3 above 0 are what that null predicts and show only that the
+   labels cost a noisier search something; **P1 is the one pair the null gets wrong, and the whole claim "the labels
+   know more than be like Forge" rests on it** — on about a hundred decisions where the search leaves Forge (point
+   9), and, by the added condition, not only on the rows a rollout map picked. P1 alone would say nothing about a
+   second seat, which is why the word needs all of it. No other pair, subset or player enters the verdict.
 8. **Read beside the rule, deciding nothing** (named now so that none of it is found afterwards).
    - P1 by kind. J210 put about two thirds of the search's Elo in priority, a quarter in attacks and none shown in
      blocks; the labels would agree with that if P1 is above 0 at priority, smaller at attacks and near 0 at blocks.
@@ -148,7 +182,12 @@ be unchanged (point 5); that is a claim the gate checks, not one this file can m
      the rest, the same numbers again.
    - Where the search leaves Forge: the option-0 share at `label=forge` against `label!=forge`. If the judges and
      the search find the same decisions wrong, the search leaves Forge more where the label does.
-   - P1 on the unselected rows alone (J203 and wave 1), and on round 2's.
+   - P1 on the unselected rows alone (J203 and wave 1) with its interval, and on round 2's (its point on the
+     unselected rows is in the rule; its interval there is not).
+   - Each search player's departure precision, and P1's by kind: the plainest form of "when it leaves Forge, does
+     it land where the judges did".
+   - `search-v2-rrandom − forge-default` and `search-v2-rrandom4 − forge-default`. Neither random seat has played
+     Forge's AI; they are about +45 and +50 over it only by adding two matches, so these two read as context.
    - The other players probed, each with its measured Elo against `search-v1-anytime`: `policy-outlet` (−84.4,
      J204 b), `search-v2-rrandom4-m40` (−20.9, J202 b), `search-v2-rmix4them-m40` (−6.9 [−17.8, +3.9], J209),
      `search-v2-ms750-r6` (−6.5 [−11.7, −1.3], J198), and, their Elo unknown as this is written,
@@ -156,7 +195,7 @@ be unchanged (point 5); that is a claim the gate checks, not one this file can m
      a rank correlation. If the smoke run's `replayMs` puts the night over 8 hours, players are dropped from the
      end of this list, never from point 7's.
    - How often a search player's three repeats pick one option (its own seed noise, the floor under every Δ).
-   - `off-atlas` taken out instead of counted as a miss, for every pair.
+   - `off-atlas` taken out instead of counted as a miss (`--off-atlas drop`), for every pair.
 9. **What each word does.**
    - **TRACKS**: wave 2 is judged (the 392 decisions, about 6.5 million tokens), the set grows to about 850 labels,
      and a new arm's agreement is read before its ladder night and printed beside its Elo. It is a screen: no arm
@@ -190,8 +229,9 @@ be unchanged (point 5); that is a claim the gate checks, not one this file can m
 
 **Unverified as written** (to be struck or corrected at the lane's first build).
 
-- That the lane compiles against the pinned jar, that the decision self-test reaches 425 checks (433 over D537),
-  and that gate step 12m passes unchanged: none run (`docs/label-probe-notes.md`, removed before merge).
+- That the lane compiles against the pinned jar, that the decision self-test reaches 425 checks off `d1d6b20f`
+  (433 once the lane sits on D537's 404), and that gate step 12m passes unchanged: none run. `agreement.py` and its
+  unit tests are Python and have run (16 tests).
 - That every one of the 605 keys replays without a `mismatch` on today's bridge: J203 replayed all six nights'
   spines on 2026-11-09 without one, and since then only the search's rollouts changed.
 - The night's length: 605 × 3 × ten search players and 605 × 2 is 19,360 replays; at 6 s a replay and 7 workers

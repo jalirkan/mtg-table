@@ -50,7 +50,9 @@ import mtgtable.Json.JsonOut;
  * <p><b>What it writes.</b>  An {@link Answer}: the token of the player's pick and its index among the atlas's
  * options ({@link #optionOf}: by token, and by play identity where two options share a token, D483; never a guess),
  * whether its search ran, and the search's report.  The player's search is seeded per repeat ({@link #repeatSeed},
- * {@link #seatWithSeed}): a ladder seat's seed is a draw from its game's stream, a repeat's is a draw from this one.
+ * {@link #seatWithSeed}): a ladder seat's config names no seed, so its search seeds itself from the clock
+ * ({@code SearchPolicy}: {@code System.nanoTime()} where the config's seed is 0) and no game of it is repeatable;
+ * a repeat here names its seed, so a probe row is.
  *
  * <p><b>The profile.</b>  Forge's AI reads its profile off the seat's lobby player
  * ({@code AiProfileUtil.getProperty(Player, ...)}), which is the atlas seat's.  A player of another profile cannot be
@@ -129,7 +131,11 @@ public final class LabelProbe {
         public boolean timedOut;
         public String status = ERROR;
         public String detail;
-        /** The player's seat counters for this decision (its search's {@code search.*}, its policy's). */
+        /**
+         * The counters the player's search added at this decision (its {@code search.*} keys, through the sink
+         * {@link #ask} hands it).  The outlet policy's counters are not here: {@code probePriority} adds them to
+         * the atlas seat's own, which no probe row carries.
+         */
         public final Map<String, Integer> counts = new TreeMap<>();
 
         /** As a game row's {@code atlas.probe} entry. */

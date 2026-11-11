@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -61,8 +62,10 @@ import mtgtable.ai.SeatSpec;
  *
  * <p><b>The rows.</b>  One JSON object a line, appended with one write each (the shards of a run share the file;
  * {@code tools/label-probe.sh} cuts a torn last line before it starts them).  A rerun with the same arguments skips
- * every (key, player, repeat) the file already holds with a status other than {@code error}; a row of the same
- * player made with another seat config refuses the run (another experiment wants another file).
+ * every (key, player, repeat) the file already holds with a status other than {@code error}, and one it holds
+ * {@link #ERROR_TRIES} errors for; a row of the same player made with another seat config or seed refuses the run
+ * (another experiment wants another file).  A worker that must stop (a stuck game thread, an exhausted heap)
+ * before the player was asked writes {@code error}, never {@code mismatch}: nothing was measured about the position.
  *
  * <p>The rules it keeps are the cube lab's: {@link CubeLab#boot} (hard rules 1, 2 and 11 through Bootstrap), decks
  * through {@code DeckSerializer.fromFile} inside {@code playMatch} (hard rule 4), one game at a time on Forge's own
@@ -74,6 +77,9 @@ public final class AtlasProbe {
 
     /** The row's version. */
     static final int ROW_VERSION = 1;
+
+    /** How many error rows settle a (key, repeat): the first is tried again by the next run, the second is final. */
+    static final int ERROR_TRIES = 2;
 
     /** The atlas's seats' profile ({@code atlas.ts}'s {@code baseJob}: Default on both). */
     static final String ATLAS_PROFILE = "Default";
@@ -273,12 +279,15 @@ public final class AtlasProbe {
     }
 
     /**
-     * The (key, repeat) pairs {@code out} already answers for this player (every status but error), and a refusal
-     * when a row of this player carries another seat config or a seed this run's {@code --seed} would not give it.  A line that does not parse is skipped (the wrapper
-     * cuts a torn last line before a run).
+     * The (key, repeat) pairs {@code out} already settles for this player -- every status but error, and an error
+     * met {@link #ERROR_TRIES} times (it is tried again once: a replay that sticks the game thread every time must
+     * not hold its shard for ever) -- and a refusal when a row of this player carries another seat config or a seed
+     * this run's {@code --seed} would not give it.  A line that does not parse is skipped (the wrapper cuts a torn
+     * last line before a run).
      */
     static Set<String> done(final File out, final Args a) throws IOException {
         final Set<String> done = new HashSet<>();
+        final Map<String, Integer> errors = new HashMap<>();
         if (!out.exists()) {
             return done;
         }
@@ -302,7 +311,7 @@ public final class AtlasProbe {
                 throw new IllegalStateException(out + " holds rows of " + a.player + " made under another --seed (" + key
                         + " repeat " + rep + "): another experiment, another --out");
             }
-            if (!LabelProbe.ERROR.equals(CubeLab.str(m, "status"))) {
+            if (!LabelProbe.ERROR.equals(CubeLab.str(m, "status")) || errors.merge(key + "#" + rep, 1, Integer::sum) >= ERROR_TRIES) {
                 done.add(key + "#" + rep);
             }
         }
@@ -389,9 +398,28 @@ public final class AtlasProbe {
             row.detail = "the match ran no atlas hook" + (rc == 3 ? " (the game thread is stuck)" : "");
             return rc;
         }
+        // the hook's lists are the game thread's; one that is stuck (rc 3) may still be appending: read copies
+        final List<Atlas.DecisionInfo> listed;
+        final List<LabelProbe.Answer> probes;
+        try {
+            listed = new ArrayList<>(hook.decisions);
+            probes = new ArrayList<>(hook.probes);
+        } catch (final RuntimeException e) {
+            row.status = LabelProbe.ERROR;
+            row.detail = "the hook's lists could not be read: " + e;
+            return rc;
+        }
+        if (rc != 0 && probes.isEmpty()) {
+            // the worker must stop and the player was never asked: nothing was measured about this position, so it
+            // is an error (retried, see done()), never a mismatch, which is final
+            row.status = LabelProbe.ERROR;
+            row.detail = "the worker stops (exit " + rc + (rc == 3 ? ", the game thread is stuck" : "")
+                    + ") before the player was asked; the replay had listed " + listed.size() + " decision(s)";
+            return rc;
+        }
         // every decision the replay listed up to d must be the baseline's: a replay that parted earlier and met the
         // listing again at d is not the baseline's position
-        for (final Atlas.DecisionInfo di : hook.decisions) {
+        for (final Atlas.DecisionInfo di : listed) {
             if (di.index > k.d) {
                 break;
             }
@@ -404,16 +432,15 @@ public final class AtlasProbe {
         }
         if (hook.branched == null) {
             row.status = LabelProbe.MISMATCH;
-            row.detail = "the replay listed " + hook.decisions.size() + " decision(s) and never reached d" + k.d
-                    + (rc == 3 ? " (the game thread is stuck)" : "");
+            row.detail = "the replay listed " + listed.size() + " decision(s) and never reached d" + k.d;
             return rc;
         }
-        if (hook.probes.isEmpty()) {
+        if (probes.isEmpty()) {
             row.status = hook.error != null ? LabelProbe.MISMATCH : LabelProbe.ERROR;
             row.detail = hook.error != null ? hook.error : "the hook reached d" + k.d + " and asked nothing";
             return rc;
         }
-        row.answer(hook.probes.get(0));
+        row.answer(probes.get(0));
         return rc;
     }
 
