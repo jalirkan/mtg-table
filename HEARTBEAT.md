@@ -2,15 +2,15 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-11T00:34:33-05:00
+- time: 2026-11-11T00:34:55-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J210 started with 6 of 7 workers at 2026-11-10T21:08:07-05:00, as many as fit (MemAvailable 23.9 GB, 3.33 GB a worker); raised toward 7 as memory frees
 - ALERT: J208 started with 6 of 7 workers at 2026-11-10T13:12:14-05:00, as many as fit (MemAvailable 25.1 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
-- running: J210 commands 7/9, 8392/9600 games, 845.7/h, ETA 2026-11-11T02:00:15-05:00, 6 worker(s), 7 core(s)
+- running: J210 commands 8/9, 8400/9600 games, 831.6/h, ETA 2026-11-11T02:01:29-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 4.84; memory 7.3/30.5 GB, swap 4886 MB, pressure 0% (lab budget 23.4 GB)
+- load: 4.29; memory 5.4/30.5 GB, swap 4852 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J209 done at 2026-11-10T18:15:59-05:00: cm.played 1200 · cm.score 0.49 · cm.elo -6.9 · cm.eloLo -17.8 · cm.eloHi 3.9 · cm.aSearch.msPerDecision 923.313 · cm.bSearch.msPerDecision 910.695 · ro.aRolloutsPerDecision 16.02 · ro.bRolloutsPerDecision 15.55 · ro.ratio 1.03 · ro.aPriorityShare.fromPass 0.066 · ro.bPriorityShare.fromPass 0.082 · ro.aChangedShare.a 0.117 · ro.aChangedShare.b 0.182 · v.shown 0 · v.inconclusive 0 · v.indistinguishable 0 · v.noWeaker 0 · v.worseNotBadly 1 · v.losesBadly 0 · v.candidate 0 · v.confirm 0 · v.trackCloses 1 · v.repost 0 · v.mix.forgeRoundsPerDecision 3.464 · v.mix.randomRoundsPerDecision 2.943 · v.mix.meanDForge 793.078 · v.mix.meanDRandom 692.584 · v.mix.disagreeShare 0.105 · v.info.minusJ208Same 12.2 · v.info.minusJ206 16.3 · v.info.minusJ204b.diff 77.5 · v.chainDeals 1 · w.lost 612
