@@ -52,8 +52,12 @@ no player or key, a key the labels file does not hold, a repeat that is not 0, 1
 a status that is not one of the six, an `ok` row whose option is not one of the label row's `k` options or whose `k`
 is another, a `searched` that is not true, false or null, a `seed` that is not the probe's own for (538, key,
 repeat), two rows of one (player, key, repeat) that are not errors or more rows of one than the probe's two tries
-write, and a player whose rows carry a config hash that is not the registered seat's. The rows of two runs read as
-one are refused by these, never merged.
+write, and a player whose rows carry a config hash that is not the registered seat's. Two runs that share a (player,
+key, repeat), or one made under another seed, are refused by these and never merged; two runs over disjoint repeats
+under the one seed read as one resumed run (the probe resumes its --out the same way), so a smoke run writes an --out
+of its own and that file is not handed to the read. And the run must be whole: each of the five registered seats has
+a row, an error row among them, at every (decision, repeat) of the labels file, labelled or not, or the read is NOT
+READ (a probe that stopped part-way, a seat left out, rows deleted or lost to a torn line).
 """
 from __future__ import annotations
 
@@ -76,7 +80,8 @@ SUBSETS = ('all', 'p', 'a', 'b', 'label!=forge', 'label=forge')
 
 
 def read_jsonl(path):
-    """Every complete JSON line of a file; a line that does not parse (a torn last line) is skipped."""
+    """Every JSON object a line of a file; a line that does not parse (a torn last line) or is no object is
+    skipped. (--rule d538 notices a lost row: every (decision, repeat) of a registered seat must have one.)"""
     out = []
     with open(path, encoding='utf-8') as f:
         for line in f:
@@ -84,9 +89,11 @@ def read_jsonl(path):
             if not line:
                 continue
             try:
-                out.append(json.loads(line))
+                row = json.loads(line)
             except ValueError:
                 continue
+            if isinstance(row, dict):
+                out.append(row)
     return out
 
 
@@ -145,11 +152,16 @@ def repeat_seed(seed, key, repeat):
 def audit(probe_rows, label_rows, probe_seed=None):
     """The rows as the files hold them, before collect() keeps one row of each (player, key, repeat): the counts of
     AUDIT, the first offending row of each (`first`), every player's highest repeat (`repeatMax`) and the config
-    hashes its rows carry (`hashes`, '' for a row with none). `seedMismatch` is counted only under a probe_seed.
-    Nothing here stops a read; --rule d538 refuses a read whose counts are not all 0."""
+    hashes its rows carry (`hashes`, '' for a row with none), the labels file's keys (`keys`) and for every player
+    the (key, repeat)s of them it has a row at (`cells`). `seedMismatch` is counted only under a probe_seed and is
+    None without one (no seed was looked at). Nothing here stops a read; --rule d538 refuses a read whose counts
+    are not all 0 and does not read one whose registered seats lack a cell."""
     ks = {r['key']: r.get('k') for r in label_rows if isinstance(r.get('key'), str)}
     counts = dict.fromkeys(AUDIT, 0)
+    if probe_seed is None:
+        counts['seedMismatch'] = None
     first = {}
+    cells = {}
     seen = {}
     rep_max = {}
     hashes = {}
@@ -164,13 +176,16 @@ def audit(probe_rows, label_rows, probe_seed=None):
         if not isinstance(p, str) or not isinstance(key, str):
             bad('unkeyed', r)
             continue
-        hashes.setdefault(p, set()).add(r.get('hash') or '')
+        h = r.get('hash') or ''
+        hashes.setdefault(p, set()).add(h if isinstance(h, str) else repr(h))
         if key not in ks:
             bad('unknownKey', r)
         if type(rep) is not int or rep < 0:
             bad('badRepeat', r)
         else:
             rep_max[p] = max(rep_max.get(p, -1), rep)
+            if key in ks:
+                cells.setdefault(p, set()).add((key, rep))
             if probe_seed is not None and r.get('seed') != repeat_seed(probe_seed, key, rep):
                 bad('seedMismatch', r)
         if st not in ANSWERED + NO_ANSWER:
@@ -190,7 +205,8 @@ def audit(probe_rows, label_rows, probe_seed=None):
             bad('duplicates', None, said)
         if rows > ERROR_TRIES:
             bad('overTries', None, said)
-    return {'probeSeed': probe_seed, 'counts': counts, 'first': first,
+    return {'probeSeed': probe_seed, 'counts': counts, 'first': first, 'keys': len(ks),
+            'cells': {p: len(c) for p, c in sorted(cells.items())},
             'repeatMax': dict(sorted(rep_max.items())), 'hashes': {p: sorted(h) for p, h in sorted(hashes.items())}}
 
 
@@ -199,15 +215,15 @@ def collect(rows):
     (player, key, repeat), else its last error row."""
     players = {}
     for r in rows:
-        p = r.get('player')
-        if p is None or r.get('key') is None:
+        p, rep = r.get('player'), r.get('repeat')
+        if not isinstance(p, str) or not isinstance(r.get('key'), str):
             continue
         e = players.setdefault(p, {'seats': set(), 'hash': None, 'reps': {}})
         if r.get('seat') is not None:
-            e['seats'].add(r['seat'])
+            e['seats'].add(r['seat'] if isinstance(r['seat'], str) else repr(r['seat']))
         if r.get('hash'):
             e['hash'] = r['hash']
-        k = (r['key'], r.get('repeat'))
+        k = (r['key'], rep if rep is None or type(rep) in (int, str, float, bool) else repr(rep))
         old = e['reps'].get(k)
         if old is None or r.get('status') != 'error' or old.get('status') == 'error':
             e['reps'][k] = r
@@ -417,8 +433,9 @@ def d538(s, run=None):
     (audit()'s counts, a repeat at or past a player's repeats, a config hash that is not the registered seat's).
     Then point 6's stops, each a stop (VOID: forge-default has an ok row off option 0 or an off-atlas row; NOT
     READ: a player that must not search did, one of the four answered under 95% of the labels, does not have its
-    repeats at every probed decision or answered under 95% of its repeats, or a pair of the rule has no decision or
-    no interval); then point 7's word, from the unrounded numbers with strict inequalities, DOES NOT TRACK tested
+    repeats at every probed decision or answered under 95% of its repeats, one of the run's five seats lacks a row
+    at a (decision, repeat) of the labels file, or a pair of the rule has no decision or no interval); then point
+    7's word, from the unrounded numbers with strict inequalities, DOES NOT TRACK tested
     before TRACKS. `run` is D538_RUN but for the unit tests."""
     run = D538_RUN if run is None else run
     if s.get('split') != '%s=%s' % D538_SPLIT or s.get('offAtlas') != 'miss':
@@ -437,6 +454,8 @@ def d538(s, run=None):
         raise ValueError("--rule d538 checks every row's seed against the probe's --seed %d; this read checked %s"
                          % (run['probeSeed'], au.get('probeSeed')))
     wrong = ['%d %s (first: %s)' % (n, what, au['first'].get(what)) for what, n in au['counts'].items() if n]
+    if au['counts'].get('seedMismatch') is None:
+        wrong.append('seeds that were not checked')
     if wrong:
         raise ValueError('--rule d538 reads the rows of one run of the probe under --seed %d; these hold %s'
                          % (run['probeSeed'], '; '.join(wrong)))
@@ -473,6 +492,14 @@ def d538(s, run=None):
         if c['repeats'] < D538_ANSWERED * want * c['labelled']:
             stops.append('NOT READ: %s answered %d of its %d repeats of the labelled decisions, under %.0f%%'
                          % (p, c['repeats'], want * c['labelled'], 100 * D538_ANSWERED))
+    # the run is whole: every (decision, repeat) of the labels file, labelled or not, has a row of each of the five
+    # seats (an error row is a row). Unknown keys and repeats past a seat's were refused above, so the count says it.
+    for p, want in run['repeats'].items():
+        have, full = au['cells'].get(p, 0), want * au['keys']
+        if have != full:
+            stops.append('NOT READ: %s has a row at %d of the %d (decision, repeat)s of the run (%d decisions, %d '
+                         'repeat(s)): the probe is not finished or its rows are not all here'
+                         % (p, have, full, au['keys'], want))
     p1, p2, p3 = (found[ab] for ab in D538_PAIRS)
     p1u = p1['subsets'][D538_UNSELECTED]
     why = ['P1 %s' % ci(p1, True), 'P1 on %s %s (n %d)' % (D538_UNSELECTED, ci(p1u, True), p1u['n']),

@@ -5,8 +5,8 @@ merge); it merges after D537. The probe's code (`LabelProbe.java`,
 `tools/cubelab/AtlasProbe.java`, `tools/label-probe.sh`, `tools/atlas/agreement.py`, a probe block on an atlas
 unit, `ai-ladder.sh cfg`), the labels file, this file and PLAN's rows. **Written while J211 measured, alone: at the
 time of writing no line of the lane had been compiled or run**, so everything it says about the code is a plan
-until the build, the self-tests, gate step 12m and the smoke run of point 6 have passed. The live seat is meant to
-be unchanged (point 5); that is a claim the gate checks, not one this file can make. **Amended the same morning,
+until the build, the self-tests, gate step 12m and the smoke run (*Unverified as written*, below) have passed. The
+live seat is meant to be unchanged (point 5); that is a claim the gate checks, not one this file can make. **Amended the same morning,
 after a read-only review and before any probe row existed**: the rule of point 7 gained a condition and a narrower
 claim, point 6's stops got their words, and the read became one command whose output is the verdict. **And a
 second time, after a second review, still before any row**: `forge-default` off the atlas is VOID too (it raised P1
@@ -18,7 +18,11 @@ so the rows of two probe runs handed to it together could hide a VOID or move a 
 of one run of the probe under `--seed 538` and refuses anything else (point 4), it names the labels file by its
 sha256 and every one of its five seats by its config hash, a search seat that answered under 95% of its repeats and
 P1 with no interval on the unselected labels are NOT READ (point 6), and point 9's second look is a field of the
-rule (`look`) so that it can buy nothing. The words of point 7 and their numbers did not change. The rule can still
+rule (`look`) so that it can buy nothing. **And a fourth time, after a fourth review, still before any row**: a run
+that is not whole is NOT READ (point 6: each of the five seats has a row at every (decision, repeat) of the 605;
+before this an unfinished `forge-default` shard, a seat left out or a deleted row still got a word), a smoke run
+writes an `--out` of its own (point 4), and what the read cannot see is written under *Unverified as written*. The
+words of point 7 and their numbers did not change. The rule can still
 change until J213 is posted, and only in this file; from the posting on it is fixed.*
 
 **Status: the labels are recorded. The probe is written and unbuilt. The validity night is registered and unplayed.**
@@ -131,8 +135,13 @@ change until J213 is posted, and only in this file; from the posting on it is fi
    five seats under another config hash than the ladder's (`cdd55e02a89c`, `3ed453ffef1c`, `fb8ae32c014d`,
    `646d59a008f6`, `e350d94649a4`, in `D538_RUN`). One `--out` of one probe run holds none of these (the probe
    settles a repeat on its first row that is not an error and tries an error once more), so a refusal means the
-   files are not the night's rows: a smoke run's rows left in, a second run appended, a file edited. The counts are
-   in the read's `audit` whatever the flags. **A refusal is no verdict**: the night is NOT READ until the rows are
+   files are not the night's rows: a second run appended, a run under another seed, a file edited. What these do
+   **not** tell apart is two runs over disjoint repeats under the one seed: the probe resumes its `--out`, so rows
+   a smoke run left in the night's `--out` are kept as the night's own (and were made at the smoke run's worker
+   count, which point 5 does not allow). **A smoke run therefore writes an `--out` of its own, and the night's
+   `--out` files do not exist before the night.** The counts are in the read's `audit` whatever the flags, but for
+   `seedMismatch`, which is `null` without `--rule` (no seed is checked, and a read that never checked is refused
+   by the rule). **A refusal is no verdict**: the night is NOT READ until the rows are
    the night's own (point 6). `--json` does not overwrite a non-empty file that is not an earlier read. Its definitions (a decision counts once, by the mean over its answered
    repeats; `off-atlas` is an answer that is never the label and never option 0, or with `--off-atlas drop` no
    answer; `ambiguous`, `mismatch`, `unsupported` and `error` are no answer and are counted) are in its header and
@@ -159,7 +168,8 @@ change until J213 is posted, and only in this file; from the posting on it is fi
      is the seat path D509 froze: gate step 12m (`cubelab.sh seat-identity`) and `atlas-selftest` must pass with no
      `--write`, or the lane does not merge.
 6. **Before any reading: the run must be a measurement.** In this order, each a stop that `--rule d538` prints in
-   place of point 7's word.
+   place of point 7's word. (Point 4's refusal comes before all of them: rows that are refused print no stop, VOID
+   among them, until the rows are the night's own.)
    - **VOID**: `forge-default` has an `ok` row that is not option 0, or an `off-atlas` row. It is Forge's own
      answer handed back, so anything else is a fault in the mapping: the fault is fixed and the night is replayed.
      Not a finding. (An `off-atlas` row of it where the label is Forge's move lowers Forge's agreement and raises
@@ -169,8 +179,12 @@ change until J213 is posted, and only in this file; from the posting on it is fi
      of the 515 labelled decisions; or one of the four does not have its repeats (3 rows for a search player, 1 for
      `forge-default`) at every labelled decision it was probed at, or answered fewer than 95% of its repeats of
      the labelled decisions (3 × 515 for a search player: one answer of three at every decision is not the run);
-     or a pair of the rule, P1 on the unselected labels among them, shares no decision or has no interval; or the
-     read refuses the rows (point 4, exit 2). The night is not read until the cause is explained
+     or a pair of the rule, P1 on the unselected labels among them, shares no decision or has no interval; or
+     **the run is not whole**: one of the five seats of point 7 (`policy-outlet` among them) lacks a row at a
+     (decision, repeat) of the 605 × its repeats, labelled or not, an `error` row being a row (a probe that stopped
+     part-way and was not run again, a seat left out of the night, a row deleted or lost: without this a missing
+     `forge-default` row hides a VOID, and 25 missing decisions pass the 95% stops); or the read refuses the rows
+     (point 4, exit 2). The night is not read until the cause is explained
      in writing, and a replay after a fix is read by the same rule. (A probe that stopped part-way is finished by
      running its line again, point 4; that is no replay.)
 7. **The rule: does agreement track Elo?** One night (J213, after J212), alone, `{workers}` JVMs: the 605
@@ -278,12 +292,19 @@ change until J213 is posted, and only in this file; from the posting on it is fi
 
 - That the lane compiles against the pinned jar, that the decision self-test reaches 434 checks (D537's 404
   and this lane's 30), and that gate step 12m passes unchanged: none run. `agreement.py` and its unit tests are
-  Python and have run (24 tests; 32 in `tools/atlas/tests/`).
+  Python and have run (25 tests; 33 in `tools/atlas/tests/`).
 - **That `agreement.py`'s port of `LabelProbe.repeatSeed` gives the Java's numbers.** The port was written from
   the source and its two constants (`repeatSeed(538, "J186/s01/d9", 0) = 100225255197839`, repeat 1
   `134260492138398`) are Python's; the decision self-test holds the Java to the same two, and the smoke run's rows
   must pass `--rule`'s audit with `seedMismatch` 0. If the build shows the port wrong, the port is corrected and
   the constants with it; the rule's refusal stands.
+- **What the read cannot see** (the fourth review; none is an accident of an honest night). The rule pins a
+  seat by its config hash, and the row's `hash` is what `label-probe.sh` was handed beside the seat config, both
+  from one line of `ai-ladder.sh cfg`: a row edited to carry another seat's hash reads as that seat's. And rows
+  edited from misses into errors raise a seat's agreement while 95% of its repeats still answer; errors that fell
+  on a seat's misses by themselves would do the same, so the read prints every seat's error count and a night with
+  errors names them in its summary. At the first build `ai-ladder.sh cfg NAME` is run for the five seats and its
+  hashes compared with `D538_RUN`'s.
 - That every one of the 605 keys replays without a `mismatch` on today's bridge: J203 replayed all six nights'
   spines on 2026-11-09 without one, and since then only the search's rollouts changed.
 - The night's length: 605 × 3 × ten search players and 605 × 2 is 19,360 replays; at 6 s a replay and 7 workers

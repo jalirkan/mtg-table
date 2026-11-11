@@ -171,6 +171,7 @@ S, F, R, R4 = 'search-v1-anytime', 'forge-default', 'search-v2-rrandom', 'search
 PAIRS = [(S, F), (S, R), (S, R4)]
 
 
+OUTLET = 'policy-outlet'
 K = 5   # every decision of the rule's labels lists five options
 
 
@@ -189,7 +190,7 @@ def rule_labels(round2):
 def rule_rows(search_d1, search_d0=0, forge_d1=0, forge_searched=False, drop=None, random_d1=lambda i: 2):
     """forge-default and both random seats pick 0 at d0; at d1 forge picks forge_d1, the random seats
     random_d1(spine number) and the search search_d1(spine number), search_d0 at d0; `drop` is a (player, key) made
-    a mismatch."""
+    a mismatch. policy-outlet's rows come last (option 0 everywhere, unsearched): the run is its five seats."""
     rows = []
     for i in range(1, 7):
         d0, d1 = 'J2/s%d/d0' % i, 'J2/s%d/d1' % i
@@ -197,6 +198,7 @@ def rule_rows(search_d1, search_d0=0, forge_d1=0, forge_searched=False, drop=Non
         for p in (R, R4):
             rows += [row(p, d0, 0, 'ok', 0), row(p, d1, 0, 'ok', random_d1(i))]
         rows += [row(S, d0, 0, 'ok', search_d0), row(S, d1, 0, 'ok', search_d1(i))]
+    rows += [row(OUTLET, 'J2/s%d/d%d' % (i, d), 0, 'ok', 0, searched=False) for i in range(1, 7) for d in (0, 1)]
     if drop:
         rows = [dict(r, status='mismatch', option=None) if (r['player'], r['key']) == drop else r for r in rows]
     return rows
@@ -311,11 +313,11 @@ class Rule(unittest.TestCase):
         _, r = self.read(rule_rows(lambda i: 1, forge_searched=True))
         self.assertEqual(r['word'], 'NOT READ')
         # policy-outlet's rows stop the read whatever --players names
-        outlet = [row('policy-outlet', 'J2/s1/d0', 0, 'ok', 0, searched=True)]
-        _, r = self.read(rule_rows(lambda i: 1) + outlet, players=[S, F, R, R4])
+        rows = rule_rows(lambda i: 1)
+        self.assertEqual((rows[-12]['player'], rows[-12]['key']), (OUTLET, 'J2/s1/d0'))
+        rows[-12] = row(OUTLET, 'J2/s1/d0', 0, 'ok', 0, searched=True)
+        _, r = self.read(rows, players=[S, F, R, R4])
         self.assertEqual((r['word'], r['stops']), ('NOT READ', ['NOT READ: policy-outlet searched at 1 rows']))
-        _, r = self.read(rule_rows(lambda i: 1) + [row('policy-outlet', 'J2/s1/d0', 0, 'ok', 0, searched=False)])
-        self.assertEqual(r['word'], 'AGREEMENT TRACKS ELO')
         # the search is to have two rows a decision and has its second at one only: the repeats are not the run's
         two = dict(RUN, repeats=dict(RUN['repeats'], **{S: 2}))
         _, r = self.read(rule_rows(lambda i: 1) + [row(S, 'J2/s2/d1', 1, 'ok', 1)], run=two)
@@ -424,14 +426,67 @@ class Rule(unittest.TestCase):
         a = A.audit(rows, rule_labels(2), RUN['probeSeed'])
         self.assertEqual(set(a['counts']), set(A.AUDIT))
         self.assertEqual((sum(a['counts'].values()), a['first'], a['probeSeed']), (0, {}, 7))
-        self.assertEqual((a['repeatMax'], a['hashes'][S]), ({F: 0, R: 0, R4: 0, S: 0}, ['h-' + S]))
-        # without a probe seed the seeds are not looked at; the labels' k is the option count of an unlabelled row too
-        self.assertEqual(A.audit([dict(r, seed=5) for r in rows], rule_labels(2))['counts']['seedMismatch'], 0)
+        self.assertEqual((a['repeatMax'], a['hashes'][S]), ({F: 0, R: 0, R4: 0, S: 0, OUTLET: 0}, ['h-' + S]))
+        self.assertEqual((a['keys'], a['cells']), (12, {F: 12, R: 12, R4: 12, S: 12, OUTLET: 12}))
+        # without a probe seed the seeds are not looked at, and the count says so: None, never a 0 nobody checked
+        # (a read made that way is refused by the rule); the labels' k is the option count of an unlabelled row too
+        self.assertIsNone(A.audit([dict(r, seed=5) for r in rows], rule_labels(2))['counts']['seedMismatch'])
+        unchecked = A.summarize(rule_labels(2), rows, boot=RUN['boot'], seed=RUN['seed'], pairs=PAIRS,
+                                split=('source', 'round2'), labels_sha=RUN['labelsSha256'])
+        unchecked['audit']['probeSeed'] = RUN['probeSeed']       # a read that claims the check it did not make
+        with self.assertRaisesRegex(ValueError, 'seeds that were not checked'):
+            A.d538(unchecked, RUN)
+        # a row whose hash, seat or repeat is a list is counted or carried, never a traceback
+        odd = A.summarize(rule_labels(2), rows + [dict(rows[0], hash=['a'], repeat=[0])], boot=10)
+        self.assertEqual((odd['audit']['counts']['badRepeat'], odd['audit']['hashes'][F]), (1, ["['a']", 'h-' + F]))
+        with self.assertRaisesRegex(ValueError, '2 seat configs'):
+            A.summarize(rule_labels(2), rows + [dict(rows[0], seat=['b'])], boot=10)
         unl = [dict(rule_labels(2)[0], label=None)] + rule_labels(2)[1:]
         self.assertEqual(A.audit([dict(rows[0], option=K)], unl)['counts']['badOption'], 1)
         # summarize carries it and stops nothing
         s = A.summarize(rule_labels(2), rows + rows, boot=10)
         self.assertEqual((s['audit']['counts']['duplicates'], s['audit']['probeSeed'], s['v']), (len(rows), None, 3))
+
+    def test_the_run_is_whole(self):
+        good = rule_rows(lambda i: 1)
+        # an unlabelled decision is a decision of the run: its rows are asked for too
+        def read(rows, labels=None):
+            s = A.summarize(labels or rule_labels(2), stamp(rows), boot=RUN['boot'], seed=RUN['seed'], pairs=PAIRS,
+                            split=('source', 'round2'), probe_seed=RUN['probeSeed'], labels_sha=RUN['labelsSha256'])
+            return A.d538(s, dict(RUN, labelled=s['labels']['labelled']))
+        self.assertEqual(read(good)['word'], 'AGREEMENT TRACKS ELO')
+        # forge-default's one row at a decision is not there (a shard that ran out of tries, a row deleted): the
+        # decision is simply not probed, 11 of 12 is under 95% here, and with 100 decisions it would not be
+        r = read([x for x in good if (x['player'], x['key']) != (F, 'J2/s6/d1')])
+        self.assertEqual(r['word'], 'NOT READ')
+        self.assertIn('NOT READ: forge-default has a row at 11 of the 12 (decision, repeat)s of the run (12 '
+                      'decisions, 1 repeat(s))', r['stops'][-1])
+        # the missing row is at a decision nobody labelled: no share moves, and the run is still not whole
+        unl = [dict(x, label=None) if x['key'] == 'J2/s6/d1' else x for x in rule_labels(2)]
+        self.assertEqual(read(good, unl)['word'], 'AGREEMENT TRACKS ELO')
+        r = read([x for x in good if (x['player'], x['key']) != (F, 'J2/s6/d1')], unl)
+        self.assertEqual((r['word'], len(r['stops'])), ('NOT READ', 1))
+        self.assertIn('forge-default has a row at 11 of the 12', r['stops'][0])
+        # a VOID row deleted is no longer a clean read
+        r = read([x for x in good if (x['player'], x['key']) != (F, 'J2/s1/d0')], unl)
+        self.assertEqual(r['word'], 'NOT READ')
+        # policy-outlet left out of the night: its searched stop could not have fired
+        r = read([x for x in good if x['player'] != OUTLET])
+        self.assertEqual((r['word'], r['stops']),
+                         ('NOT READ', ['NOT READ: policy-outlet has a row at 0 of the 12 (decision, repeat)s of the '
+                                       'run (12 decisions, 1 repeat(s)): the probe is not finished or its rows are '
+                                       'not all here']))
+        # an error row is a row: the probe wrote it, and the 95% stops read it
+        err = [dict(x, status='error', option=None) if (x['player'], x['key']) == (OUTLET, 'J2/s2/d0') else x
+               for x in good]
+        self.assertEqual(read(err)['word'], 'AGREEMENT TRACKS ELO')
+        # a search seat's second repeat missing at every decision of two (one worker's failed tail)
+        two = dict(RUN, repeats=dict(RUN['repeats'], **{S: 2}))
+        second = [row(S, 'J2/s%d/d%d' % (i, d), 1, 'ok', d) for i in range(1, 7) for d in (0, 1)]
+        self.assertEqual(self.read(good + second, run=two)[1]['word'], 'AGREEMENT TRACKS ELO')
+        _, r = self.read(good + second[:-2], run=two)
+        self.assertEqual(r['word'], 'NOT READ')
+        self.assertIn('%s has a row at 22 of the 24' % S, r['stops'][-1])
 
     def test_only_d538s_own_read(self):
         s, r = self.read(rule_rows(lambda i: 1))
@@ -518,7 +573,7 @@ class Rule(unittest.TestCase):
                 f.write(once + once)
             p = subprocess.run(run + ['--rule', 'd538', '--json', out, both], cwd=ROOT, capture_output=True, text=True)
             self.assertEqual(p.returncode, 2)
-            self.assertIn('one run of the probe under --seed 7; these hold 48 duplicates', p.stderr)
+            self.assertIn('one run of the probe under --seed 7; these hold 60 duplicates', p.stderr)
             self.assertEqual((os.path.getmtime(out), os.path.getsize(out)), before)
             # another labels file of twelve labelled decisions
             with open(lab, 'a') as f:

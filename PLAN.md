@@ -10714,8 +10714,9 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    and asks a ladder player, by its ladder config hash, which option it plays there; `tools/atlas/agreement.py`
    scores the rows against the labels by spine bootstrap. The rule is in code (`--rule d538`) and was written before
    a probe row existed: the stops **VOID** (`forge-default` not on option 0, or off the atlas) and **NOT READ** (an
-   unsearched seat that searched, under 95% of the decisions or of a seat's repeats answered, repeats missing, or a
-   pair of the rule with no shared decision or no interval), and a refusal, exit 2 and no verdict, of rows that are
+   unsearched seat that searched, under 95% of the decisions or of a seat's repeats answered, repeats missing, one
+   of the five seats without a row at a (decision, repeat) of the 605, or a pair of the rule with no shared
+   decision or no interval), and a refusal, exit 2 and no verdict, of rows that are
    not one run of the probe under `--seed 538` (a repeat with two rows that are not errors, another seed, another
    config hash, a row the probe does not write) or of any labels file but the recorded one, by sha256; then
    **AGREEMENT TRACKS ELO** when `search-v1-anytime` agrees more than
