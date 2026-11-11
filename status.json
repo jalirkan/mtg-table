@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T18:58:46-05:00",
- "heartbeat": "2026-11-10T18:58:46-05:00",
+ "updated": "2026-11-10T19:02:41-05:00",
+ "heartbeat": "2026-11-10T19:02:41-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,10 +39,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 25.59,
-  "memUsedGb": 15.3,
+  "load1": 4.29,
+  "memUsedGb": 5.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4205,
+  "swapUsedMb": 4197,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -56,21 +56,21 @@
    "id": "J210",
    "title": "Where the search's strength is, by decision kind (D535, config only, no new Java): search-v2 with each of priority, attacks and blocks searched or left to Forge, all eight combinations, each one fixed 1,200-game match (600 mirrored pairs, D398, the confirm set, no stopping rule) against forge-default on the same 600 deals, each in a ladder folder of its own, read paired by deal (WHOLE, ALONE and LAST for each kind, INTERACTION, REPLICATION against J194 (a)'s rows) and by D535's faster-seat candidate rule; alone on the machine",
    "cpu": "heavy",
-   "phase": "commands 1/9",
+   "phase": "commands 2/9",
    "started": "2026-11-10T18:36:19-05:00",
-   "elapsed": 1347,
-   "done": 1072,
+   "elapsed": 1581,
+   "done": 1192,
    "total": 9600,
    "unit": "games",
-   "ratePerHour": 2938,
-   "eta": "2026-11-10T21:52:55-05:00",
+   "ratePerHour": 2733.5,
+   "eta": "2026-11-10T22:07:14-05:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T18:58:13-05:00",
-   "memGb": 9.3,
+   "dataUpdated": "2026-11-10T19:00:24-05:00",
+   "memGb": 0.01,
    "live": {
     "mn.played": 0,
     "mn.elo": 0,
@@ -109,9 +109,9 @@
     "cf.corners": 0,
     "cf.lines": 0,
     "cf.ok": 0,
-    "elapsed_s": 1313,
+    "elapsed_s": 1570,
     "j210_err": 0,
-    "j210_games": 1072
+    "j210_games": 1192
    },
    "liveHeadline": [
     "mn.played",
@@ -152,7 +152,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J210-run1"
+   "detail": "lab-J210-run2"
   }
  ],
  "queue": [],
