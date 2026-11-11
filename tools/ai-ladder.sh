@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 #   tools/ai-ladder.sh list                                  # the registry, and what is unavailable here
+#   tools/ai-ladder.sh cfg search-v1-anytime                 # its config hash and ai-bench seat config (D538)
 #   tools/ai-ladder.sh run --hours 8 --jobs 7                # spend a time budget where it is most informative
 #   tools/ai-ladder.sh sprt policy-outlet forge-default --elo0 0 --elo1 20 --jobs 7
 #   tools/ai-ladder.sh match search-v1-anytime search-v1 --games 1200 --jobs 7   # fixed N, a 95% interval (D398)
