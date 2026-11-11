@@ -1177,6 +1177,56 @@ test('D535: the six kind arms are search-v2 with what= alone changed, and no sec
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D537: the three horizon arms are search-v2 with only the horizon (and, for t1-x3, the clock) changed', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  const v2 = by.get('search-v1-anytime')!;
+  const V2CFG = 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1';
+  assert.equal(v2.cfg, V2CFG, "search-v2's seat config");
+  assert.equal(v2.resolved.aturns, undefined, "search-v2's aturns is unset (omitted at its default, -1: attacks follow turns)");
+  // aturns=0 is written for both t1 arms: unset, it would follow turns=1 and deepen attacks too (SearchConfig.horizonFor)
+  const arms = [
+    ['search-v2-t1', { turns: 1, aturns: 0 }, V2CFG.replace(',turns=0,', ',turns=1,').replace(',anytime=1', ',aturns=0,anytime=1'), '63c35e9f7d5b', ['turns', 'aturns']],
+    ['search-v2-a1', { aturns: 1 }, V2CFG.replace(',anytime=1', ',aturns=1,anytime=1'), '3cf65e94df28', ['aturns']],
+    ['search-v2-t1-x3', { budgetMs: 4500, turns: 1, aturns: 0 },
+      V2CFG.replace('ms=1500,', 'ms=4500,').replace(',turns=0,', ',turns=1,').replace(',anytime=1', ',aturns=0,anytime=1'), 'ce99b41f9898',
+      ['budgetMs', 'turns', 'aturns']],
+  ] as const;
+  for (const [name, change, cfg, hash, keys] of arms) {
+    const x = by.get(name);
+    assert.ok(x?.cfg, `${name} is registered and playable`);
+    const xr = raw.players.find((y) => y.name === name)!;
+    assert.equal(xr.kind, v2raw.kind);
+    assert.deepEqual(xr.params, { ...v2raw.params, ...change }, `${name}'s params are search-v2's with ${keys.join(', ')} changed`);
+    const xrest: Record<string, unknown> = { ...x!.resolved };
+    const brest: Record<string, unknown> = { ...v2.resolved };
+    for (const k of keys) {
+      delete xrest[k];
+      delete brest[k];
+    }
+    assert.deepEqual(xrest, brest, `every other resolved param of ${name} is search-v2's`);
+    assert.equal(x!.resolved.maxRounds, 12, `${name} keeps the 12-round cap`);
+    assert.equal(x!.cfg, cfg, `${name}'s seat config`);
+    assert.equal(x!.hash, hash, `${name}'s config hash (D537)`);
+    assert.equal(reg.filter((y) => y.hash === hash).length, 1, `one registered player has the hash ${hash}`);
+    assert.match(xr.note ?? '', /never the live seat/);
+  }
+  // the t1 arms write the attack horizon as 0; the a1 arm leaves turns at 0
+  assert.equal(by.get('search-v2-t1')!.resolved.aturns, 0);
+  assert.equal(by.get('search-v2-t1-x3')!.resolved.aturns, 0);
+  assert.equal(by.get('search-v2-a1')!.resolved.turns, 0);
+  // t1-x3 is t1 at three times the clock and nothing else
+  const t1 = by.get('search-v2-t1')!;
+  const x3 = by.get('search-v2-t1-x3')!;
+  assert.deepEqual({ ...x3.resolved, budgetMs: 1500 }, t1.resolved, 't1-x3 is t1 with budgetMs alone changed');
+  assert.equal(x3.resolved.budgetMs, 3 * (t1.resolved.budgetMs as number));
+  assert.equal(new Set(arms.map(([, , , h]) => h)).size, 3);
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+  assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');

@@ -147,6 +147,7 @@ public final class DecisionSelfTest {
         evalLeafOnly();
         budgetAndRoundsOnly();
         knobAndCurveArms();
+        horizonArms();
         rolloutRandom();
         rolloutRandomV3();
         rolloutRandomV4();
@@ -626,6 +627,53 @@ public final class DecisionSelfTest {
         check(live.budgetMs == 1500 && live.maxRounds == 12 && "default".equals(live.rollout) && !live.rankPrior
                 && !SearchConfig.LIVE_DEFAULTS.contains("rollout") && !SearchConfig.LIVE_DEFAULTS.contains("rank"),
                 "the live seat stays 1500 ms and 12 rounds, plain-Forge rollouts, candidates in order");
+    }
+
+    /**
+     * D537: the horizon arms, read from the seat configs the ladder writes for them
+     * (tools/ai-ladder/players.json): {@code search-v2-t1} is search-v2 with
+     * {@code turns=1,aturns=0} (priority and block rollouts play to the end of the
+     * next turn, attacks keep this turn), {@code search-v2-a1} with {@code aturns=1}
+     * (attack rollouts alone play on), and {@code search-v2-t1-x3} is
+     * {@code search-v2-t1} at {@code ms=4500} with the round cap left at 12.  An
+     * unset {@code aturns} follows {@code turns} ({@link SearchConfig#horizonFor}),
+     * so {@code turns=1} alone would deepen attacks too: that is why the two t1
+     * arms write {@code aturns=0}, and the case below holds it.  Every other public
+     * field equals search-v2's (by reflection), and the live seat keeps
+     * {@code turns=0} with {@code aturns} unset.
+     */
+    private static void horizonArms() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        check(v2.horizonFor("p") == 0 && v2.horizonFor("a") == 0 && v2.horizonFor("b") == 0 && v2.attackTurns == -1,
+                "search-v2: every kind's rollouts end with this turn, aturns unset");
+        final SearchConfig t1 = SearchConfig.parse(
+                "ms=1500,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=0,anytime=1");
+        check(t1.horizonFor("p") == 1 && t1.horizonFor("b") == 1 && t1.horizonFor("a") == 0 && t1.budgetMs == 1500
+                && t1.maxRounds == 12, "t1: priority and blocks one turn further, attacks this turn, 1500 ms, 12 rounds");
+        check(t1.toString().equals(v2.toString().replace("turns=0,", "turns=1,").replace(",anytime=1", ",aturns=0,anytime=1")),
+                "t1: the text is search-v2's with turns=1 and aturns=0: " + t1);
+        configOnly("t1", v2, t1, List.of("horizonTurns", "attackTurns"));
+        final SearchConfig bare = SearchConfig.parse(v2Text.replace("turns=0,", "turns=1,"));
+        check(bare.horizonFor("a") == 1 && bare.attackTurns == -1,
+                "turns=1 without aturns deepens attacks too (aturns unset follows turns): the t1 arms must write aturns=0");
+        final SearchConfig a1 = SearchConfig.parse(
+                "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=1,anytime=1");
+        check(a1.horizonFor("a") == 1 && a1.horizonFor("p") == 0 && a1.horizonFor("b") == 0 && a1.budgetMs == 1500
+                && a1.maxRounds == 12, "a1: attacks one turn further, priority and blocks this turn, 1500 ms, 12 rounds");
+        check(a1.toString().equals(v2.toString().replace(",anytime=1", ",aturns=1,anytime=1")),
+                "a1: the text is search-v2's with aturns=1: " + a1);
+        configOnly("a1", v2, a1, List.of("attackTurns"));
+        final SearchConfig x3 = SearchConfig.parse(
+                "ms=4500,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=0,anytime=1");
+        check(x3.horizonFor("p") == 1 && x3.horizonFor("b") == 1 && x3.horizonFor("a") == 0 && x3.budgetMs == 4500
+                && x3.maxRounds == 12 && x3.minRounds == 2 && x3.mullMs == v2.mullMs,
+                "t1-x3: t1's horizons at 4500 ms, the round cap still 12, minRounds and mullms search-v2's");
+        configOnly("t1-x3", t1, x3, List.of("budgetMs"));
+        configOnly("t1-x3 against search-v2", v2, x3, List.of("budgetMs", "horizonTurns", "attackTurns"));
+        final SearchConfig live = SearchConfig.parseLive("");
+        check(live.horizonFor("p") == 0 && live.horizonFor("a") == 0 && live.horizonFor("b") == 0 && live.attackTurns == -1
+                && !SearchConfig.LIVE_DEFAULTS.contains("turns"), "the live seat keeps turns=0 with aturns unset");
     }
 
     /**
