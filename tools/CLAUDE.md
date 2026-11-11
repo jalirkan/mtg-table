@@ -221,7 +221,8 @@ scrambled, which must change no feature; the numpy half is skipped, and says
 so, where numpy is missing; about thirty seconds) → **12n**, `python3 -m unittest discover -s
 tools/atlas/tests` (**D515**: the move atlas's `labels.py` and `compare.py` over `fixtures/atlas/night`
 against golden counts, a release built from it clean and byte-identical twice, and the release's scrub check
-failing on each planted machine path, name and rules text; about a second) → `npm run build && npm test`.
+failing on each planted machine path, name and rules text; and, since **D538**, `agreement.py`'s read of the label
+probe's rows, over rows its test writes itself; a second or two) → `npm run build && npm test`.
 `SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes.
 **The gate's ports are not the live ones:** `WSPORT` defaults to **9644**, so a
 parallel gate's step 10 takes 9644..9654 and 9662, clear of 8642..8646 (the
