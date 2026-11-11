@@ -1,0 +1,465 @@
+==== J212 run1 started 2026-11-11T12:50:56-05:00 in unit lab-J212-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J212 1/3: search-v2-t1 against search-v1-anytime, 1,200 games on the confirm set
+match search-v2-t1 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 150 batch(es) of 8 games (1200 games, 600 mirrored pairs), no stopping rule
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900000, 2 pair(s))
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900001, 2 pair(s))
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900002, 2 pair(s))
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900003, 2 pair(s))
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900004, 2 pair(s))
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900005, 2 pair(s))
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900006, 2 pair(s))
+  done   w0 search-v2-t1 3-5 search-v1-anytime (0 draws) in 363 s
+  8 decisive games (4 pairs): search-v2-t1 scores 37.5%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900007, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 390 s
+  16 decisive games (8 pairs): search-v2-t1 scores 43.8%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900008, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 431 s
+  24 decisive games (12 pairs): search-v2-t1 scores 45.8%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900009, 2 pair(s))
+  done   w5 search-v2-t1 3-5 search-v1-anytime (0 draws) in 493 s
+  32 decisive games (16 pairs): search-v2-t1 scores 43.8%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900010, 2 pair(s))
+  done   w1 search-v2-t1 5-3 search-v1-anytime (0 draws) in 510 s
+  40 decisive games (20 pairs): search-v2-t1 scores 47.5%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900011, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 536 s
+  48 decisive games (24 pairs): search-v2-t1 scores 47.9%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900012, 2 pair(s))
+  done   w2 search-v2-t1 3-5 search-v1-anytime (0 draws) in 267 s
+  56 decisive games (28 pairs): search-v2-t1 scores 46.4%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900013, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 687 s
+  64 decisive games (32 pairs): search-v2-t1 scores 46.9%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900014, 2 pair(s))
+  done   w4 search-v2-t1 5-3 search-v1-anytime (0 draws) in 302 s
+  72 decisive games (36 pairs): search-v2-t1 scores 48.6%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900015, 2 pair(s))
+  done   w0 search-v2-t1 3-5 search-v1-anytime (0 draws) in 479 s
+  80 decisive games (40 pairs): search-v2-t1 scores 47.5%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900016, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 322 s
+  88 decisive games (44 pairs): search-v2-t1 scores 47.7%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900017, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 190 s
+  96 decisive games (48 pairs): search-v2-t1 scores 47.9%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900018, 2 pair(s))
+  done   w1 search-v2-t1 5-3 search-v1-anytime (0 draws) in 493 s
+  104 decisive games (52 pairs): search-v2-t1 scores 49.0%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900019, 2 pair(s))
+  done   w5 search-v2-t1 3-5 search-v1-anytime (0 draws) in 575 s
+  112 decisive games (56 pairs): search-v2-t1 scores 48.2%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900020, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 434 s
+  120 decisive games (60 pairs): search-v2-t1 scores 48.3%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900021, 2 pair(s))
+  done   w1 search-v2-t1 3-5 search-v1-anytime (0 draws) in 190 s
+  128 decisive games (64 pairs): search-v2-t1 scores 47.7%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900022, 2 pair(s))
+  done   w2 search-v2-t1 3-5 search-v1-anytime (0 draws) in 543 s
+  136 decisive games (68 pairs): search-v2-t1 scores 47.1%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900023, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 282 s
+  144 decisive games (72 pairs): search-v2-t1 scores 47.2%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900024, 2 pair(s))
+  done   w0 search-v2-t1 2-6 search-v1-anytime (0 draws) in 519 s
+  152 decisive games (76 pairs): search-v2-t1 scores 46.1%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900025, 2 pair(s))
+  done   w6 search-v2-t1 5-3 search-v1-anytime (0 draws) in 503 s
+  160 decisive games (80 pairs): search-v2-t1 scores 46.9%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900026, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 559 s
+  168 decisive games (84 pairs): search-v2-t1 scores 47.0%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900027, 2 pair(s))
+  done   w2 search-v2-t1 3-5 search-v1-anytime (0 draws) in 358 s
+  176 decisive games (88 pairs): search-v2-t1 scores 46.6%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900028, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 253 s
+  184 decisive games (92 pairs): search-v2-t1 scores 46.7%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900029, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 455 s
+  192 decisive games (96 pairs): search-v2-t1 scores 46.9%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900030, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 469 s
+  200 decisive games (100 pairs): search-v2-t1 scores 47.0%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900031, 2 pair(s))
+  done   w3 search-v2-t1 3-5 search-v1-anytime (0 draws) in 437 s
+  208 decisive games (104 pairs): search-v2-t1 scores 46.6%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900032, 2 pair(s))
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 315 s
+  216 decisive games (108 pairs): search-v2-t1 scores 47.2%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900033, 2 pair(s))
+  done   w0 search-v2-t1 3-5 search-v1-anytime (0 draws) in 566 s
+  224 decisive games (112 pairs): search-v2-t1 scores 46.9%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900034, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 397 s
+  232 decisive games (116 pairs): search-v2-t1 scores 47.0%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900035, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 377 s
+  240 decisive games (120 pairs): search-v2-t1 scores 47.1%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900036, 2 pair(s))
+  done   w2 search-v2-t1 1-7 search-v1-anytime (0 draws) in 518 s
+  248 decisive games (124 pairs): search-v2-t1 scores 46.0%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900037, 2 pair(s))
+  done   w6 search-v2-t1 1-7 search-v1-anytime (0 draws) in 776 s
+  256 decisive games (128 pairs): search-v2-t1 scores 44.9%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900038, 2 pair(s))
+  done   w0 search-v2-t1 4-4 search-v1-anytime (0 draws) in 233 s
+  264 decisive games (132 pairs): search-v2-t1 scores 45.1%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900039, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 321 s
+  272 decisive games (136 pairs): search-v2-t1 scores 45.2%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900040, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 214 s
+  280 decisive games (140 pairs): search-v2-t1 scores 45.4%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900041, 2 pair(s))
+  done   w3 search-v2-t1 6-2 search-v1-anytime (0 draws) in 505 s
+  288 decisive games (144 pairs): search-v2-t1 scores 46.2%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900042, 2 pair(s))
+  done   w0 search-v2-t1 4-4 search-v1-anytime (0 draws) in 297 s
+  296 decisive games (148 pairs): search-v2-t1 scores 46.3%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900043, 2 pair(s))
+  done   w4 search-v2-t1 2-6 search-v1-anytime (0 draws) in 454 s
+  304 decisive games (152 pairs): search-v2-t1 scores 45.7%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900044, 2 pair(s))
+  done   w2 search-v2-t1 5-3 search-v1-anytime (0 draws) in 434 s
+  312 decisive games (156 pairs): search-v2-t1 scores 46.2%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900045, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 542 s
+  320 decisive games (160 pairs): search-v2-t1 scores 46.3%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900046, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 315 s
+  328 decisive games (164 pairs): search-v2-t1 scores 46.3%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900047, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 337 s
+  336 decisive games (168 pairs): search-v2-t1 scores 46.1%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900048, 2 pair(s))
+  done   w6 search-v2-t1 3-5 search-v1-anytime (0 draws) in 501 s
+  344 decisive games (172 pairs): search-v2-t1 scores 45.9%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900049, 2 pair(s))
+  done   w5 search-v2-t1 3-5 search-v1-anytime (0 draws) in 646 s
+  352 decisive games (176 pairs): search-v2-t1 scores 45.7%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900050, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 387 s
+  360 decisive games (180 pairs): search-v2-t1 scores 45.8%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900051, 2 pair(s))
+  done   w0 search-v2-t1 5-3 search-v1-anytime (0 draws) in 518 s
+  368 decisive games (184 pairs): search-v2-t1 scores 46.2%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900052, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 383 s
+  376 decisive games (188 pairs): search-v2-t1 scores 46.3%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900053, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 559 s
+  384 decisive games (192 pairs): search-v2-t1 scores 46.4%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900054, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 382 s
+  392 decisive games (196 pairs): search-v2-t1 scores 46.4%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900055, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 437 s
+  400 decisive games (200 pairs): search-v2-t1 scores 46.5%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900056, 2 pair(s))
+  done   w2 search-v2-t1 5-3 search-v1-anytime (0 draws) in 362 s
+  408 decisive games (204 pairs): search-v2-t1 scores 46.8%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900057, 2 pair(s))
+  done   w5 search-v2-t1 3-5 search-v1-anytime (0 draws) in 404 s
+  416 decisive games (208 pairs): search-v2-t1 scores 46.6%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900058, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 294 s
+  424 decisive games (212 pairs): search-v2-t1 scores 46.7%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900059, 2 pair(s))
+  done   w0 search-v2-t1 5-3 search-v1-anytime (0 draws) in 425 s
+  432 decisive games (216 pairs): search-v2-t1 scores 47.0%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900060, 2 pair(s))
+  done   w1 search-v2-t1 3-5 search-v1-anytime (0 draws) in 394 s
+  440 decisive games (220 pairs): search-v2-t1 scores 46.8%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900061, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 266 s
+  448 decisive games (224 pairs): search-v2-t1 scores 46.9%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900062, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 359 s
+  456 decisive games (228 pairs): search-v2-t1 scores 46.9%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900063, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 284 s
+  464 decisive games (232 pairs): search-v2-t1 scores 47.0%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900064, 2 pair(s))
+  done   w0 search-v2-t1 3-5 search-v1-anytime (0 draws) in 310 s
+  472 decisive games (236 pairs): search-v2-t1 scores 46.8%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900065, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 598 s
+  480 decisive games (240 pairs): search-v2-t1 scores 46.7%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900066, 2 pair(s))
+  done   w1 search-v2-t1 3-5 search-v1-anytime (0 draws) in 332 s
+  488 decisive games (244 pairs): search-v2-t1 scores 46.5%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900067, 2 pair(s))
+  done   w6 search-v2-t1 3-5 search-v1-anytime (0 draws) in 647 s
+  496 decisive games (248 pairs): search-v2-t1 scores 46.4%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900068, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 293 s
+  504 decisive games (252 pairs): search-v2-t1 scores 46.4%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900069, 2 pair(s))
+  done   w5 search-v2-t1 3-5 search-v1-anytime (0 draws) in 433 s
+  512 decisive games (256 pairs): search-v2-t1 scores 46.3%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900070, 2 pair(s))
+  done   w2 search-v2-t1 2-6 search-v1-anytime (0 draws) in 463 s
+  520 decisive games (260 pairs): search-v2-t1 scores 46.0%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900071, 2 pair(s))
+  done   w0 search-v2-t1 6-2 search-v1-anytime (0 draws) in 450 s
+  528 decisive games (264 pairs): search-v2-t1 scores 46.4%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900072, 2 pair(s))
+  done   w1 search-v2-t1 5-3 search-v1-anytime (0 draws) in 299 s
+  536 decisive games (268 pairs): search-v2-t1 scores 46.6%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900073, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 365 s
+  544 decisive games (272 pairs): search-v2-t1 scores 46.7%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900074, 2 pair(s))
+  done   w3 search-v2-t1 5-3 search-v1-anytime (0 draws) in 361 s
+  552 decisive games (276 pairs): search-v2-t1 scores 46.9%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900075, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 509 s
+  560 decisive games (280 pairs): search-v2-t1 scores 46.8%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900076, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 421 s
+  568 decisive games (284 pairs): search-v2-t1 scores 46.8%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900077, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 223 s
+  576 decisive games (288 pairs): search-v2-t1 scores 46.9%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900078, 2 pair(s))
+  done   w2 search-v2-t1 5-3 search-v1-anytime (0 draws) in 485 s
+  584 decisive games (292 pairs): search-v2-t1 scores 47.1%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900079, 2 pair(s))
+  done   w1 search-v2-t1 3-5 search-v1-anytime (0 draws) in 433 s
+  592 decisive games (296 pairs): search-v2-t1 scores 47.0%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900080, 2 pair(s))
+  done   w0 search-v2-t1 7-1 search-v1-anytime (0 draws) in 469 s
+  600 decisive games (300 pairs): search-v2-t1 scores 47.5%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900081, 2 pair(s))
+  done   w3 search-v2-t1 5-3 search-v1-anytime (0 draws) in 339 s
+  608 decisive games (304 pairs): search-v2-t1 scores 47.7%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900082, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 329 s
+  616 decisive games (308 pairs): search-v2-t1 scores 47.7%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900083, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 223 s
+  624 decisive games (312 pairs): search-v2-t1 scores 47.8%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900084, 2 pair(s))
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 381 s
+  632 decisive games (316 pairs): search-v2-t1 scores 47.9%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900085, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 388 s
+  640 decisive games (320 pairs): search-v2-t1 scores 48.0%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900086, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 231 s
+  648 decisive games (324 pairs): search-v2-t1 scores 48.0%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900087, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 372 s
+  656 decisive games (328 pairs): search-v2-t1 scores 48.0%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900088, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 281 s
+  664 decisive games (332 pairs): search-v2-t1 scores 48.0%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900089, 2 pair(s))
+  done   w0 search-v2-t1 2-6 search-v1-anytime (0 draws) in 454 s
+  672 decisive games (336 pairs): search-v2-t1 scores 47.8%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900090, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 501 s
+  680 decisive games (340 pairs): search-v2-t1 scores 47.8%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900091, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 356 s
+  688 decisive games (344 pairs): search-v2-t1 scores 47.7%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900092, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 304 s
+  696 decisive games (348 pairs): search-v2-t1 scores 47.7%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900093, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 448 s
+  704 decisive games (352 pairs): search-v2-t1 scores 47.7%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900094, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 516 s
+  712 decisive games (356 pairs): search-v2-t1 scores 47.8%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900095, 2 pair(s))
+  done   w2 search-v2-t1 5-3 search-v1-anytime (0 draws) in 421 s
+  720 decisive games (360 pairs): search-v2-t1 scores 47.9%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900096, 2 pair(s))
+  done   w0 search-v2-t1 4-4 search-v1-anytime (0 draws) in 411 s
+  728 decisive games (364 pairs): search-v2-t1 scores 47.9%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900097, 2 pair(s))
+  done   w6 search-v2-t1 5-3 search-v1-anytime (0 draws) in 306 s
+  736 decisive games (368 pairs): search-v2-t1 scores 48.1%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900098, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 516 s
+  744 decisive games (372 pairs): search-v2-t1 scores 48.1%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900099, 2 pair(s))
+  done   w1 search-v2-t1 5-3 search-v1-anytime (0 draws) in 418 s
+  752 decisive games (376 pairs): search-v2-t1 scores 48.3%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900100, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 428 s
+  760 decisive games (380 pairs): search-v2-t1 scores 48.2%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900101, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 322 s
+  768 decisive games (384 pairs): search-v2-t1 scores 48.2%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900102, 2 pair(s))
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 512 s
+  776 decisive games (388 pairs): search-v2-t1 scores 48.3%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900103, 2 pair(s))
+  done   w0 search-v2-t1 3-5 search-v1-anytime (0 draws) in 406 s
+  784 decisive games (392 pairs): search-v2-t1 scores 48.2%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900104, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 338 s
+  792 decisive games (396 pairs): search-v2-t1 scores 48.2%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900105, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 478 s
+  800 decisive games (400 pairs): search-v2-t1 scores 48.3%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900106, 2 pair(s))
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 338 s
+  808 decisive games (404 pairs): search-v2-t1 scores 48.4%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900107, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 459 s
+  816 decisive games (408 pairs): search-v2-t1 scores 48.3%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900108, 2 pair(s))
+  done   w0 search-v2-t1 6-2 search-v1-anytime (0 draws) in 371 s
+  824 decisive games (412 pairs): search-v2-t1 scores 48.5%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900109, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 358 s
+  832 decisive games (416 pairs): search-v2-t1 scores 48.6%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900110, 2 pair(s))
+  done   w1 search-v2-t1 3-5 search-v1-anytime (0 draws) in 630 s
+  840 decisive games (420 pairs): search-v2-t1 scores 48.5%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900111, 2 pair(s))
+  done   w2 search-v2-t1 5-3 search-v1-anytime (0 draws) in 540 s
+  848 decisive games (424 pairs): search-v2-t1 scores 48.6%
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 280 s
+  856 decisive games (428 pairs): search-v2-t1 scores 48.6%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900112, 2 pair(s))
+  done   w0 search-v2-t1 5-3 search-v1-anytime (0 draws) in 222 s
+  864 decisive games (432 pairs): search-v2-t1 scores 48.7%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900113, 2 pair(s))
+  done   w3 search-v2-t1 5-3 search-v1-anytime (0 draws) in 357 s
+  872 decisive games (436 pairs): search-v2-t1 scores 48.9%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900114, 2 pair(s))
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900115, 2 pair(s))
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 554 s
+  880 decisive games (440 pairs): search-v2-t1 scores 49.0%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900116, 2 pair(s))
+  done   w1 search-v2-t1 5-3 search-v1-anytime (0 draws) in 493 s
+  888 decisive games (444 pairs): search-v2-t1 scores 49.1%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900117, 2 pair(s))
+  done   w6 search-v2-t1 5-3 search-v1-anytime (0 draws) in 524 s
+  896 decisive games (448 pairs): search-v2-t1 scores 49.2%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900118, 2 pair(s))
+  done   w4 search-v2-t1 5-3 search-v1-anytime (0 draws) in 397 s
+  904 decisive games (452 pairs): search-v2-t1 scores 49.3%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900119, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 460 s
+  912 decisive games (456 pairs): search-v2-t1 scores 49.3%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900120, 2 pair(s))
+  done   w0 search-v2-t1 3-5 search-v1-anytime (0 draws) in 483 s
+  920 decisive games (460 pairs): search-v2-t1 scores 49.2%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900121, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 405 s
+  928 decisive games (464 pairs): search-v2-t1 scores 49.2%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900122, 2 pair(s))
+  done   w6 search-v2-t1 5-3 search-v1-anytime (0 draws) in 294 s
+  936 decisive games (468 pairs): search-v2-t1 scores 49.4%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900123, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 258 s
+  944 decisive games (472 pairs): search-v2-t1 scores 49.3%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900124, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 351 s
+  952 decisive games (476 pairs): search-v2-t1 scores 49.3%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900125, 2 pair(s))
+  done   w2 search-v2-t1 5-3 search-v1-anytime (0 draws) in 300 s
+  960 decisive games (480 pairs): search-v2-t1 scores 49.4%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900126, 2 pair(s))
+  done   w0 search-v2-t1 5-3 search-v1-anytime (0 draws) in 351 s
+  968 decisive games (484 pairs): search-v2-t1 scores 49.5%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900127, 2 pair(s))
+  done   w3 search-v2-t1 5-3 search-v1-anytime (0 draws) in 719 s
+  976 decisive games (488 pairs): search-v2-t1 scores 49.6%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900128, 2 pair(s))
+  done   w5 search-v2-t1 4-4 search-v1-anytime (0 draws) in 349 s
+  984 decisive games (492 pairs): search-v2-t1 scores 49.6%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900129, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 316 s
+  992 decisive games (496 pairs): search-v2-t1 scores 49.6%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900130, 2 pair(s))
+  done   w6 search-v2-t1 5-3 search-v1-anytime (0 draws) in 380 s
+  1000 decisive games (500 pairs): search-v2-t1 scores 49.7%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900131, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 365 s
+  1008 decisive games (504 pairs): search-v2-t1 scores 49.7%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900132, 2 pair(s))
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 481 s
+  1016 decisive games (508 pairs): search-v2-t1 scores 49.7%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900133, 2 pair(s))
+  done   w0 search-v2-t1 4-4 search-v1-anytime (0 draws) in 351 s
+  1024 decisive games (512 pairs): search-v2-t1 scores 49.7%
+  done   w3 search-v2-t1 3-5 search-v1-anytime (0 draws) in 411 s
+  1032 decisive games (516 pairs): search-v2-t1 scores 49.6%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900134, 2 pair(s))
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 378 s
+  1040 decisive games (520 pairs): search-v2-t1 scores 49.7%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900135, 2 pair(s))
+  done   w1 search-v2-t1 4-4 search-v1-anytime (0 draws) in 391 s
+  1048 decisive games (524 pairs): search-v2-t1 scores 49.7%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900136, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 387 s
+  1056 decisive games (528 pairs): search-v2-t1 scores 49.7%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900137, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 360 s
+  1064 decisive games (532 pairs): search-v2-t1 scores 49.6%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900138, 2 pair(s))
+  done   w6 search-v2-t1 3-5 search-v1-anytime (0 draws) in 511 s
+  1072 decisive games (536 pairs): search-v2-t1 scores 49.5%
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900139, 2 pair(s))
+  done   w0 search-v2-t1 4-4 search-v1-anytime (0 draws) in 268 s
+  1080 decisive games (540 pairs): search-v2-t1 scores 49.5%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900140, 2 pair(s))
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 406 s
+  1088 decisive games (544 pairs): search-v2-t1 scores 49.5%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900141, 2 pair(s))
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 466 s
+  1096 decisive games (548 pairs): search-v2-t1 scores 49.6%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900142, 2 pair(s))
+  done   w2 search-v2-t1 4-4 search-v1-anytime (0 draws) in 382 s
+  1104 decisive games (552 pairs): search-v2-t1 scores 49.6%
+  start  w5 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900143, 2 pair(s))
+  done   w4 search-v2-t1 3-5 search-v1-anytime (0 draws) in 382 s
+  1112 decisive games (556 pairs): search-v2-t1 scores 49.6%
+  start  w2 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900144, 2 pair(s))
+  start  w4 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900145, 2 pair(s))
+  done   w1 search-v2-t1 3-5 search-v1-anytime (0 draws) in 483 s
+  1120 decisive games (560 pairs): search-v2-t1 scores 49.5%
+  start  w1 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900146, 2 pair(s))
+  done   w0 search-v2-t1 4-4 search-v1-anytime (0 draws) in 388 s
+  1128 decisive games (564 pairs): search-v2-t1 scores 49.5%
+  start  w0 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900147, 2 pair(s))
+  done   w6 search-v2-t1 4-4 search-v1-anytime (0 draws) in 569 s
+  1136 decisive games (568 pairs): search-v2-t1 scores 49.5%
+  start  w6 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900148, 2 pair(s))
+  done   w3 search-v2-t1 6-2 search-v1-anytime (0 draws) in 396 s
+  1144 decisive games (572 pairs): search-v2-t1 scores 49.7%
+  start  w3 search-v2-t1 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, seed 114900149, 2 pair(s))
+  done   w2 search-v2-t1 5-3 search-v1-anytime (0 draws) in 397 s
+  1152 decisive games (576 pairs): search-v2-t1 scores 49.7%
+  done   w5 search-v2-t1 5-3 search-v1-anytime (0 draws) in 441 s
+  1160 decisive games (580 pairs): search-v2-t1 scores 49.8%
+  done   w1 search-v2-t1 3-5 search-v1-anytime (0 draws) in 494 s
+  1168 decisive games (584 pairs): search-v2-t1 scores 49.7%
+  done   w4 search-v2-t1 4-4 search-v1-anytime (0 draws) in 514 s
+  1176 decisive games (588 pairs): search-v2-t1 scores 49.7%
+  done   w3 search-v2-t1 4-4 search-v1-anytime (0 draws) in 289 s
+  1184 decisive games (592 pairs): search-v2-t1 scores 49.7%
+  done   w6 search-v2-t1 3-5 search-v1-anytime (0 draws) in 381 s
+  1192 decisive games (596 pairs): search-v2-t1 scores 49.7%
+  done   w0 search-v2-t1 5-3 search-v1-anytime (0 draws) in 412 s
+  1200 decisive games (600 pairs): search-v2-t1 scores 49.8%
+
+match finished: 1200 of 1200 games (0 draws, 0 engine errors, 0 timeouts), 600 mirrored pairs
+search-v2-t1 scores 49.8% [95% 47.9%, 51.6%] = -2 Elo [-15, +11] against search-v1-anytime
+search-v2-t1: 27514 decisions searched in 1199 games, 5464 changed Forge's answer (19.9%); budget fallbacks 698 = 2.5% [95% 2.0%, 3.0%]; other fallbacks {"unmappable":22}
+search-v2-t1 by kind: p 3979/18952, a 968/6195, b 517/2367
+search-v2-t1 time per decision: 1210.296 ms (p+a+b); by kind p 1313.635, a 863.58, b 1290.329
+search-v2-t1 rollouts timed out inside one engine step: 17
+search-v1-anytime: 27541 decisions searched in 1199 games, 5091 changed Forge's answer (18.5%); budget fallbacks 109 = 0.4% [95% 0.2%, 0.5%]; other fallbacks {"unmappable":25}
+search-v1-anytime by kind: p 3599/18987, a 942/6178, b 550/2376
+search-v1-anytime time per decision: 898.588 ms (p+a+b); by kind p 905.676, a 861.555, b 938.235
+search-v1-anytime rollouts timed out inside one engine step: 7
+{"v":1,"at":"2026-11-11T20:21:43.900Z","id":"justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439","host":"justin-a-B650-GAMING-X-AX-V2","a":"search-v2-t1","b":"search-v1-anytime","ah":"63c35e9f7d5b","bh":"cdd55e02a89c","set":"tools/ai-bench/pairs-confirm.txt","target":1200,"planned":1200,"complete":true,"played":1200,"draws":0,"errors":0,"timeouts":0,"decisive":1200,"pairs":600,"aWins":597,"score":0.4975,"se":0.0095,"lo":0.4789,"hi":0.5161,"elo":-1.7,"eloLo":-14.6,"eloHi":11.2,"aSearch":{"games":1199,"searched":27514,"changed":5464,"fallback":{"budget":698,"unmappable":22},"budgetRate":0.025369,"budgetLo":0.020449,"budgetHi":0.030289,"byKind":{"p":{"searched":18952,"changed":3979,"rate":0.209951},"a":{"searched":6195,"changed":968,"rate":0.156255},"b":{"searched":2367,"changed":517,"rate":0.21842}},"msMean":{"p":1313.635,"a":863.58,"b":1290.329},"msPerDecision":1210.296,"evalLeaves":0,"evalLeafUs":null,"stepTimeouts":17,"unavailable":0},"bSearch":{"games":1199,"searched":27541,"changed":5091,"fallback":{"unmappable":25,"budget":109},"budgetRate":0.003958,"budgetLo":0.002452,"budgetHi":0.005463,"byKind":{"p":{"searched":18987,"changed":3599,"rate":0.189551},"a":{"searched":6178,"changed":942,"rate":0.152477},"b":{"searched":2376,"changed":550,"rate":0.231481}},"msMean":{"p":905.676,"a":861.555,"b":938.235},"msPerDecision":898.588,"evalLeaves":0,"evalLeafUs":null,"stepTimeouts":7,"unavailable":0}}

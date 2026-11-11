@@ -1,10 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-11-11T15:20:39-05:00",
- "heartbeat": "2026-11-11T15:20:39-05:00",
+ "updated": "2026-11-11T15:21:44-05:00",
+ "heartbeat": "2026-11-11T15:21:44-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
+  {
+   "at": "2026-11-11T15:21:44-05:00",
+   "id": "J212",
+   "kind": "memory-fit",
+   "needGb": 3.07,
+   "availGb": 24,
+   "workers": 6,
+   "workersMax": 7,
+   "text": "J212 started with 6 of 7 workers at 2026-11-11T15:21:44-05:00, as many as fit (MemAvailable 24 GB, 3.07 GB a worker); raised toward 7 as memory frees"
+  },
   {
    "at": "2026-11-10T21:08:07-05:00",
    "id": "J210",
@@ -19,10 +29,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.94,
-  "memUsedGb": 9.9,
+  "load1": 5.44,
+  "memUsedGb": 6.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5522,
+  "swapUsedMb": 5485,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -36,21 +46,21 @@
    "id": "J212",
    "title": "The search's horizon (D537, config only, no play change): three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) of search-v2 with its rollouts played one turn further against search-v1-anytime (search-v2, the live seat), each in a ladder folder of its own on blocks 114,900,000-114,900,149 -- search-v2-t1 (priority and block rollouts to the end of the next turn at 1.5 s), search-v2-a1 (attack rollouts one turn further at 1.5 s), search-v2-t1-x3 (t1 at 4.5 s, the round cap still 12) -- each read by D519's four readings at 1,200 games, pre-registered in D537; then, information only, 720 recorded games of search-v2 against Forge Default summarised. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 1/5",
+   "phase": "commands 2/5",
    "started": "2026-11-11T12:33:37-05:00",
-   "elapsed": 10022,
+   "elapsed": 10087,
    "done": 1176,
    "total": 3600,
    "unit": "games",
-   "ratePerHour": 460.1,
-   "eta": "2026-11-11T20:36:46-05:00",
-   "workers": 7,
+   "ratePerHour": 443.9,
+   "eta": "2026-11-11T20:49:21-05:00",
+   "workers": 6,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-11T15:20:06-05:00",
-   "memGb": 3.42,
+   "memGb": 0.01,
    "live": {
     "mt1.played": 0,
     "mt1.elo": 0,
@@ -82,7 +92,7 @@
     "v.horizonClosedA": -1,
     "rec.games": 0,
     "rec.pSearched": 0,
-    "elapsed_s": 9989,
+    "elapsed_s": 10054,
     "j212_err": 0,
     "j212_games": 1176,
     "ma1.errors": 0,
@@ -153,7 +163,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J212-run1"
+   "detail": "lab-J212-run2"
   }
  ],
  "queue": [
