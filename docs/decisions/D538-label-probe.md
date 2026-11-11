@@ -22,7 +22,13 @@ rule (`look`) so that it can buy nothing. **And a fourth time, after a fourth re
 that is not whole is NOT READ (point 6: each of the five seats has a row at every (decision, repeat) of the 605;
 before this an unfinished `forge-default` shard, a seat left out or a deleted row still got a word), a smoke run
 writes an `--out` of its own (point 4), and what the read cannot see is written under *Unverified as written*. The
-words of point 7 and their numbers did not change. The rule can still
+words of point 7 and their numbers did not change. **And a fifth time, after the first build and a review of the
+compiled lane on smoke rows, before any row of the night**: a replay that the game timeout or an error of the game
+cut before it reached the decision wrote `mismatch`, which is final and is never tried again; it now writes `error`
+(point 4's sentence was not true of a timeout until then); the probe refuses to resume a file whose rows of the
+player carry another config hash, where it compared the seat config only; and `label-probe.sh` exits 2, with the
+shards' own words, when every shard that failed refused the run, where it exited 1. No rule, number or word of
+point 7 changed. The rule can still
 change until J213 is posted, and only in this file; from the posting on it is fixed.*
 
 **Status: the labels are recorded. The probe is written and unbuilt. The validity night is registered and unplayed.**
@@ -145,7 +151,8 @@ change until J213 is posted, and only in this file; from the posting on it is fi
    the night's own (point 6). `--json` does not overwrite a non-empty file that is not an earlier read. Its definitions (a decision counts once, by the mean over its answered
    repeats; `off-atlas` is an answer that is never the label and never option 0, or with `--off-atlas drop` no
    answer; `ambiguous`, `mismatch`, `unsupported` and `error` are no answer and are counted) are in its header and
-   were fixed before any row existed. A worker that stops inside a replay writes `error`, never `mismatch`; an
+   were fixed before any row existed. A worker that stops inside a replay writes `error`, never `mismatch`, and so
+   does a replay the game timeout or an error of the game cut before the decision; an
    `error` row is tried once more and the second is final.
 5. **What the probe's position is and is not** (each a limit on point 7's reading, stated before it).
    - The player is asked on the live engine at the atlas hook, after Forge's AI has answered; the judges read seat

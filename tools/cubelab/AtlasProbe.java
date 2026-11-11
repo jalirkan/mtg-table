@@ -63,9 +63,10 @@ import mtgtable.ai.SeatSpec;
  * <p><b>The rows.</b>  One JSON object a line, appended with one write each (the shards of a run share the file;
  * {@code tools/label-probe.sh} cuts a torn last line before it starts them).  A rerun with the same arguments skips
  * every (key, player, repeat) the file already holds with a status other than {@code error}, and one it holds
- * {@link #ERROR_TRIES} errors for; a row of the same player made with another seat config or seed refuses the run
+ * {@link #ERROR_TRIES} errors for; a row of the same player made with another seat config, config hash or seed refuses the run
  * (another experiment wants another file).  A worker that must stop (a stuck game thread, an exhausted heap)
- * before the player was asked writes {@code error}, never {@code mismatch}: nothing was measured about the position.
+ * before the player was asked writes {@code error}, never {@code mismatch}: nothing was measured about the position;
+ * so does a replay the game timeout or an error of the game cut before it reached d.
  *
  * <p>The rules it keeps are the cube lab's: {@link CubeLab#boot} (hard rules 1, 2 and 11 through Bootstrap), decks
  * through {@code DeckSerializer.fromFile} inside {@code playMatch} (hard rule 4), one game at a time on Forge's own
@@ -305,6 +306,10 @@ public final class AtlasProbe {
                 throw new IllegalStateException(out + " holds rows of " + a.player + " made with the seat config "
                         + CubeLab.str(m, "seat") + ", not " + a.seat + ": another experiment, another --out");
             }
+            if (a.hash != null && !a.hash.equals(CubeLab.str(m, "hash"))) {
+                throw new IllegalStateException(out + " holds rows of " + a.player + " made under the config hash "
+                        + CubeLab.str(m, "hash") + ", not " + a.hash + ": another experiment, another --out");
+            }
             final String key = CubeLab.str(m, "key");
             final long rep = CubeLab.num(m, "repeat", -1);
             if (key != null && rep >= 0 && CubeLab.num(m, "seed", 0) != LabelProbe.repeatSeed(a.seed, key, (int) rep)) {
@@ -433,6 +438,15 @@ public final class AtlasProbe {
                 row.detail = "decision " + di.index + ": " + diff;
                 return rc;
             }
+        }
+        if (hook.branched == null && CubeLab.lastCut != null && hook.error == null) {
+            // the replay agreed with the baseline as far as it got and was cut (the game timeout, an error of the
+            // game) before d: nothing was measured about this position, so it is an error (retried), never a
+            // mismatch, which is final and says the replay is not the recorded game
+            row.status = LabelProbe.ERROR;
+            row.detail = CubeLab.lastCut + " cut the replay before d" + k.d + "; it had listed " + listed.size()
+                    + " decision(s)";
+            return rc;
         }
         if (hook.branched == null) {
             row.status = LabelProbe.MISMATCH;

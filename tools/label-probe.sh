@@ -34,8 +34,8 @@
 # skips every row --out holds for this player, after cutting off a torn last
 # line; an error row is tried again once, and a second error at the same
 # (decision, repeat) is final; a row of this player made with another seat
-# config or --seed refuses the run.  Two --out files need two basenames: the
-# run's folder is var/label-probe/<basename>-<player>.
+# config, hash or --seed refuses the run (exit 2).  Two --out files need two
+# basenames: the run's folder is var/label-probe/<basename>-<player>.
 # Logs: var/label-probe/<run>/shard-<i>.log (each probe's line, the match
 # lines, Forge's chatter).  Needs ./bridge/build.sh first (bridge/out).  Not in
 # the gate: it boots the engine and takes minutes to hours.
@@ -127,8 +127,23 @@ for ((i = 0; i < workers; i++)); do
   pids+=($!)
 done
 rc=0
-for p in "${pids[@]}"; do wait "$p" || rc=1; done
-[ "$rc" = 0 ] || echo "label-probe: a shard failed -- see $dir/shard-*.log" >&2
+refused=1
+for p in "${pids[@]}"; do
+  c=0
+  wait "$p" || c=$?
+  [ "$c" = 0 ] && continue
+  rc=1
+  [ "$c" = 2 ] || refused=0
+done
+if [ "$rc" != 0 ]; then
+  # every shard that failed REFUSED the run (exit 2: --out holds rows of another seat config, hash or seed): the
+  # run's exit is 2 and the shards' own words are printed; anything else is 1
+  if [ "$refused" = 1 ]; then
+    rc=2
+    grep -h '^label-probe: ' "$dir"/shard-*.log 2>/dev/null | sort -u | tail -3 >&2 || :
+  fi
+  echo "label-probe: a shard failed -- see $dir/shard-*.log" >&2
+fi
 python3 -I -c '
 import collections, json, sys
 last = {}

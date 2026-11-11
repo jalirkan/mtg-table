@@ -542,6 +542,7 @@ public final class CubeLab {
             RowsLeakCheck.reset();
             Atlas.Hook hook = null;
             lastHook = null;
+            lastCut = null;
             if (atlas != null) {
                 hook = new Atlas.Hook(atlasUnit(atlas, observeCfg, decks, deckFiles, specA, specB, id, seed));
                 lastHook = hook;
@@ -559,6 +560,7 @@ public final class CubeLab {
             } finally {
                 SearchPolicy.observeHook(null);
             }
+            lastCut = r.timeout ? "the game timeout" : r.error != null ? "the game's error " + r.error : null;
             DistillRows.endGame(rowsKey, r.winner, !r.stuck && r.error == null);
             if (atlas != null && r.error != null && r.error.endsWith("OutOfMemoryError")) {
                 // D465: the replay itself ran out of heap (a branch's own is counted by the hook)
@@ -645,6 +647,13 @@ public final class CubeLab {
      * one): {@code AtlasProbe} reads its listing and its probe's answer once the match is over.
      */
     static Atlas.Hook lastHook;
+
+    /**
+     * D538: what cut the last game {@link #playMatch} played short of its own end -- the per-game timeout or an
+     * error of the game -- or null when it ended by itself.  {@code AtlasProbe} writes {@code error}, never
+     * {@code mismatch}, for a replay that was cut before it reached the decision.
+     */
+    static String lastCut;
 
     /**
      * A game row's {@code playExplore} (D358): both seats' counts summed --
