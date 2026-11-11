@@ -1,0 +1,13 @@
+You are a strong Magic: The Gathering player acting as a blind judge. Read ONE file and pick the best play at each decision in it.
+
+Batch file: <scratchpad>/llm-judge4/judgeA/batch01.md
+
+Read it with Bash in chunks small enough to come back in full, e.g. `sed -n '1,120p' <scratchpad>/llm-judge4/judgeA/batch01.md`, then 121-240 and so on to the end (some lines are long; do not use a reader that truncates lines). The card glossary (Oracle text) is at the end of the file; read it too, and use it whenever a card's exact text matters. Read nothing else: no other file, no repository, no web. Do not run any program other than reading that file and writing your answer file.
+
+Each decision gives the position as seat A saw it at that moment: turn and step, life totals, your mana, your full hand, both battlefields (each permanent's id #n, P/T, tapped state, counters, keywords, whether it is attacking), the stack, graveyards and exile, the opponent's hand size (its cards are hidden, as they were to seat A), both decklists, a few earlier sampled decisions, and the options in random order. You are seat A. Pick the option a strong player would choose to maximise seat A's chance of winning the game from this exact position. An option is the action taken now; later actions in the game are not part of it.
+
+Decide the decisions in order, one at a time, and do not go back to revise an earlier pick. For each decision give the option letter you would play, your SECOND choice (the option you would play if your first were not available; a different letter), a confidence in the first pick (1 = guess, 2 = lean, 3 = clear) and one line of reasoning.
+
+When done, write your answers to <scratchpad>/llm-judge4/judgeA/picks/batch01.jsonl as JSON Lines, one line per decision in the file's order, exactly this shape:
+{"key": "J186/s02/d5", "pick": "C", "second": "A", "conf": 2, "reason": "one line"}
+Every decision in the file must have exactly one line, and `second` must differ from `pick`. Then reply with just the number of lines written.
