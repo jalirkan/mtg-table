@@ -111,7 +111,16 @@ public final class AtlasProbe {
             System.exit(2);
             return;
         }
-        final int rc = run(a);
+        int rc;
+        try {
+            rc = run(a);
+        } catch (final IllegalArgumentException | IllegalStateException e) {
+            System.err.println("label-probe: " + e.getMessage());
+            rc = 2;
+        } catch (final Throwable t) {
+            t.printStackTrace();   // and exit: a throw out of main would leave the JVM to Forge's non-daemon pools
+            rc = 1;
+        }
         System.err.flush();
         System.exit(rc);   // Forge leaves non-daemon pools behind
     }
@@ -265,7 +274,7 @@ public final class AtlasProbe {
 
     /**
      * The (key, repeat) pairs {@code out} already answers for this player (every status but error), and a refusal
-     * when a row of this player carries another seat config.  A line that does not parse is skipped (the wrapper
+     * when a row of this player carries another seat config or a seed this run's {@code --seed} would not give it.  A line that does not parse is skipped (the wrapper
      * cuts a torn last line before a run).
      */
     static Set<String> done(final File out, final Args a) throws IOException {
@@ -287,8 +296,14 @@ public final class AtlasProbe {
                 throw new IllegalStateException(out + " holds rows of " + a.player + " made with the seat config "
                         + CubeLab.str(m, "seat") + ", not " + a.seat + ": another experiment, another --out");
             }
+            final String key = CubeLab.str(m, "key");
+            final long rep = CubeLab.num(m, "repeat", -1);
+            if (key != null && rep >= 0 && CubeLab.num(m, "seed", 0) != LabelProbe.repeatSeed(a.seed, key, (int) rep)) {
+                throw new IllegalStateException(out + " holds rows of " + a.player + " made under another --seed (" + key
+                        + " repeat " + rep + "): another experiment, another --out");
+            }
             if (!LabelProbe.ERROR.equals(CubeLab.str(m, "status"))) {
-                done.add(CubeLab.str(m, "key") + "#" + CubeLab.num(m, "repeat", -1));
+                done.add(key + "#" + rep);
             }
         }
         return done;
