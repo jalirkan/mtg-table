@@ -2416,12 +2416,14 @@ s12m_seatid() {
 #      from it passes the scrub check and zips the same bytes twice, and the
 #      check fails on each thing it exists to catch (a machine path, a name, a
 #      rules-text identity field, an ability's text in a label, Forge's CARDNAME).
-#      Standard library only, no engine, about a second.
+#      D538 added test_agreement.py beside them: agreement.py's read of the label
+#      probe's rows (its audit, its stops, --rule d538's words) over rows the test
+#      writes itself.  Standard library only, no engine, a second or two.
 s12n_atlas() {
   printf '\n=== 12n. tools/atlas tests -- the move atlas labels, a release from the fixture, the scrub check (D515) ===\n'
   command -v python3 >/dev/null || die "python3 not found (12n: tools/atlas needs Python 3)"
   python3 -m unittest discover -s tools/atlas/tests 2>&1 \
-    || die "tools/atlas tests (12n: labels.py or compare.py moved off the fixture's goldens, or the release's scrub check let a path, a name or rules text through; D515)"
+    || die "tools/atlas tests (12n: labels.py or compare.py moved off the fixture's goldens, the release's scrub check let a path, a name or rules text through (D515), or agreement.py's read of the label probe's rows moved (D538))"
 }
 
 s13_skipped() {

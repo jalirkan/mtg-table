@@ -238,19 +238,13 @@ public final class CubeLab {
     private static String jarSha;
 
     public static void main(final String[] args) throws Exception {
-        proto = new PrintStream(new java.io.FileOutputStream(java.io.FileDescriptor.out), true, StandardCharsets.UTF_8);
-        System.setOut(System.err);
+        protocolOut();
         if (args.length == 0) {
             System.err.println("usage: CubeLab facts --names <file> --out <json> | CubeLab play");
             System.exit(2);
         }
-        cfg = Config.load();
         final long t0 = System.nanoTime();
-        Bootstrap.installGui(cfg.forgeHomeDir());           // hard rule 1: the FIRST Forge call
-        final long initMs = Bootstrap.initializeModel(false);
-        // A cube draft in Forge ranks by the CubeCobra list first; set it the way
-        // BoosterDraft.setupCustomDraft does, so CardRanker.getRawScore reads it.
-        IBoosterDraft.CUSTOM_RANKINGS_FILE[0] = CUBE_RANKINGS;
+        final long initMs = boot();
         emit(new JsonOut().obj().n("type", "ready").n("initMs", initMs).n("bootMs", ms(t0)).end().done());
         int rc;
         switch (args[0]) {
@@ -261,6 +255,26 @@ public final class CubeLab {
         System.err.flush();
         proto.flush();
         System.exit(rc);   // Forge leaves non-daemon pools behind
+    }
+
+    /** The protocol's stdout, and {@code System.out} pointed at stderr for Forge's chatter (D538: AtlasProbe's main too). */
+    static void protocolOut() {
+        proto = new PrintStream(new java.io.FileOutputStream(java.io.FileDescriptor.out), true, StandardCharsets.UTF_8);
+        System.setOut(System.err);
+    }
+
+    /**
+     * The worker's boot: its config, the headless GUI, the model; the initialize's milliseconds.  D538: shared with
+     * {@code AtlasProbe}'s main, which plays the same match lines in this same process shape.
+     */
+    static long boot() throws Exception {
+        cfg = Config.load();
+        Bootstrap.installGui(cfg.forgeHomeDir());           // hard rule 1: the FIRST Forge call
+        final long initMs = Bootstrap.initializeModel(false);
+        // A cube draft in Forge ranks by the CubeCobra list first; set it the way
+        // BoosterDraft.setupCustomDraft does, so CardRanker.getRawScore reads it.
+        IBoosterDraft.CUSTOM_RANKINGS_FILE[0] = CUBE_RANKINGS;
+        return initMs;
     }
 
     static void emit(final String json) {
@@ -527,8 +541,11 @@ public final class CubeLab {
             RowsLeakCheck.configure(rec == null && atlas == null ? rowsCheckEvery : 0, gameSeed);
             RowsLeakCheck.reset();
             Atlas.Hook hook = null;
+            lastHook = null;
+            lastCut = null;
             if (atlas != null) {
                 hook = new Atlas.Hook(atlasUnit(atlas, observeCfg, decks, deckFiles, specA, specB, id, seed));
+                lastHook = hook;
                 if (num(atlas, "decision", -1) >= 0) {
                     DistillRows.useDir(null);   // a branch unit's replay writes no rows; its branches do
                 }
@@ -543,6 +560,7 @@ public final class CubeLab {
             } finally {
                 SearchPolicy.observeHook(null);
             }
+            lastCut = r.timeout ? "the game timeout" : r.error != null ? "the game's error " + r.error : null;
             DistillRows.endGame(rowsKey, r.winner, !r.stuck && r.error == null);
             if (atlas != null && r.error != null && r.error.endsWith("OutOfMemoryError")) {
                 // D465: the replay itself ran out of heap (a branch's own is counted by the hook)
@@ -623,6 +641,19 @@ public final class CubeLab {
 
     /** D465: the exit code of a worker that retired because its heap is exhausted (3 is a stuck game thread). */
     static final int RETIRED = 4;
+
+    /**
+     * D538: the observe hook of the last game {@link #playMatch} played with an {@code atlas} block (null without
+     * one): {@code AtlasProbe} reads its listing and its probe's answer once the match is over.
+     */
+    static Atlas.Hook lastHook;
+
+    /**
+     * D538: what cut the last game {@link #playMatch} played short of its own end -- the per-game timeout or an
+     * error of the game -- or null when it ended by itself.  {@code AtlasProbe} writes {@code error}, never
+     * {@code mismatch}, for a replay that was cut before it reached the decision.
+     */
+    static String lastCut;
 
     /**
      * A game row's {@code playExplore} (D358): both seats' counts summed --
@@ -766,6 +797,12 @@ public final class CubeLab {
                 opts.add(((Number) o).intValue());
             }
             u.options = opts;
+        }
+        if (a.get("probe") instanceof Map) {
+            // D538: ask a ladder player at the decision instead of branching it (AtlasProbe writes these blocks)
+            final Map<?, ?> p = (Map<?, ?>) a.get("probe");
+            u.probe = new mtgtable.ai.LabelProbe.Ask(str(p, "player"), str(p, "seat"), num(p, "seed", 0),
+                    (int) num(p, "repeat", 0));
         }
         if (u.decision >= 0) {
             // D465: each branch reaches the pool as it ends, so a worker that dies keeps what it finished

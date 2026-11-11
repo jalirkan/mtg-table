@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import forge.LobbyPlayer;
 import forge.ai.ComputerUtilCard;
@@ -369,7 +370,16 @@ public class PolicyControllerAi extends PlayerControllerAi {
      * steers (its own victim and target rules).
      */
     private List<SpellAbility> choose() {
-        final List<SpellAbility> r = choose0();
+        return choose(policy, search, super::chooseSpellAbilityToPlay);
+    }
+
+    /**
+     * {@link #choose()} with the outlet policy, the search and Forge's answer handed in: this seat's own, or (D538,
+     * {@link #probePriority}) a ladder player's policy and search, Forge's answer the one already given.
+     */
+    private List<SpellAbility> choose(final OutletPolicy policy, final SearchPolicy search,
+                                      final Supplier<List<SpellAbility>> forgeAnswer) {
+        final List<SpellAbility> r = choose0(policy, search, forgeAnswer);
         if (search != null && r != null && r.size() == 1 && steerSa == null && !"outlets".equals(lastBy)
                 && search.wantsTargets(player)) {
             search.chooseTargets(player, r.get(0));
@@ -377,8 +387,36 @@ public class PolicyControllerAi extends PlayerControllerAi {
         return r;
     }
 
+    /** What {@link #probePriority} answers: the play (null or empty = pass) and whose answer it was. */
+    public record Probe(List<SpellAbility> answer, String by) {
+    }
+
+    /**
+     * D538, the label probe ({@link LabelProbe}): what a seat with {@code policy} and {@code search} answers at the
+     * priority this seat is deciding now, Forge's own answer {@code forge} given (null = pass) rather than asked
+     * again -- {@link #choose()}'s path, with that seat's policy and search in place of this one's.  This seat's
+     * steer and its answer's owner are put back after, so its own answer is played as it was going to be.  On the
+     * game thread, inside this seat's own decision (the atlas's observe hook).
+     */
+    public Probe probePriority(final OutletPolicy policy, final SearchPolicy search, final List<SpellAbility> forge) {
+        final SpellAbility steerSa0 = steerSa;
+        final Card steerVictim0 = steerVictim;
+        final String lastBy0 = lastBy;
+        final String lastWhy0 = lastWhy;
+        try {
+            final List<SpellAbility> r = choose(policy, search, () -> forge);
+            return new Probe(r, lastBy);
+        } finally {
+            steerSa = steerSa0;
+            steerVictim = steerVictim0;
+            lastBy = lastBy0;
+            lastWhy = lastWhy0;
+        }
+    }
+
     /** The priority answer: the outlet policy, Forge, the policy again, then the search (D309-D312). */
-    private List<SpellAbility> choose0() {
+    private List<SpellAbility> choose0(final OutletPolicy policy, final SearchPolicy search,
+                                       final Supplier<List<SpellAbility>> forgeAnswer) {
         steerSa = null;
         steerVictim = null;
         lastBy = "forge";
@@ -402,7 +440,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 }
             }
         }
-        final List<SpellAbility> forge = super.chooseSpellAbilityToPlay();
+        final List<SpellAbility> forge = forgeAnswer.get();
         if (forge != null && forge.size() == 1 && policy != null
                 && OutletPolicy.creatureSacCost(forge.get(0)) != null) {
             // Forge chose an outlet by itself (Carrion Feeder's AristocratCounters
@@ -440,17 +478,17 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (search != null && steerSa == null && search.wantsPriority(player)) {
             // The outlet policy's rules stay in front (D311 roadmap 5): the search
             // only reconsiders a priority none of them claimed.
-            final List<SpellAbility> r = observing()
+            final List<SpellAbility> r = search.config().observe
                     ? Decisions.quiet(() -> search.choosePriority(player, getAi(), forge))   // D450
                     : search.choosePriority(player, getAi(), forge);
-            lastBy = searchBy(r != forge);
+            lastBy = searchBy(search, r != forge);
             return r;
         }
         return forge;
     }
 
     /** "search" when the search reached a verdict (kept Forge's answer or changed it), else "forge". */
-    private String searchBy(final boolean changed) {
+    private static String searchBy(final SearchPolicy search, final boolean changed) {
         if (changed) {
             return "search";
         }

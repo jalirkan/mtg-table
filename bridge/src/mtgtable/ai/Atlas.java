@@ -291,6 +291,11 @@ public final class Atlas {
         public Set<Integer> options;
         /** D465: each branch as it ends (the worker streams it to the pool), or null. */
         public Consumer<Branch> onBranch;
+        /**
+         * D538: ask this ladder player at the decision instead of branching it ({@link LabelProbe}), or null.  The
+         * replay is a branch unit's to the decision and its listing check; then the answer, and the replay ends.
+         */
+        public LabelProbe.Ask probe;
     }
 
     /** One decision of the atlas seat. */
@@ -481,6 +486,8 @@ public final class Atlas {
         public String retire;
         /** D465: of this unit's copies, how many were still reachable after one GC at its end (-1 = not measured). */
         public int copiesRetained = -1;
+        /** D538: the probe's answers ({@link Unit#probe}): one, at the unit's decision, when its listing was the baseline's. */
+        public final List<LabelProbe.Answer> probes = new ArrayList<>();
 
         public Hook(final Unit unit) {
             this.unit = unit;
@@ -520,6 +527,15 @@ public final class Atlas {
             if (unit.expect != null && !unit.expect.equals(d.tokens)) {
                 error = "the replay diverged at decision " + d.index + ": the baseline listed " + unit.expect
                         + ", the replay " + d.tokens;
+                if (unit.probe != null) {
+                    ai.getGame().setGameOver(GameEndReason.Draw);   // D538: nothing to ask; the replay's rest is not played
+                }
+                return;
+            }
+            if (unit.probe != null) {
+                // D538: the player's answer at the baseline's position, in place of the branches; the replay ends here
+                probes.add(LabelProbe.ask(ai, cands, kind, d, unit.probe));
+                ai.getGame().setGameOver(GameEndReason.Draw);
                 return;
             }
             final Path rowsBefore = DistillRows.dir();
@@ -768,6 +784,13 @@ public final class Atlas {
             j.end();
             if (copiesRetained >= 0) {
                 j.n("copiesRetained", (long) copiesRetained);
+            }
+            if (!probes.isEmpty()) {
+                j.key("probe").arr();   // D538
+                for (final LabelProbe.Answer a : probes) {
+                    a.write(j);
+                }
+                j.end();
             }
             j.key("branches").arr();
             for (final Branch b : branches) {

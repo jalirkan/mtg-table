@@ -156,6 +156,7 @@ public final class DecisionSelfTest {
         explore();
         randomSeat();
         leakVerdict();
+        labelProbe();
 
         System.out.println("decision selftest: " + checks + " check(s), " + failures + " failure(s)");
         if (failures > 0) {
@@ -249,6 +250,126 @@ public final class DecisionSelfTest {
             check(false, "D529: the fake retest threw " + e);
         }
         check(LeakVerdict.RETEST_BUDGET_MS == 600_000L && LeakVerdict.RETESTS == 4, "D529: the retest's constants");
+    }
+
+    /**
+     * D538: the label probe's engine-free half ({@link LabelProbe}).  The two faults that would make an agreement
+     * score wrong without a word: a replay whose listing is not the baseline's taken as the same position
+     * ({@link LabelProbe#listingDiff} must see a changed, reordered, missing or extra option, and only those), and a
+     * pick mapped to the wrong option ({@link LabelProbe#optionOf}: by token -- a pass is the listing's pass, not
+     * option 0; an attack and a block by their canonical token, whatever order the pick declared them in -- and,
+     * where two options share a token (D483), by identity, never by a guess).  Then the seat's seed per repeat
+     * ({@link LabelProbe#seatWithSeed}, {@link LabelProbe#repeatSeed}) and the answer's JSON.
+     */
+    private static void labelProbe() {
+        final List<String> base = List.of("cast:11", "pass", "cast:40", "activate:7#1");
+        check(LabelProbe.listingDiff(base, new ArrayList<>(base)) == null, "D538: the same listing is no mismatch");
+        check(LabelProbe.listingDiff(List.of(), List.of()) == null, "D538: two empty listings are no mismatch");
+        final String changed = LabelProbe.listingDiff(base, List.of("cast:11", "pass", "cast:41", "activate:7#1"));
+        check(changed != null && changed.startsWith("option 2:"), "D538: one changed token is a mismatch at its option (" + changed + ")");
+        check(LabelProbe.listingDiff(base, List.of("pass", "cast:11", "cast:40", "activate:7#1")) != null,
+                "D538: the same options in another order are a mismatch (option indices would move)");
+        final String extra = LabelProbe.listingDiff(base, List.of("cast:11", "pass", "cast:40", "activate:7#1", "cast:3"));
+        check(extra != null && extra.contains("4 options, the replay 5"), "D538: an extra option is a mismatch (" + extra + ")");
+        check(LabelProbe.listingDiff(base, List.of("cast:11", "pass", "cast:40")) != null, "D538: a missing option is a mismatch");
+        check(LabelProbe.listingDiff(List.of("attack:none", "attack:4"), List.of("block:none", "block:4>9")) != null,
+                "D538: another kind of decision at d is a mismatch");
+
+        final List<String> ids = List.of("Grizzly Bears|spell|Original|-|-|-|-|", "pass", "Shock|spell|Original|-|-|-|-|",
+            "Prodigal Sorcerer|ability|Original|-|-|-|-|");
+        check(LabelProbe.optionOf("cast:40", ids.get(2), base, ids) == 2, "D538: a pick is its token's option");
+        check(LabelProbe.optionOf("pass", "pass", base, ids) == 1, "D538: a pass is the listing's pass, not option 0");
+        check(LabelProbe.optionOf("cast:11", ids.get(0), base, ids) == 0, "D538: Forge's own play is option 0");
+        check(LabelProbe.optionOf("cast:99", "Ornithopter|spell|Original|-|-|-|-|", base, ids) == LabelProbe.NO_OPTION,
+                "D538: a play the atlas did not list is off-atlas");
+        check(LabelProbe.optionOf("activate:7", ids.get(3), base, ids) == LabelProbe.NO_OPTION,
+                "D538: activate:7 is not activate:7#1 (a card's other ability is another option)");
+        final List<String> atk = List.of(Decision.attackToken(List.of()), Decision.attackToken(List.of(21, 26)),
+            Decision.attackToken(List.of(26)));
+        check(LabelProbe.optionOf(Decision.attackToken(List.of(26, 21)), "x", atk, atk) == 1,
+                "D538: an attack declared in another order is the same option");
+        final List<int[]> pairs = new ArrayList<>();
+        pairs.add(new int[] {12, 40});
+        pairs.add(new int[] {11, 40});
+        final List<int[]> swapped = new ArrayList<>();
+        swapped.add(new int[] {11, 40});
+        swapped.add(new int[] {12, 40});
+        final List<String> blk = List.of(Decision.blockToken(List.of()), Decision.blockToken(pairs));
+        check(LabelProbe.optionOf(Decision.blockToken(swapped), "x", blk, blk) == 1, "D538: blocks declared in another order are the same option");
+        check(LabelProbe.optionOf("block:none", "block:none", blk, blk) == 0, "D538: no block is block:none");
+        // D483: an Adventure card's creature and its adventure share cast:<id>; the identity tells them apart
+        final List<String> adv = List.of("pass", "cast:5", "cast:5");
+        final List<String> advIds = List.of("pass", "Bonecrusher Giant|spell|Original|-|-|-|-|", "Stomp|spell|Adventure|-|-|-|-|");
+        check(LabelProbe.optionOf("cast:5", advIds.get(2), adv, advIds) == 2, "D538: a shared token is told apart by identity (the adventure)");
+        check(LabelProbe.optionOf("cast:5", advIds.get(1), adv, advIds) == 1, "D538: ... and the creature");
+        check(LabelProbe.optionOf("cast:5", "Bonecrusher Giant|spell|Original|-|-|-|-|kicked", adv, advIds) == LabelProbe.TWO_OPTIONS,
+                "D538: a shared token whose identity is neither option's is ambiguous, never the first");
+        check(LabelProbe.optionOf("cast:5", advIds.get(1), adv, List.of("pass", advIds.get(1), advIds.get(1))) == LabelProbe.TWO_OPTIONS,
+                "D538: two options of one token and one identity are ambiguous");
+        check(LabelProbe.optionOf("cast:5", advIds.get(1), adv, null) == LabelProbe.TWO_OPTIONS,
+                "D538: a shared token with no identities is ambiguous");
+
+        final String seat = "Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=p,seed=0,anytime=1";
+        final String seeded = LabelProbe.seatWithSeed(seat, 77);
+        check(seeded.startsWith(seat) && SearchConfig.parse(seeded.substring(seeded.indexOf("+search:") + 8)).seed == 77
+                && SearchConfig.parse(seeded.substring(seeded.indexOf("+search:") + 8)).priority
+                && !SearchConfig.parse(seeded.substring(seeded.indexOf("+search:") + 8)).attacks,
+                "D538: the repeat's seed is the search's, the rest of its config unchanged (" + seeded + ")");
+        check(LabelProbe.seatWithSeed("Default+outlets", 77).equals("Default+outlets"), "D538: a seat with no search keeps its config");
+        check(LabelProbe.seatWithSeed("Default+search", 77).equals("Default+search:seed=77"), "D538: a bare +search gets the seed");
+        boolean zero = false;
+        try {
+            LabelProbe.seatWithSeed(seat, 0);
+        } catch (final IllegalArgumentException e) {
+            zero = true;
+        }
+        check(zero, "D538: a probe seed of 0 (the clock's) is refused");
+        boolean notLast = false;
+        try {
+            LabelProbe.seatWithSeed("Default+search:ms=1500+outlets", 77);
+        } catch (final IllegalArgumentException e) {
+            notLast = true;
+        }
+        check(notLast, "D538: a +search part that is not the seat's last is refused, not seeded in the wrong place");
+        final java.util.Set<Long> seeds = new java.util.HashSet<>();
+        boolean positive = true;
+        for (int i = 0; i < 50; i++) {
+            for (int r = 0; r < 3; r++) {
+                final long x = LabelProbe.repeatSeed(1, "J186/s01/d" + i, r);
+                positive &= x > 0;
+                seeds.add(x);
+            }
+        }
+        check(seeds.size() == 150 && positive, "D538: every (key, repeat) its own positive seed (" + seeds.size() + " of 150)");
+        check(LabelProbe.repeatSeed(1, "J186/s01/d9", 2) == LabelProbe.repeatSeed(1, "J186/s01/d9", 2)
+                && LabelProbe.repeatSeed(1, "J186/s01/d9", 2) != LabelProbe.repeatSeed(2, "J186/s01/d9", 2),
+                "D538: the seed is the run's seed's, the key's and the repeat's, and only theirs");
+        // tools/atlas/agreement.py ports repeatSeed to refuse rows made under another --seed; these two numbers are
+        // the port's, and test_agreement.py holds it to the same two
+        check(LabelProbe.repeatSeed(538, "J186/s01/d9", 0) == 100225255197839L
+                && LabelProbe.repeatSeed(538, "J186/s01/d9", 1) == 134260492138398L,
+                "D538: agreement.py's port of the seed gives the same numbers ("
+                        + LabelProbe.repeatSeed(538, "J186/s01/d9", 0) + ", "
+                        + LabelProbe.repeatSeed(538, "J186/s01/d9", 1) + ")");
+
+        final LabelProbe.Answer a = new LabelProbe.Answer();
+        a.d = 9;
+        a.kind = "a";
+        a.k = 3;
+        a.option = 1;
+        a.token = "attack:21,26";
+        a.status = LabelProbe.OK;
+        a.searched = true;
+        a.counts.put("search.a.considered", 1);
+        final Json.JsonOut j = new Json.JsonOut();
+        a.write(j);
+        final Map<?, ?> m = (Map<?, ?>) Json.parse(j.done());
+        check(Long.valueOf(1).equals(m.get("option")) && "ok".equals(m.get("status")) && "attack:21,26".equals(m.get("token"))
+                && Boolean.TRUE.equals(m.get("searched")) && m.get("fallback") == null
+                && Long.valueOf(1).equals(((Map<?, ?>) m.get("counts")).get("search.a.considered")),
+                "D538: the answer's JSON (option, status, token, searched, counts)");
+        check(new LabelProbe.Answer().option == LabelProbe.NO_OPTION && LabelProbe.ERROR.equals(new LabelProbe.Answer().status),
+                "D538: an answer never filled in is an error with no option");
     }
 
     /** D529: one replay a signature, every one with the fork digest {@code digest}. */
