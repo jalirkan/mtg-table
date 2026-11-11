@@ -1,0 +1,48 @@
+==== J212 pilot4 started 2026-11-11T12:35:25-05:00 in unit lab-J212-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-t1 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-t1 vs search-v1-anytime (match:j212-pilot:20261111T173526-30018, seed 467900000, 1 pair(s))
+  done   w0 search-v2-t1 2-2 search-v1-anytime (0 draws) in 172 s
+  4 decisive games (2 pairs): search-v2-t1 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-t1 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-t1: 94 decisions searched in 4 games, 18 changed Forge's answer (19.1%); budget fallbacks 2 = 2.1% [95% 0.0%, 5.5%]; other fallbacks {}
+search-v2-t1 by kind: p 13/63, a 3/21, b 2/10
+search-v2-t1 time per decision: 1012.054 ms (p+a+b); by kind p 1095.089, a 666.277, b 1215.069
+search-v1-anytime: 93 decisions searched in 4 games, 25 changed Forge's answer (26.9%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 19/65, a 3/19, b 3/9
+search-v1-anytime time per decision: 739.776 ms (p+a+b); by kind p 727.473, a 761.986, b 781.749
+{"run":"20261111T173526-30018","a":"search-v2-t1","b":"search-v1-anytime","lines":4,"games":4,"aCfg":"Default+outlets+search:ms=1500,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=0,anytime=1","bCfg":"Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1","cfgExact":4,"aDecisions":94,"aPriority":63,"aAttacks":21,"aBlocks":10,"aRollouts":1689,"aRounds":573,"aShort":4,"aRolloutsPerDecision":17.97,"aRoundsPerDecision":6.1,"aShortShare":0.0426,"aPlayMsPerRollout":50.6,"aCopyMsPerRollout":2.6,"aFromPass":0.0794,"aToOther":0.0476,"aToPass":0.0794,"aFromPassN":5,"aToOtherN":3,"aToPassN":5,"aSkipLand":6.25,"aSkipLandN":25,"aStepCap":0,"bDecisions":93,"bPriority":65,"bAttacks":19,"bBlocks":9,"bRollouts":1890,"bRounds":702,"bShort":3,"bRolloutsPerDecision":20.32,"bRoundsPerDecision":7.55,"bShortShare":0.0323,"bPlayMsPerRollout":32.4,"bCopyMsPerRollout":2.5,"bFromPass":0.1077,"bToOther":0.0923,"bToPass":0.0923,"bFromPassN":7,"bToOtherN":6,"bToPassN":6,"bSkipLand":6.25,"bSkipLandN":25,"bStepCap":0,"rolloutRatio":0.884,"playMsRatio":1.562}
+{"written":1,"k":"t1","namesOk":1,"hashesOk":1,"cfgOk":1,"games":4,"aSearched":94,"bSearched":93,"aP":63,"aA":21,"aB":10,"bP":65,"bA":19,"bB":9,"agree":1,"aMs":1012.054,"bMs":739.776,"budgetMs":1500,"aPlayMs":50.6,"bPlayMs":32.4,"playRatio":1.562,"aRollouts":17.97,"bRollouts":20.32,"aShortShare":0.0426,"underBudget":1}
+match search-v2-a1 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-a1 vs search-v1-anytime (match:j212-pilot:20261111T173819-100816, seed 467900000, 1 pair(s))
+  done   w0 search-v2-a1 1-3 search-v1-anytime (0 draws) in 329 s
+  4 decisive games (2 pairs): search-v2-a1 scores 25.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-a1 scores 25.0% [95% 0.0%, 74.0%] = -191 Elo [-Infinity, +182] against search-v1-anytime
+search-v2-a1: 126 decisions searched in 4 games, 27 changed Forge's answer (21.4%); budget fallbacks 13 = 10.3% [95% 2.3%, 18.4%]; other fallbacks {}
+search-v2-a1 by kind: p 19/85, a 0/27, b 8/14
+search-v2-a1 time per decision: 1019.76 ms (p+a+b); by kind p 890.065, a 1387.476, b 1098.021
+search-v2-a1 rollouts timed out inside one engine step: 2
+search-v1-anytime: 127 decisions searched in 4 games, 28 changed Forge's answer (22.0%); budget fallbacks 6 = 4.7% [95% 0.0%, 12.4%]; other fallbacks {}
+search-v1-anytime by kind: p 17/93, a 10/28, b 1/6
+search-v1-anytime time per decision: 953.585 ms (p+a+b); by kind p 982.301, a 954.089, b 506.131
+search-v1-anytime rollouts timed out inside one engine step: 6
+{"run":"20261111T173819-100816","a":"search-v2-a1","b":"search-v1-anytime","lines":4,"games":4,"aCfg":"Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=1,anytime=1","bCfg":"Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1","cfgExact":4,"aDecisions":126,"aPriority":85,"aAttacks":27,"aBlocks":14,"aRollouts":1826,"aRounds":703,"aShort":16,"aRolloutsPerDecision":14.49,"aRoundsPerDecision":5.58,"aShortShare":0.127,"aPlayMsPerRollout":51.2,"aCopyMsPerRollout":2.8,"aFromPass":0.0824,"aToOther":0.0588,"aToPass":0.0824,"aFromPassN":7,"aToOtherN":5,"aToPassN":7,"aSkipLand":7.75,"aSkipLandN":31,"aStepCap":0,"bDecisions":127,"bPriority":93,"bAttacks":28,"bBlocks":6,"bRollouts":2135,"bRounds":803,"bShort":10,"bRolloutsPerDecision":16.81,"bRoundsPerDecision":6.32,"bShortShare":0.0787,"bPlayMsPerRollout":39.5,"bCopyMsPerRollout":2.8,"bFromPass":0.0645,"bToOther":0.043,"bToPass":0.0753,"bFromPassN":6,"bToOtherN":4,"bToPassN":7,"bSkipLand":6.5,"bSkipLandN":26,"bStepCap":0,"rolloutRatio":0.862,"playMsRatio":1.296}
+{"written":1,"k":"a1","namesOk":1,"hashesOk":1,"cfgOk":1,"games":4,"aSearched":126,"bSearched":127,"aP":85,"aA":27,"aB":14,"bP":93,"bA":28,"bB":6,"agree":1,"aMs":1019.76,"bMs":953.585,"budgetMs":1500,"aPlayMs":51.2,"bPlayMs":39.5,"playRatio":1.296,"aRollouts":14.49,"bRollouts":16.81,"aShortShare":0.127,"underBudget":1}
+match search-v2-t1-x3 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-t1-x3 vs search-v1-anytime (match:j212-pilot:20261111T174348-160756, seed 467900000, 1 pair(s))
+  done   w0 search-v2-t1-x3 2-2 search-v1-anytime (0 draws) in 176 s
+  4 decisive games (2 pairs): search-v2-t1-x3 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-t1-x3 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-t1-x3: 78 decisions searched in 4 games, 17 changed Forge's answer (21.8%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-t1-x3 by kind: p 14/52, a 1/18, b 2/8
+search-v2-t1-x3 time per decision: 1563.174 ms (p+a+b); by kind p 1862.867, a 576.246, b 1835.762
+search-v1-anytime: 78 decisions searched in 4 games, 18 changed Forge's answer (23.1%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 15/52, a 2/18, b 1/8
+search-v1-anytime time per decision: 616.529 ms (p+a+b); by kind p 687.408, a 507.118, b 401.997
+{"run":"20261111T174348-160756","a":"search-v2-t1-x3","b":"search-v1-anytime","lines":4,"games":4,"aCfg":"Default+outlets+search:ms=4500,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=0,anytime=1","bCfg":"Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1","cfgExact":4,"aDecisions":78,"aPriority":52,"aAttacks":18,"aBlocks":8,"aRollouts":1919,"aRounds":695,"aShort":0,"aRolloutsPerDecision":24.6,"aRoundsPerDecision":8.91,"aShortShare":0,"aPlayMsPerRollout":60.1,"aCopyMsPerRollout":2.6,"aFromPass":0.1346,"aToOther":0.0577,"aToPass":0.0769,"aFromPassN":7,"aToOtherN":3,"aToPassN":4,"aSkipLand":5.75,"aSkipLandN":23,"aStepCap":0,"bDecisions":78,"bPriority":52,"bAttacks":18,"bBlocks":8,"bRollouts":1681,"bRounds":636,"bShort":0,"bRolloutsPerDecision":21.55,"bRoundsPerDecision":8.15,"bShortShare":0,"bPlayMsPerRollout":25.5,"bCopyMsPerRollout":2.5,"bFromPass":0.1923,"bToOther":0.0385,"bToPass":0.0577,"bFromPassN":10,"bToOtherN":2,"bToPassN":3,"bSkipLand":6,"bSkipLandN":24,"bStepCap":0,"rolloutRatio":1.142,"playMsRatio":2.357}
+{"written":1,"k":"x3","namesOk":1,"hashesOk":1,"cfgOk":1,"games":4,"aSearched":78,"bSearched":78,"aP":52,"aA":18,"aB":8,"bP":52,"bA":18,"bB":8,"agree":1,"aMs":1563.174,"bMs":616.529,"budgetMs":4500,"aPlayMs":60.1,"bPlayMs":25.5,"playRatio":2.357,"aRollouts":24.6,"bRollouts":21.55,"aShortShare":0,"underBudget":1}
