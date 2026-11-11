@@ -61,7 +61,8 @@ idle.*
 3. **What the table says, and what it does not.** Of the search's about 87 Elo over the same seat with no search
    (the none corner, itself 3 Elo from Forge Default), searching priority plays alone gives about 60 and searching
    attacks alone about 26, and the two together land where all three do (the pa corner is at the pab corner to
-   within 0.0017 in score): priority is about two thirds of the whole and attacks about a quarter, and they add.
+   within 0.0017 in score): priority is about two thirds of the whole and attacks about a quarter, consistent with the two adding (the
+   interaction's interval holds 0).
    Searching blocks alone gives about 11, and nothing is shown for it on top of the other two. The search changed Forge's answer at about the same rate for
    every kind (19.4% of priority decisions, 15.4% of attacks, 14.8% of blocks in the pab corner), so the kinds
    differ in how often they come up and in what a changed answer is worth, not in how often the search disagrees
@@ -84,8 +85,9 @@ idle.*
    blocks the folder has played. On this host's own name the match would take 114,900,000–114,900,599, and the
    first 150 of those are the 600 deals J210 named the candidate on: an arm chosen because its difference to `all`
    was small on some deals is flattered by those deals. `hostBase('j211')` is 931,000,000, so the match takes
-   **931,900,000–931,900,599**; every game in the lab's ladder logs is on base 114 (69,456 rows read on
-   2026-11-11), so these are new deals for every player. `--host` changes the seed base and the names in the log,
+   **931,900,000–931,900,599**; no game in the lab's ladder logs is on base 931 (338,577 rows read on 2026-11-11: 336,193
+   on base 114, 2,240 tuning rows on base 610, the rest on the pilots' own hosts), so these are new deals for
+   every player. `--host` changes the seed base and the names in the log,
    nothing a game plays by (J198's pilot used the flag the same way). The folder is emptied by the match's own
    block before it starts, so a match the runner starts again after a memory stop replays the same 600 blocks
    (D535 point 2's reason). 600 consecutive blocks give each of the confirm set's 30 deck pairs exactly 40
@@ -97,6 +99,8 @@ idle.*
    - **NO-BLOCK SEAT HOLDS**: complete and the interval's lower end is above −10 Elo.
    - **NO-BLOCK SEAT FAILS**: complete and the interval's upper end is below −10 Elo.
    - **INCONCLUSIVE AT 4,800**: complete and neither.
+   The ends are the match line's own `eloLo` and `eloHi`, which the ladder rounds to 0.1 Elo, so a printed −10.0
+   is neither above −10 nor below it.
    Three words describe the interval beside the verdict and decide nothing: *indistinguishable* when it holds 0,
    *a measured loss* when it is wholly below 0, *a measured gain* when wholly above. A HOLDS that is also a
    measured loss is reported as both ("holds the bar and loses about N"). **D535 point 6 wrote "the −10 Elo bar,
@@ -105,7 +109,7 @@ idle.*
    (SHOWN, SMALL GAIN, INCONCLUSIVE AT 4,800 or NOT SHOWN, for A as a gain over B) is printed beside it as
    information.
 8. **The cost is read beside the verdict**, from the same line: each side's searched decisions by kind, its ms a
-   searched decision and its search seconds a game (ms a decision × searched ÷ games), and A's as a share of B's.
+   searched decision and its search seconds a game (ms a decision × searched ÷ the match's games played), and A's as a share of B's.
 9. **What each verdict leads to.**
    - HOLDS: `search-v2-no-b` is a **live-seat candidate**. It becomes a seat-queue row with the measured point,
      interval and seconds saved, and the owner says yes or no in one word (D509). Nothing changes the seat here.
