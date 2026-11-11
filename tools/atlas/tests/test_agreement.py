@@ -7,13 +7,16 @@ that is neither the label nor option 0, the subsets, the interval clustered by s
 carry the same sum shows no width), the paired difference over the decisions both players answered, a player with
 two seat configs refused, the pairs named by --pairs in the direction given and on every subset, the --split
 subsets, departure precision, off-atlas dropped, the mixed and other-identity counts, D538's stops and words from
-the unrounded numbers, its refusal of any read but its own run, point 9's wave-2 answer, --json never written over
-a rows file, and the command line end to end. No engine, no lab data, standard library only.
+the unrounded numbers, its refusal of any read but its own run (the labels file by sha256 among it), its refusal of
+rows that are not one run of the probe (two runs' rows in one read, another --seed, a row the probe never writes,
+another seat's hash), the port of the probe's seed, point 9's wave-2 answer on the first look only, --json never
+written over a rows file, and the command line end to end. No engine, no lab data, standard library only.
 
     python3 -m unittest discover -s tools/atlas/tests
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -114,7 +117,7 @@ class Agreement(unittest.TestCase):
         # option 0: s01 holds 1 of 2, s02 none of 2; resamples run from 0 to 1/2
         zero = p['stats']['all']['zero']
         self.assertTrue(0.0 <= zero['lo'] <= 0.25 <= zero['hi'] <= 0.5, zero)
-        self.assertEqual(s['labels'], {'labelled': 4, 'spines': 2})
+        self.assertEqual(s['labels'], {'labelled': 4, 'spines': 2, 'sha256': None})
         # one seeded draw: the same read twice
         self.assertEqual(A.summarize(LABELS, X, boot=200, seed=1), A.summarize(LABELS, X, boot=200, seed=1))
 
@@ -168,40 +171,59 @@ S, F, R, R4 = 'search-v1-anytime', 'forge-default', 'search-v2-rrandom', 'search
 PAIRS = [(S, F), (S, R), (S, R4)]
 
 
+K = 5   # every decision of the rule's labels lists five options
+
+
 def rule_labels(round2):
     """Six spines s1..s6; the first `round2` of them carry source round2, the rest wave1."""
     out = []
     for i in range(1, 7):
         src = 'round2' if i <= round2 else 'wave1'
-        out.append({'key': 'J2/s%d/d0' % i, 'night': 'J2', 'spine': 's%d' % i, 'kind': 'p', 'label': 0, 'source': src})
-        out.append({'key': 'J2/s%d/d1' % i, 'night': 'J2', 'spine': 's%d' % i, 'kind': 'a', 'label': 1, 'source': src})
+        out.append({'key': 'J2/s%d/d0' % i, 'night': 'J2', 'spine': 's%d' % i, 'kind': 'p', 'k': K, 'label': 0,
+                    'source': src})
+        out.append({'key': 'J2/s%d/d1' % i, 'night': 'J2', 'spine': 's%d' % i, 'kind': 'a', 'k': K, 'label': 1,
+                    'source': src})
     return out
 
 
-def rule_rows(search_d1, search_d0=0, forge_d1=0, forge_searched=False, drop=None):
-    """forge-default and both random seats pick 0 at d0; at d1 forge picks forge_d1, the random seats option 2 and
-    the search search_d1(spine number), search_d0 at d0; `drop` is a (player, key) made a mismatch."""
+def rule_rows(search_d1, search_d0=0, forge_d1=0, forge_searched=False, drop=None, random_d1=lambda i: 2):
+    """forge-default and both random seats pick 0 at d0; at d1 forge picks forge_d1, the random seats
+    random_d1(spine number) and the search search_d1(spine number), search_d0 at d0; `drop` is a (player, key) made
+    a mismatch."""
     rows = []
     for i in range(1, 7):
         d0, d1 = 'J2/s%d/d0' % i, 'J2/s%d/d1' % i
         rows += [row(F, d0, 0, 'ok', 0, searched=forge_searched), row(F, d1, 0, 'ok', forge_d1, searched=False)]
         for p in (R, R4):
-            rows += [row(p, d0, 0, 'ok', 0), row(p, d1, 0, 'ok', 2)]
+            rows += [row(p, d0, 0, 'ok', 0), row(p, d1, 0, 'ok', random_d1(i))]
         rows += [row(S, d0, 0, 'ok', search_d0), row(S, d1, 0, 'ok', search_d1(i))]
     if drop:
         rows = [dict(r, status='mismatch', option=None) if (r['player'], r['key']) == drop else r for r in rows]
     return rows
 
 
-# the unit tests' run: 200 draws, 12 labelled decisions, one row a decision
-RUN = {'boot': 200, 'seed': 1, 'labelled': 12, 'repeats': {S: 1, F: 1, R: 1, R4: 1}}
+# the unit tests' run: 200 draws, 12 labelled decisions, one row a decision, the probe's seed 7, the first look
+RUN = {'boot': 200, 'seed': 1, 'probeSeed': 7, 'labelled': 12, 'look': 1, 'labelsSha256': 'the-test-labels',
+       'repeats': {S: 1, F: 1, R: 1, R4: 1, 'policy-outlet': 1},
+       'hashes': {p: 'h-' + p for p in (S, F, R, R4, 'policy-outlet')}}
+
+
+def stamp(rows, probe_seed=None):
+    """The probe's own `seed` and the labels' `k` on every row that carries no `seed` (a test plants its own)."""
+    seed = RUN['probeSeed'] if probe_seed is None else probe_seed
+    return [r if 'seed' in r else dict(r, seed=A.repeat_seed(seed, r['key'], r['repeat']), k=K) for r in rows]
 
 
 class Rule(unittest.TestCase):
 
-    def read(self, rows, round2=2, players=None):
-        s = A.summarize(rule_labels(round2), rows, players, boot=200, seed=1, pairs=PAIRS, split=('source', 'round2'))
-        return s, A.d538(s, RUN)
+    def summary(self, rows, round2=2, players=None, run=None, pairs=PAIRS, split=('source', 'round2')):
+        run = RUN if run is None else run
+        return A.summarize(rule_labels(round2), stamp(rows), players, boot=run['boot'], seed=run['seed'], pairs=pairs,
+                           split=split, probe_seed=RUN['probeSeed'], labels_sha=RUN['labelsSha256'])
+
+    def read(self, rows, round2=2, players=None, run=None):
+        s = self.summary(rows, round2, players, run)
+        return s, A.d538(s, RUN if run is None else run)
 
     def test_pairs_in_the_direction_given_on_every_subset(self):
         s, _ = self.read(rule_rows(lambda i: 1))
@@ -294,28 +316,161 @@ class Rule(unittest.TestCase):
         self.assertEqual((r['word'], r['stops']), ('NOT READ', ['NOT READ: policy-outlet searched at 1 rows']))
         _, r = self.read(rule_rows(lambda i: 1) + [row('policy-outlet', 'J2/s1/d0', 0, 'ok', 0, searched=False)])
         self.assertEqual(r['word'], 'AGREEMENT TRACKS ELO')
-        # a second row of one decision: the repeats are not the run's
-        _, r = self.read(rule_rows(lambda i: 1) + [row(S, 'J2/s2/d1', 1, 'ok', 1)])
+        # the search is to have two rows a decision and has its second at one only: the repeats are not the run's
+        two = dict(RUN, repeats=dict(RUN['repeats'], **{S: 2}))
+        _, r = self.read(rule_rows(lambda i: 1) + [row(S, 'J2/s2/d1', 1, 'ok', 1)], run=two)
         self.assertEqual(r['word'], 'NOT READ')
-        self.assertIn('has 1 to 2 rows a labelled decision, not 1', r['stops'][0])
+        self.assertIn('has 1 to 2 rows a labelled decision, not 2', r['stops'][0])
+        # it has both rows everywhere and the second is no answer at two decisions: every decision is answered,
+        # every decision has its rows, and 22 of its 24 repeats are answers -- under 95% of them
+        second = [row(S, 'J2/s%d/d%d' % (i, d), 1, 'mismatch' if (i, d) in ((1, 0), (2, 1)) else 'ok', d)
+                  for i in range(1, 7) for d in (0, 1)]
+        _, r = self.read(rule_rows(lambda i: 1) + second, run=two)
+        self.assertEqual((r['word'], r['stops']),
+                         ('NOT READ', ['NOT READ: %s answered 22 of its 24 repeats of the labelled decisions, under 95%%' % S]))
+        _, r = self.read(rule_rows(lambda i: 1) + [dict(x, status='ok', option=x['key'][-1] == '1' and 1 or 0)
+                                                   for x in second], run=two)
+        self.assertEqual(r['word'], 'AGREEMENT TRACKS ELO')
         _, r = self.read(rule_rows(lambda i: 1, drop=(S, 'J2/s4/d0')))    # 11 of 12 answered: under 95%
         self.assertEqual(r['word'], 'NOT READ')
         self.assertIn('answered 11 of 12', r['stops'][0])
-        s = A.summarize(rule_labels(2), rule_rows(lambda i: 1), boot=200, pairs=PAIRS[:2], split=('source', 'round2'))
-        with self.assertRaises(ValueError):
-            A.d538(s, RUN)                                                # a pair of the rule is missing
-        with self.assertRaises(ValueError):
-            A.d538(A.summarize(rule_labels(2), rule_rows(lambda i: 1), boot=200, pairs=PAIRS), RUN)   # no split
+        with self.assertRaisesRegex(ValueError, 'needs the pair'):
+            A.d538(self.summary(rule_rows(lambda i: 1), pairs=PAIRS[:2]), RUN)   # a pair of the rule is missing
+        with self.assertRaisesRegex(ValueError, '--split source=round2'):
+            A.d538(self.summary(rule_rows(lambda i: 1), split=None), RUN)        # no split
+
+    def test_no_interval_on_the_unselected_rows(self):
+        # one draw of the bootstrap, and a seed whose draw holds no unselected spine (five of six are round2): P1
+        # has a point there and no interval, and that is NOT READ, as point 6 says
+        for seed in range(1, 200):
+            run = dict(RUN, boot=1, seed=seed)
+            s = self.summary(rule_rows(lambda i: 1), round2=5, run=run)
+            if s['pairs'][0]['subsets']['source!=round2']['lo'] is None:
+                break
+        else:
+            self.fail('no seed under 200 leaves the unselected spine out of one draw')
+        self.assertIsNotNone(s['pairs'][0]['subsets']['source!=round2']['mean'])
+        self.assertIsNotNone(s['pairs'][0]['lo'])
+        r = A.d538(s, run)
+        self.assertEqual(r['word'], 'NOT READ')
+        self.assertIn('has no interval', r['stops'][0])
+
+    def test_the_seed_port(self):
+        # LabelProbe.repeatSeed in Python. The two constants are this port's; DecisionSelfTest checks the Java
+        # against the same two, so the lane's first build is what proves the port (D538, unverified as written)
+        self.assertEqual(A.repeat_seed(538, 'J186/s01/d9', 0), 100225255197839)
+        self.assertEqual(A.repeat_seed(538, 'J186/s01/d9', 1), 134260492138398)
+        seeds = {A.repeat_seed(1, 'J186/s01/d%d' % i, r) for i in range(50) for r in range(3)}
+        self.assertEqual(len(seeds), 150)
+        self.assertTrue(all(0 < x < 1 << 47 for x in seeds))
+        self.assertNotEqual(A.repeat_seed(1, 'J186/s01/d9', 2), A.repeat_seed(2, 'J186/s01/d9', 2))
+
+    def refused(self, rows, what, **kw):
+        with self.assertRaisesRegex(ValueError, what):
+            self.read(rows, **kw)
+
+    def test_the_rows_of_two_runs_are_not_merged(self):
+        good = rule_rows(lambda i: 1)
+        self.assertEqual(self.read(good)[1]['word'], 'AGREEMENT TRACKS ELO')
+        # forge-default off the atlas in one run and on option 0 in a later one: the last row would hide the VOID
+        rows = [row(F, 'J2/s1/d0', 0, 'off-atlas', searched=False)] + good
+        self.refused(rows, '1 duplicates .first: forge-default J2/s1/d0 repeat 0: 2 rows, 2 not errors.')
+        # a second set of a random seat's rows, all on option 0, appended: it would move P2
+        self.refused(good + [row(R, 'J2/s%d/d1' % i, 0, 'ok', 0) for i in range(1, 7)], '6 duplicates')
+        # the same rows made under another --seed, alone and beside the run's own
+        other = stamp(good, probe_seed=1)
+        self.refused(other, '%d seedMismatch' % len(good))
+        self.refused(good[:-1] + other[-1:], '1 seedMismatch')
+        self.refused([dict(r, seed=None) for r in stamp(good)], 'seedMismatch')
+        # a repeat the run does not have (a rerun with more --repeats), for a rule player and for policy-outlet
+        self.refused(good + [row(S, 'J2/s2/d1', 1, 'ok', 1)], 'reads 1 repeat.s. of %s; these rows hold its repeat 1' % S)
+        self.refused(good + [row('policy-outlet', 'J2/s1/d0', 1, 'ok', 0, searched=False)], 'of policy-outlet')
+        # an error tried again is one run: error then ok is read, error twice is an error, three rows are not
+        err = row(S, 'J2/s3/d1', 0, 'error')
+        self.assertEqual(self.read([err] + good)[1]['word'], 'AGREEMENT TRACKS ELO')
+        self.refused([err, err] + good, '1 overTries')
+        s, r = self.read([r for r in good if (r['player'], r['key']) != (S, 'J2/s3/d1')] + [err, err])
+        self.assertEqual((s['players'][S]['counts']['error'], r['word']), (1, 'NOT READ'))
+        # a player the rule does not name is held to one run too
+        self.refused(good + [row('X', 'J2/s1/d0', 0, 'ok', 0), row('X', 'J2/s1/d0', 0, 'ok', 1)], '1 duplicates')
+
+    def test_rows_the_probe_never_writes(self):
+        good = rule_rows(lambda i: 1)
+        x = stamp([row(S, 'J2/s3/d1', 0, 'ok', 1)])[0]
+        rest = [r for r in good if (r['player'], r['key']) != (S, 'J2/s3/d1')]
+        self.assertEqual(self.read(rest + [x])[1]['word'], 'AGREEMENT TRACKS ELO')
+        for what, bad in (('unknownStatus', dict(x, status='okay')), ('unknownStatus', dict(x, status=None)),
+                          ('badOption', dict(x, option=None)), ('badOption', dict(x, option=K)),
+                          ('badOption', dict(x, option=-1)), ('badOption', dict(x, option='1')),
+                          ('badOption', dict(x, option=True)), ('badOption', dict(x, k=K + 1)),
+                          ('badOption', dict(x, k=None)), ('badSearched', dict(x, searched='true')),
+                          ('badSearched', dict(x, searched=1)), ('unkeyed', dict(x, key=None)),
+                          ('unkeyed', dict(x, player=None)), ('unknownKey', dict(x, key='J2/s9/d1')),
+                          ('badRepeat', dict(x, repeat=None)), ('badRepeat', dict(x, repeat=-1)),
+                          ('badRepeat', dict(x, repeat='0')), ('badRepeat', dict(x, repeat=False))):
+            with self.subTest(what=what, bad=bad):
+                self.refused(rest + [bad], '1 %s' % what)
+        # a miss that is not an ok row carries no option and no searched, and is read
+        self.assertEqual(self.read(rest + [dict(x, status='off-atlas', option=None, searched=None)])[1]['word'],
+                         'AGREEMENT TRACKS ELO')
+        # the registered seat's hash, on every row of it; a player the run names no hash for is not held to one
+        self.refused(rest + [dict(x, hash='h-other')], 'under the config hash h-%s; these rows carry h-other, h-%s' % (S, S))
+        self.refused([dict(r, hash=None) for r in stamp(good)], 'these rows carry none')
+        self.assertEqual(self.read(good + [dict(row('X', 'J2/s1/d0', 0, 'ok', 0), hash='anything')])[1]['word'],
+                         'AGREEMENT TRACKS ELO')
+
+    def test_the_audit(self):
+        rows = stamp(rule_rows(lambda i: 1))
+        a = A.audit(rows, rule_labels(2), RUN['probeSeed'])
+        self.assertEqual(set(a['counts']), set(A.AUDIT))
+        self.assertEqual((sum(a['counts'].values()), a['first'], a['probeSeed']), (0, {}, 7))
+        self.assertEqual((a['repeatMax'], a['hashes'][S]), ({F: 0, R: 0, R4: 0, S: 0}, ['h-' + S]))
+        # without a probe seed the seeds are not looked at; the labels' k is the option count of an unlabelled row too
+        self.assertEqual(A.audit([dict(r, seed=5) for r in rows], rule_labels(2))['counts']['seedMismatch'], 0)
+        unl = [dict(rule_labels(2)[0], label=None)] + rule_labels(2)[1:]
+        self.assertEqual(A.audit([dict(rows[0], option=K)], unl)['counts']['badOption'], 1)
+        # summarize carries it and stops nothing
+        s = A.summarize(rule_labels(2), rows + rows, boot=10)
+        self.assertEqual((s['audit']['counts']['duplicates'], s['audit']['probeSeed'], s['v']), (len(rows), None, 3))
 
     def test_only_d538s_own_read(self):
         s, r = self.read(rule_rows(lambda i: 1))
         self.assertEqual(r['word'], 'AGREEMENT TRACKS ELO')
-        for run in (dict(RUN, boot=4000), dict(RUN, seed=538), dict(RUN, labelled=515)):
+        for run in (dict(RUN, boot=4000), dict(RUN, seed=538), dict(RUN, labelled=515), dict(RUN, probeSeed=538),
+                    dict(RUN, labelsSha256='another-file')):
             with self.assertRaises(ValueError):
                 A.d538(s, run)
+        with self.assertRaisesRegex(ValueError, 'sha256 is another-file; this one is the-test-labels'):
+            A.d538(s, dict(RUN, labelsSha256='another-file'))
+        with self.assertRaisesRegex(ValueError, 'this read checked None'):
+            A.d538(A.summarize(rule_labels(2), stamp(rule_rows(lambda i: 1)), boot=200, pairs=PAIRS,
+                               split=('source', 'round2'), labels_sha=RUN['labelsSha256']), RUN)
         with self.assertRaises(ValueError):
             A.d538(s)                                                     # the run D538 fixed: 4000, 538, 515 labels
         self.assertEqual((A.D538_RUN['boot'], A.D538_RUN['seed'], A.D538_RUN['labelled']), (4000, 538, 515))
+        self.assertEqual((A.D538_RUN['probeSeed'], A.D538_RUN['look']), (538, 1))
+        self.assertEqual(set(A.D538_RUN['hashes']), set(A.D538_PLAYERS + A.D538_UNSEARCHED))
+        self.assertEqual(set(A.D538_RUN['repeats']), set(A.D538_RUN['hashes']))
+        # the labels file D538 names is the one in the repo
+        with open(os.path.join(ROOT, 'fixtures', 'atlas', 'judged', 'labels-judged-v1.jsonl'), 'rb') as f:
+            self.assertEqual(hashlib.sha256(f.read()).hexdigest(), A.D538_RUN['labelsSha256'])
+
+    def test_wave_2_is_bought_on_the_first_look_only(self):
+        _, r = self.read(rule_rows(lambda i: 1))
+        self.assertEqual((r['word'], r['look'], r['wave2']), ('AGREEMENT TRACKS ELO', 1, True))
+        s, r = self.read(rule_rows(lambda i: 1), run=dict(RUN, look=2))
+        self.assertEqual((r['word'], r['look'], r['wave2']), ('AGREEMENT TRACKS ELO', 2, False))
+        self.assertIn('D538 wave 2 (point 9): the second look, final: nothing is bought', A.text(dict(s, rule=r)))
+        # INCONCLUSIVE with P1's point above 0 on all the labels and on the unselected ones: bought on look 1 ...
+        some = lambda i: 1 if i in (1, 6) else 0   # noqa: E731
+        _, r = self.read(rule_rows(some), round2=3)
+        self.assertEqual((r['word'], r['p2OrP3PointAboveZero'], r['wave2']), ('INCONCLUSIVE', True, True))
+        _, r = self.read(rule_rows(some), round2=3, run=dict(RUN, look=2))
+        self.assertEqual((r['word'], r['wave2']), ('INCONCLUSIVE', False))
+        # ... and not where neither P2's nor P3's point is above 0 (the random seats pick what the search picks)
+        _, r = self.read(rule_rows(some, random_d1=some), round2=3)
+        self.assertEqual((r['word'], r['p1PointAboveZero'], r['p1UnselectedPointAboveZero']), ('INCONCLUSIVE', True, True))
+        self.assertEqual((r['p2OrP3PointAboveZero'], r['wave2']), (False, False))
 
     def test_command_line_rule(self):
         with tempfile.TemporaryDirectory() as d:
@@ -323,7 +478,9 @@ class Rule(unittest.TestCase):
             with open(lab, 'w') as f:
                 f.write(''.join(json.dumps(r) + '\n' for r in rule_labels(2)))
             with open(rows, 'w') as f:
-                f.write(''.join(json.dumps(r) + '\n' for r in rule_rows(lambda i: 1)))
+                f.write(''.join(json.dumps(r) + '\n' for r in stamp(rule_rows(lambda i: 1))))
+            with open(lab, 'rb') as f:
+                this = dict(RUN, labelsSha256=hashlib.sha256(f.read()).hexdigest())
             script = os.path.join(T, 'agreement.py')
             cmd = [sys.executable, '-I', script, '--labels', lab, '--boot', '200',
                    '--pairs', ','.join('%s:%s' % ab for ab in PAIRS), '--split', 'source=round2']
@@ -339,7 +496,7 @@ class Rule(unittest.TestCase):
             self.assertIn('515 labelled decisions; these labels have 12', p.stderr)
             # the same read with the rule's run set to this file's, through main()
             code = ('import sys; sys.path.insert(0, %r); import agreement as A; A.D538_RUN = %r; '
-                    'sys.exit(A.main(sys.argv[1:]))' % (T, RUN))
+                    'sys.exit(A.main(sys.argv[1:]))' % (T, this))
             run = [sys.executable, '-I', '-c', code] + cmd[3:]
             p = subprocess.run(run + ['--rule', 'd538', '--json', out, rows], cwd=ROOT, capture_output=True, text=True)
             self.assertEqual(p.returncode, 0, p.stderr)
@@ -350,6 +507,29 @@ class Rule(unittest.TestCase):
                 s = json.load(f)
             self.assertEqual(s['rule']['word'], 'AGREEMENT TRACKS ELO')
             self.assertEqual(s['pairs'][0]['subsets']['source!=round2']['n'], 8)
+            self.assertEqual((s['labels']['sha256'], s['audit']['probeSeed']), (this['labelsSha256'], 7))
+            self.assertEqual(sum(s['audit']['counts'].values()), 0)
+            # the rows of a second run appended to the file (every row twice): refused, and the read is not rewritten
+            before = os.path.getmtime(out), os.path.getsize(out)
+            with open(rows) as f:
+                once = f.read()
+            both = os.path.join(d, 'both.jsonl')
+            with open(both, 'w') as f:
+                f.write(once + once)
+            p = subprocess.run(run + ['--rule', 'd538', '--json', out, both], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+            self.assertIn('one run of the probe under --seed 7; these hold 48 duplicates', p.stderr)
+            self.assertEqual((os.path.getmtime(out), os.path.getsize(out)), before)
+            # another labels file of twelve labelled decisions
+            with open(lab, 'a') as f:
+                f.write('\n')
+            p = subprocess.run(run + ['--rule', 'd538', rows], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+            self.assertIn('reads the labels file whose sha256 is', p.stderr)
+            # --json to a directory is a usage error, not a traceback
+            p = subprocess.run(run + ['--json', d, rows], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+            self.assertIn('is a directory', p.stderr)
             p = subprocess.run(run[:-2] + ['--rule', 'd538', rows], cwd=ROOT, capture_output=True, text=True)
             self.assertEqual(p.returncode, 2)                             # the rule without its split
             p = subprocess.run(cmd + ['--pairs', 'a-b', rows], cwd=ROOT, capture_output=True, text=True)

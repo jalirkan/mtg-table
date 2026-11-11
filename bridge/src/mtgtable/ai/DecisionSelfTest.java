@@ -344,6 +344,13 @@ public final class DecisionSelfTest {
         check(LabelProbe.repeatSeed(1, "J186/s01/d9", 2) == LabelProbe.repeatSeed(1, "J186/s01/d9", 2)
                 && LabelProbe.repeatSeed(1, "J186/s01/d9", 2) != LabelProbe.repeatSeed(2, "J186/s01/d9", 2),
                 "D538: the seed is the run's seed's, the key's and the repeat's, and only theirs");
+        // tools/atlas/agreement.py ports repeatSeed to refuse rows made under another --seed; these two numbers are
+        // the port's, and test_agreement.py holds it to the same two
+        check(LabelProbe.repeatSeed(538, "J186/s01/d9", 0) == 100225255197839L
+                && LabelProbe.repeatSeed(538, "J186/s01/d9", 1) == 134260492138398L,
+                "D538: agreement.py's port of the seed gives the same numbers ("
+                        + LabelProbe.repeatSeed(538, "J186/s01/d9", 0) + ", "
+                        + LabelProbe.repeatSeed(538, "J186/s01/d9", 1) + ")");
 
         final LabelProbe.Answer a = new LabelProbe.Answer();
         a.d = 9;

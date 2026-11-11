@@ -45,12 +45,20 @@ Definitions, fixed before any probe data:
 A player whose rows carry two seat configs is refused (two experiments under one name).
 
 --rule d538 prints D538's stops and word (point 6 and point 7) from the same numbers. It refuses (exit 2) anything
-but D538's own read: its three pairs, --split source=round2, --off-atlas miss, --boot 4000, --seed 538 and 515
-labelled decisions. Its stops look at every player in the rows, whatever --players names.
+but D538's own read: its three pairs, --split source=round2, --off-atlas miss, --boot 4000, --seed 538, and the
+labels file D538 names (515 labelled decisions, by its sha256). Its stops look at every player in the rows, whatever
+--players names. And it refuses rows that are not one run of the probe under --seed 538 (D538 point 4): a row with
+no player or key, a key the labels file does not hold, a repeat that is not 0, 1, 2, ... below the player's repeats,
+a status that is not one of the six, an `ok` row whose option is not one of the label row's `k` options or whose `k`
+is another, a `searched` that is not true, false or null, a `seed` that is not the probe's own for (538, key,
+repeat), two rows of one (player, key, repeat) that are not errors or more rows of one than the probe's two tries
+write, and a player whose rows carry a config hash that is not the registered seat's. The rows of two runs read as
+one are refused by these, never merged.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import random
@@ -58,6 +66,12 @@ import sys
 
 ANSWERED = ('ok', 'off-atlas')
 NO_ANSWER = ('ambiguous', 'mismatch', 'unsupported', 'error')
+# AtlasProbe.ERROR_TRIES: the rows one (player, key, repeat) can have in one --out (an error is tried once more)
+ERROR_TRIES = 2
+# what audit() counts, each a row (or, for the last two, a (player, key, repeat)) one run of the probe never writes
+AUDIT = ('unkeyed', 'unknownKey', 'badRepeat', 'unknownStatus', 'badOption', 'badSearched', 'seedMismatch',
+         'duplicates', 'overTries')
+M64 = (1 << 64) - 1
 SUBSETS = ('all', 'p', 'a', 'b', 'label!=forge', 'label=forge')
 
 
@@ -107,6 +121,77 @@ def subsets_of(split):
     if split is None:
         return SUBSETS
     return SUBSETS + ('%s=%s' % split, '%s!=%s' % split)
+
+
+def _mix(z):
+    """ExploreMath.mix, on an unsigned 64-bit value."""
+    z = ((z ^ (z >> 30)) * 0xbf58476d1ce4e5b9) & M64
+    z = ((z ^ (z >> 27)) * 0x94d049bb133111eb) & M64
+    return z ^ (z >> 31)
+
+
+def repeat_seed(seed, key, repeat):
+    """LabelProbe.repeatSeed: the seed the probe gives repeat `repeat` of decision `key` under --seed `seed`, the
+    `seed` of that row. The Java walks the key's UTF-16 units; so does this."""
+    h = _mix(0x9E3779B97F4A7C15 ^ 0x50524F4245)
+    h = _mix(h ^ (seed & M64))
+    units = key.encode('utf-16-le')
+    for i in range(0, len(units), 2):
+        h = _mix(h ^ (units[i] | units[i + 1] << 8))
+    h = _mix(h ^ ((repeat + 11) & M64)) & 0x7FFFFFFFFFFF
+    return h or 1
+
+
+def audit(probe_rows, label_rows, probe_seed=None):
+    """The rows as the files hold them, before collect() keeps one row of each (player, key, repeat): the counts of
+    AUDIT, the first offending row of each (`first`), every player's highest repeat (`repeatMax`) and the config
+    hashes its rows carry (`hashes`, '' for a row with none). `seedMismatch` is counted only under a probe_seed.
+    Nothing here stops a read; --rule d538 refuses a read whose counts are not all 0."""
+    ks = {r['key']: r.get('k') for r in label_rows if isinstance(r.get('key'), str)}
+    counts = dict.fromkeys(AUDIT, 0)
+    first = {}
+    seen = {}
+    rep_max = {}
+    hashes = {}
+
+    def bad(what, r, said=None):
+        counts[what] += 1
+        first.setdefault(what, said or '%s %s repeat %s status %s option %s' % (
+            r.get('player'), r.get('key'), r.get('repeat'), r.get('status'), r.get('option')))
+
+    for r in probe_rows:
+        p, key, rep, st = r.get('player'), r.get('key'), r.get('repeat'), r.get('status')
+        if not isinstance(p, str) or not isinstance(key, str):
+            bad('unkeyed', r)
+            continue
+        hashes.setdefault(p, set()).add(r.get('hash') or '')
+        if key not in ks:
+            bad('unknownKey', r)
+        if type(rep) is not int or rep < 0:
+            bad('badRepeat', r)
+        else:
+            rep_max[p] = max(rep_max.get(p, -1), rep)
+            if probe_seed is not None and r.get('seed') != repeat_seed(probe_seed, key, rep):
+                bad('seedMismatch', r)
+        if st not in ANSWERED + NO_ANSWER:
+            bad('unknownStatus', r)
+        if st == 'ok':
+            o, k = r.get('option'), ks.get(key)
+            if type(o) is not int or o < 0 or (type(k) is int and (o >= k or r.get('k') != k)):
+                bad('badOption', r)
+        if r.get('searched') is not None and type(r.get('searched')) is not bool:
+            bad('badSearched', r)
+        n = seen.setdefault((p, key, rep if type(rep) is int else repr(rep)), [0, 0])
+        n[0] += 1
+        n[1] += 0 if st == 'error' else 1
+    for (p, key, rep), (rows, settled) in seen.items():
+        said = '%s %s repeat %s: %d rows, %d not errors' % (p, key, rep, rows, settled)
+        if settled > 1:
+            bad('duplicates', None, said)
+        if rows > ERROR_TRIES:
+            bad('overTries', None, said)
+    return {'probeSeed': probe_seed, 'counts': counts, 'first': first,
+            'repeatMax': dict(sorted(rep_max.items())), 'hashes': {p: sorted(h) for p, h in sorted(hashes.items())}}
 
 
 def collect(rows):
@@ -245,9 +330,11 @@ def mean_ci(values, clusters, draws):
     return ratio_ci([(c, x, 1) for c, x in values], clusters, draws)
 
 
-def summarize(label_rows, probe_rows, players=None, boot=2000, seed=1, pairs=None, split=None, off_atlas='miss'):
+def summarize(label_rows, probe_rows, players=None, boot=2000, seed=1, pairs=None, split=None, off_atlas='miss',
+              probe_seed=None, labels_sha=None):
     """The whole read as one dict (what --json writes). pairs: [(a, b)] for a - b, in that direction; None for
-    every pair of the players read. split: (field, value) of the labels rows. off_atlas: 'miss' or 'drop'."""
+    every pair of the players read. split: (field, value) of the labels rows. off_atlas: 'miss' or 'drop'.
+    probe_seed: the probe's --seed, for audit()'s seed check; labels_sha: the labels file's sha256, carried."""
     if off_atlas not in ('miss', 'drop'):
         raise ValueError('--off-atlas is miss or drop, not %r' % off_atlas)
     labels = load_labels(label_rows, split)
@@ -265,7 +352,9 @@ def summarize(label_rows, probe_rows, players=None, boot=2000, seed=1, pairs=Non
         for p in (a, b):
             if p not in names:
                 names.append(p)
-    out = {'v': 2, 'decision': 'D538', 'labels': {'labelled': len(labels), 'spines': len(clusters)},
+    out = {'v': 3, 'decision': 'D538',
+           'labels': {'labelled': len(labels), 'spines': len(clusters), 'sha256': labels_sha},
+           'audit': audit(probe_rows, label_rows, probe_seed),
            'boot': boot, 'seed': seed, 'offAtlas': off_atlas, 'split': '%s=%s' % split if split else None,
            'subsets': list(subs), 'players': {}, 'pairs': [],
            # every player in the rows, read or not: a rule's stops must not depend on --players
@@ -307,19 +396,30 @@ D538_UNSELECTED = 'source!=round2'
 D538_PLAYERS = ('search-v1-anytime', 'forge-default', 'search-v2-rrandom', 'search-v2-rrandom4')
 D538_UNSEARCHED = ('forge-default', 'policy-outlet')
 D538_ANSWERED = 0.95
-# point 7's run: the bootstrap, the labelled decisions of labels-judged-v1.jsonl, and the repeats a decision.
-# Point 9's second reading is over another labels file: the decision that buys wave 2 writes its count here.
-D538_RUN = {'boot': 4000, 'seed': 538, 'labelled': 515,
-            'repeats': {'search-v1-anytime': 3, 'forge-default': 1, 'search-v2-rrandom': 3, 'search-v2-rrandom4': 3}}
+# point 7's run: the bootstrap, the probe's --seed, labels-judged-v1.jsonl (its labelled decisions and its sha256),
+# the look this is (point 9 allows two), the repeats a decision, and the registered seats' config hashes
+# (`ai-ladder.sh cfg NAME`; a player not named here is probed under whatever hash its rows carry, one hash a player).
+# Point 9's second reading is over another labels file: the decision that buys wave 2 writes that file's count and
+# sha256 here and makes `look` 2, and nothing else.
+D538_RUN = {'boot': 4000, 'seed': 538, 'probeSeed': 538, 'labelled': 515, 'look': 1,
+            'labelsSha256': 'bbdcd021ef93447f9158bff1f7f2a3c236f91ea98367374b3fc213a654ecd9bb',
+            'repeats': {'search-v1-anytime': 3, 'forge-default': 1, 'search-v2-rrandom': 3, 'search-v2-rrandom4': 3,
+                        'policy-outlet': 1},
+            'hashes': {'search-v1-anytime': 'cdd55e02a89c', 'forge-default': '3ed453ffef1c',
+                       'search-v2-rrandom': 'fb8ae32c014d', 'search-v2-rrandom4': '646d59a008f6',
+                       'policy-outlet': 'e350d94649a4'}}
 
 
 def d538(s, run=None):
     """D538's reading of a summary: {'word', 'stops': [..], 'why': [..], ...}. A read that is not point 7's own (its
-    split, its pairs, off-atlas a miss, and `run`: the bootstrap's draws and seed, the labelled count) is refused
-    with ValueError. Then point 6's stops, each a stop (VOID: forge-default has an ok row off option 0 or an
-    off-atlas row; NOT READ: a player that must not search did, one of the four answered under 95% of the labels or
-    does not have its repeats at every probed decision, or a pair of the rule has no decision or no interval); then
-    point 7's word, from the unrounded numbers with strict inequalities. `run` is D538_RUN but for the unit tests."""
+    split, its pairs, off-atlas a miss, and `run`: the bootstrap's draws and seed, the labels file by count and
+    sha256) is refused with ValueError, and so are rows that are not one run of the probe under `run`'s probeSeed
+    (audit()'s counts, a repeat at or past a player's repeats, a config hash that is not the registered seat's).
+    Then point 6's stops, each a stop (VOID: forge-default has an ok row off option 0 or an off-atlas row; NOT
+    READ: a player that must not search did, one of the four answered under 95% of the labels, does not have its
+    repeats at every probed decision or answered under 95% of its repeats, or a pair of the rule has no decision or
+    no interval); then point 7's word, from the unrounded numbers with strict inequalities, DOES NOT TRACK tested
+    before TRACKS. `run` is D538_RUN but for the unit tests."""
     run = D538_RUN if run is None else run
     if s.get('split') != '%s=%s' % D538_SPLIT or s.get('offAtlas') != 'miss':
         raise ValueError('--rule d538 reads --split %s=%s and --off-atlas miss' % D538_SPLIT)
@@ -329,6 +429,25 @@ def d538(s, run=None):
     if s['labels']['labelled'] != run['labelled']:
         raise ValueError('--rule d538 reads %d labelled decisions; these labels have %d'
                          % (run['labelled'], s['labels']['labelled']))
+    if s['labels'].get('sha256') != run['labelsSha256']:
+        raise ValueError('--rule d538 reads the labels file whose sha256 is %s; this one is %s'
+                         % (run['labelsSha256'], s['labels'].get('sha256')))
+    au = s.get('audit') or {}
+    if au.get('probeSeed') != run['probeSeed']:
+        raise ValueError("--rule d538 checks every row's seed against the probe's --seed %d; this read checked %s"
+                         % (run['probeSeed'], au.get('probeSeed')))
+    wrong = ['%d %s (first: %s)' % (n, what, au['first'].get(what)) for what, n in au['counts'].items() if n]
+    if wrong:
+        raise ValueError('--rule d538 reads the rows of one run of the probe under --seed %d; these hold %s'
+                         % (run['probeSeed'], '; '.join(wrong)))
+    for p, want in run['repeats'].items():
+        if au['repeatMax'].get(p, -1) >= want:
+            raise ValueError('--rule d538 reads %d repeat(s) of %s; these rows hold its repeat %d'
+                             % (want, p, au['repeatMax'][p]))
+    for p, want in run['hashes'].items():
+        if p in au['hashes'] and au['hashes'][p] != [want]:
+            raise ValueError("--rule d538 reads %s under the config hash %s; these rows carry %s"
+                             % (p, want, ', '.join(h or 'none' for h in au['hashes'][p])))
     found = {(d['a'], d['b']): d for d in s['pairs']}
     for ab in D538_PAIRS:
         if ab not in found:
@@ -351,6 +470,9 @@ def d538(s, run=None):
         if c['probed'] and (c['repeatsMin'], c['repeatsMax']) != (want, want):
             stops.append('NOT READ: %s has %d to %d rows a labelled decision, not %d'
                          % (p, c['repeatsMin'], c['repeatsMax'], want))
+        if c['repeats'] < D538_ANSWERED * want * c['labelled']:
+            stops.append('NOT READ: %s answered %d of its %d repeats of the labelled decisions, under %.0f%%'
+                         % (p, c['repeats'], want * c['labelled'], 100 * D538_ANSWERED))
     p1, p2, p3 = (found[ab] for ab in D538_PAIRS)
     p1u = p1['subsets'][D538_UNSELECTED]
     why = ['P1 %s' % ci(p1, True), 'P1 on %s %s (n %d)' % (D538_UNSELECTED, ci(p1u, True), p1u['n']),
@@ -361,9 +483,10 @@ def d538(s, run=None):
         word = 'NOT READ'
         stops.append('NOT READ: a pair of the rule (P1 on %s among them) has no decision both players answered'
                      % D538_UNSELECTED)
-    elif any(d['hi'] is None or d['lo'] is None for d in (p1, p2, p3)):
+    elif any(d['hi'] is None or d['lo'] is None for d in (p1, p2, p3, p1u)):
         word = 'NOT READ'
-        stops.append('NOT READ: a pair of the rule has no interval (no resample held a decision of it)')
+        stops.append('NOT READ: a pair of the rule (P1 on %s among them) has no interval (no resample held a '
+                     'decision of it)' % D538_UNSELECTED)
     elif any(d['hi'] < 0 for d in (p1, p2, p3)):
         word = 'AGREEMENT DOES NOT TRACK ELO'
     elif (p1['lo'] > 0 and p1u['mean'] > 0 and p2['mean'] > 0 and p3['mean'] > 0
@@ -373,11 +496,14 @@ def d538(s, run=None):
         word = 'INCONCLUSIVE'
     above = p1['mean'] is not None and p1['mean'] > 0
     above_u = p1u['mean'] is not None and p1u['mean'] > 0
-    # point 9: wave 2 is bought on TRACKS, and once on an INCONCLUSIVE whose P1 point is above 0 on all the labels
-    # and on the unselected ones
-    return {'word': word, 'stops': stops, 'why': why, 'p1PointAboveZero': above,
-            'p1UnselectedPointAboveZero': above_u,
-            'wave2': word == 'AGREEMENT TRACKS ELO' or (word == 'INCONCLUSIVE' and above and above_u)}
+    above_23 = any(d['mean'] is not None and d['mean'] > 0 for d in (p2, p3))
+    # point 9: wave 2 is bought on the first look only -- on TRACKS, and on an INCONCLUSIVE whose P1 point is above
+    # 0 on all the labels and on the unselected ones and whose P2 or P3 point is above 0. The second look (on wave
+    # 2's labels) is final and buys nothing.
+    return {'word': word, 'stops': stops, 'why': why, 'look': run['look'], 'p1PointAboveZero': above,
+            'p1UnselectedPointAboveZero': above_u, 'p2OrP3PointAboveZero': above_23,
+            'wave2': run['look'] == 1 and (word == 'AGREEMENT TRACKS ELO'
+                                           or (word == 'INCONCLUSIVE' and above and above_u and above_23))}
 
 
 def fmt(x, signed=False):
@@ -430,7 +556,8 @@ def text(s):
             lines.append('D538 stop: %s' % x)
         lines.append('D538: %s' % '; '.join(r['why']))
         lines.append('D538 verdict: %s' % r['word'])
-        lines.append('D538 wave 2 (point 9): %s' % ('bought' if r['wave2'] else 'not bought'))
+        lines.append('D538 wave 2 (point 9): %s' % ('bought' if r['wave2'] else 'not bought' if r['look'] == 1
+                                                    else 'the second look, final: nothing is bought'))
     return '\n'.join(lines)
 
 
@@ -450,6 +577,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if a.boot < 1:
         ap.error('--boot must be at least 1')
+    if a.json and os.path.isdir(a.json):
+        ap.error('--json %s is a directory' % a.json)
     if a.json and os.path.exists(a.json) and os.path.getsize(a.json):
         # `--json ROWS...` with the output's name left out would write the read over the first rows file
         try:
@@ -472,8 +601,11 @@ def main(argv=None):
                 if not colon or not left or not right:
                     raise ValueError('--pairs wants A:B, got %r' % x)
                 pairs.append((left, right))
+        with open(a.labels, 'rb') as f:
+            sha = hashlib.sha256(f.read()).hexdigest()
         s = summarize(read_jsonl(a.labels), rows, a.players.split(',') if a.players else None, a.boot, a.seed,
-                      pairs=pairs, split=parse_split(a.split) if a.split else None, off_atlas=a.off_atlas)
+                      pairs=pairs, split=parse_split(a.split) if a.split else None, off_atlas=a.off_atlas,
+                      probe_seed=D538_RUN['probeSeed'] if a.rule else None, labels_sha=sha)
         if a.rule:
             s['rule'] = d538(s)
     except ValueError as e:

@@ -145,5 +145,5 @@ for line in open(sys.argv[1]):
         last[k] = r
 n = collections.Counter(r.get("status") for r in last.values())
 print("label-probe: %s rows of %s: %s" % (sum(n.values()), sys.argv[2], ", ".join("%s %d" % kv for kv in sorted(n.items()))))
-' "$out" "$player"
+' "$out" "$player" || echo "label-probe: the row count could not be printed (the shards' exit code stands)" >&2
 exit "$rc"

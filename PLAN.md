@@ -10714,13 +10714,18 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    and asks a ladder player, by its ladder config hash, which option it plays there; `tools/atlas/agreement.py`
    scores the rows against the labels by spine bootstrap. The rule is in code (`--rule d538`) and was written before
    a probe row existed: the stops **VOID** (`forge-default` not on option 0, or off the atlas) and **NOT READ** (an
-   unsearched seat that searched, under 95% answered, or repeats missing), then **AGREEMENT TRACKS ELO** when `search-v1-anytime` agrees more than
+   unsearched seat that searched, under 95% of the decisions or of a seat's repeats answered, repeats missing, or a
+   pair of the rule with no shared decision or no interval), and a refusal, exit 2 and no verdict, of rows that are
+   not one run of the probe under `--seed 538` (a repeat with two rows that are not errors, another seed, another
+   config hash, a row the probe does not write) or of any labels file but the recorded one, by sha256; then
+   **AGREEMENT TRACKS ELO** when `search-v1-anytime` agrees more than
    `forge-default` (interval above 0, and the point above 0 on the 409 labels no map selected) and more than
    `search-v2-rrandom` and `search-v2-rrandom4` (points above 0, one interval above 0), **DOES NOT TRACK** when any
    of the three intervals is below 0, **INCONCLUSIVE** otherwise. TRACKS buys wave 2 (392 decisions, about 6.5
    million tokens) and makes agreement a screen read before an arm's ladder night; DOES NOT TRACK buys nothing more;
    INCONCLUSIVE buys wave 2 once, for one final second reading, only if the search's point over `forge-default` is
-   above 0 on all the labels and on the 409 unselected ones.
+   above 0 on all the labels and on the 409 unselected ones and its point over one of the two random seats is
+   above 0.
    The probe needed `PolicyControllerAi.choose` and two `SearchPolicy` loops opened up, which is the seat path D509
    froze: gate step 12m and `atlas-selftest` pass with no `--write`, or the lane does not merge. **Open:** J213 at
    the merge's pin, about 5 h, `alone: yes`, and its read.
