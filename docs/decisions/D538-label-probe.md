@@ -199,8 +199,12 @@ change until J213 is posted, and only in this file; from the posting on it is fi
 
    `READ.json` is the file the read is written to and comes before the rows; the tool refuses to write it over a
    rows file. The word is `rule.word` of that file, and `rule.wave2` is point 9's answer. `ROWS…` are the night's
-   own `--out` files and no others, every one made with `--seed 538` (`label-probe.sh`'s default is 1, and rows
-   made under it are refused).
+   own `--out` files of the five seats of the run (`forge-default`, `search-v1-anytime`, `search-v2-rrandom`,
+   `search-v2-rrandom4`, `policy-outlet`) and no others, every one made with `--seed 538` (`label-probe.sh`'s
+   default is 1, and rows made under it are refused). The files of point 8's other players are handed to point 8's
+   reads only (no `--rule`): no other player enters the word, so a fault in another player's rows does not refuse
+   it either. (Written 2026-11-11 with the night's job, before any row: "the night's own `--out` files" did not
+   say which.)
 
    The statistic is the tool's pair line, **Δ(A, B) = the mean over the labelled decisions both answered of (A's
    agreement − B's)**, A first, with its 95% interval; `off-atlas` counts as a miss. Every comparison below is strict
@@ -248,9 +252,11 @@ change until J213 is posted, and only in this file; from the posting on it is fi
    - The other players probed, each with its measured Elo against `search-v1-anytime`: `policy-outlet` (−84.4,
      J204 b), `search-v2-rrandom4-m40` (−20.9, J202 b), `search-v2-rmix4them-m40` (−6.9 [−17.8, +3.9], J209),
      `search-v2-ms750-r6` (−6.5 [−11.7, −1.3], J198), and, their Elo unknown as this is written,
-     `search-v2-no-b` (J211) and D537's three arms (J212). Agreement against Elo over all of them, as a table and
-     a rank correlation. If the smoke run's `replayMs` puts the night over 8 hours, players are dropped from the
-     end of this list, never from point 7's.
+     `search-v2-no-b` (J211) and D537's three arms (J212). Agreement against Elo over all of them, as a table (the
+     tool computes no rank correlation and none is read; written with the night's job, before any row). If the
+     smoke run's `replayMs` puts the night over 8 hours, players are dropped from the end of this list, never from
+     point 7's: `policy-outlet` is one of point 7's five seats (point 6's whole-run stop needs it), so it is
+     played with them and never dropped.
    - How often a search player's three repeats pick one option (its own seed noise, the floor under every Δ).
    - `off-atlas` taken out instead of counted as a miss (`--off-atlas drop`), for every pair.
 9. **What each word does.**
