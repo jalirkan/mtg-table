@@ -7,7 +7,8 @@ that is neither the label nor option 0, the subsets, the interval clustered by s
 carry the same sum shows no width), the paired difference over the decisions both players answered, a player with
 two seat configs refused, the pairs named by --pairs in the direction given and on every subset, the --split
 subsets, departure precision, off-atlas dropped, the mixed and other-identity counts, D538's stops and words from
-the unrounded numbers, and the command line end to end. No engine, no lab data, standard library only.
+the unrounded numbers, its refusal of any read but its own run, point 9's wave-2 answer, --json never written over
+a rows file, and the command line end to end. No engine, no lab data, standard library only.
 
     python3 -m unittest discover -s tools/atlas/tests
 """
@@ -192,11 +193,15 @@ def rule_rows(search_d1, search_d0=0, forge_d1=0, forge_searched=False, drop=Non
     return rows
 
 
+# the unit tests' run: 200 draws, 12 labelled decisions, one row a decision
+RUN = {'boot': 200, 'seed': 1, 'labelled': 12, 'repeats': {S: 1, F: 1, R: 1, R4: 1}}
+
+
 class Rule(unittest.TestCase):
 
-    def read(self, rows, round2=2):
-        s = A.summarize(rule_labels(round2), rows, boot=200, seed=1, pairs=PAIRS, split=('source', 'round2'))
-        return s, A.d538(s)
+    def read(self, rows, round2=2, players=None):
+        s = A.summarize(rule_labels(round2), rows, players, boot=200, seed=1, pairs=PAIRS, split=('source', 'round2'))
+        return s, A.d538(s, RUN)
 
     def test_pairs_in_the_direction_given_on_every_subset(self):
         s, _ = self.read(rule_rows(lambda i: 1))
@@ -234,7 +239,7 @@ class Rule(unittest.TestCase):
         miss = A.summarize(LABELS, rows, boot=50)['players']['X']
         self.assertEqual((miss['counts']['answered'], miss['counts']['mixed'], miss['counts']['otherIdentity']), (3, 1, 1))
         self.assertAlmostEqual(miss['stats']['all']['label']['mean'], (0.5 + 0 + 1) / 3)
-        self.assertEqual(miss['rows'], {'rows': 5, 'ok': 2, 'okOption0': 1, 'searched': 5})
+        self.assertEqual(miss['rows'], {'rows': 5, 'ok': 2, 'okOption0': 1, 'offAtlas': 2, 'searched': 5})
         drop = A.summarize(LABELS, rows, boot=50, off_atlas='drop')['players']['X']
         self.assertEqual((drop['counts']['answered'], drop['counts']['off-atlas'], drop['counts']['mixed']), (2, 1, 2))
         self.assertAlmostEqual(drop['stats']['all']['label']['mean'], 1.0)
@@ -242,10 +247,11 @@ class Rule(unittest.TestCase):
     def test_words(self):
         _, r = self.read(rule_rows(lambda i: 1))
         self.assertEqual((r['word'], r['stops'], r['p1PointAboveZero']), ('AGREEMENT TRACKS ELO', [], True))
+        self.assertTrue(r['wave2'])
         _, r = self.read(rule_rows(lambda i: 3, search_d0=3))             # the search agrees less than Forge
         self.assertEqual(r['word'], 'AGREEMENT DOES NOT TRACK ELO')
         _, r = self.read(rule_rows(lambda i: 0))                          # P1 is exactly 0: not above it
-        self.assertEqual((r['word'], r['p1PointAboveZero']), ('INCONCLUSIVE', False))
+        self.assertEqual((r['word'], r['p1PointAboveZero'], r['wave2']), ('INCONCLUSIVE', False, False))
         _, r = self.read(rule_rows(lambda i: 2))                          # P1 0, P2 and P3 0: nothing shown
         self.assertEqual(r['word'], 'INCONCLUSIVE')
 
@@ -257,8 +263,14 @@ class Rule(unittest.TestCase):
         self.assertGreater(p1['lo'], 0)
         self.assertEqual(p1['subsets']['source!=round2']['mean'], 0.0)
         self.assertEqual((r['word'], r['p1PointAboveZero']), ('INCONCLUSIVE', True))
+        # point 9: an INCONCLUSIVE whose P1 is not above 0 on the unselected rows does not buy wave 2
+        self.assertEqual((r['p1UnselectedPointAboveZero'], r['wave2']), (False, False))
         _, r = self.read(rule_rows(lambda i: 1), round2=5)
         self.assertEqual(r['word'], 'AGREEMENT TRACKS ELO')
+        # the search finds the label at one unselected spine and one round2 spine: P1's point is above 0 on both,
+        # its interval reaches 0, and the INCONCLUSIVE buys wave 2 once
+        _, r = self.read(rule_rows(lambda i: 1 if i in (1, 6) else 0), round2=3)
+        self.assertEqual((r['word'], r['wave2']), ('INCONCLUSIVE', True))
 
     def test_stops(self):
         rows = rule_rows(lambda i: 1)
@@ -266,16 +278,44 @@ class Rule(unittest.TestCase):
         _, r = self.read(rows)
         self.assertEqual(r['word'], 'VOID')
         self.assertIn('1 of its 12 ok rows', r['stops'][0])
+        # forge-default off the atlas where the label is Forge's move: its agreement falls, P1 rises, and it is the
+        # mapping again, not a finding
+        rows = rule_rows(lambda i: 0)
+        rows[0] = dict(row(F, 'J2/s1/d0', 0, 'off-atlas', searched=False))
+        s, r = self.read(rows)
+        self.assertGreater(s['pairs'][0]['mean'], 0)
+        self.assertEqual(r['word'], 'VOID')
+        self.assertIn('off the atlas at 1 rows', r['stops'][0])
         _, r = self.read(rule_rows(lambda i: 1, forge_searched=True))
         self.assertEqual(r['word'], 'NOT READ')
+        # policy-outlet's rows stop the read whatever --players names
+        outlet = [row('policy-outlet', 'J2/s1/d0', 0, 'ok', 0, searched=True)]
+        _, r = self.read(rule_rows(lambda i: 1) + outlet, players=[S, F, R, R4])
+        self.assertEqual((r['word'], r['stops']), ('NOT READ', ['NOT READ: policy-outlet searched at 1 rows']))
+        _, r = self.read(rule_rows(lambda i: 1) + [row('policy-outlet', 'J2/s1/d0', 0, 'ok', 0, searched=False)])
+        self.assertEqual(r['word'], 'AGREEMENT TRACKS ELO')
+        # a second row of one decision: the repeats are not the run's
+        _, r = self.read(rule_rows(lambda i: 1) + [row(S, 'J2/s2/d1', 1, 'ok', 1)])
+        self.assertEqual(r['word'], 'NOT READ')
+        self.assertIn('has 1 to 2 rows a labelled decision, not 1', r['stops'][0])
         _, r = self.read(rule_rows(lambda i: 1, drop=(S, 'J2/s4/d0')))    # 11 of 12 answered: under 95%
         self.assertEqual(r['word'], 'NOT READ')
         self.assertIn('answered 11 of 12', r['stops'][0])
-        s = A.summarize(rule_labels(2), rule_rows(lambda i: 1), boot=50, pairs=PAIRS[:2], split=('source', 'round2'))
+        s = A.summarize(rule_labels(2), rule_rows(lambda i: 1), boot=200, pairs=PAIRS[:2], split=('source', 'round2'))
         with self.assertRaises(ValueError):
-            A.d538(s)                                                     # a pair of the rule is missing
+            A.d538(s, RUN)                                                # a pair of the rule is missing
         with self.assertRaises(ValueError):
-            A.d538(A.summarize(rule_labels(2), rule_rows(lambda i: 1), boot=50, pairs=PAIRS))   # no split
+            A.d538(A.summarize(rule_labels(2), rule_rows(lambda i: 1), boot=200, pairs=PAIRS), RUN)   # no split
+
+    def test_only_d538s_own_read(self):
+        s, r = self.read(rule_rows(lambda i: 1))
+        self.assertEqual(r['word'], 'AGREEMENT TRACKS ELO')
+        for run in (dict(RUN, boot=4000), dict(RUN, seed=538), dict(RUN, labelled=515)):
+            with self.assertRaises(ValueError):
+                A.d538(s, run)
+        with self.assertRaises(ValueError):
+            A.d538(s)                                                     # the run D538 fixed: 4000, 538, 515 labels
+        self.assertEqual((A.D538_RUN['boot'], A.D538_RUN['seed'], A.D538_RUN['labelled']), (4000, 538, 515))
 
     def test_command_line_rule(self):
         with tempfile.TemporaryDirectory() as d:
@@ -284,20 +324,53 @@ class Rule(unittest.TestCase):
                 f.write(''.join(json.dumps(r) + '\n' for r in rule_labels(2)))
             with open(rows, 'w') as f:
                 f.write(''.join(json.dumps(r) + '\n' for r in rule_rows(lambda i: 1)))
-            cmd = [sys.executable, '-I', os.path.join(T, 'agreement.py'), '--labels', lab, '--boot', '50',
+            script = os.path.join(T, 'agreement.py')
+            cmd = [sys.executable, '-I', script, '--labels', lab, '--boot', '200',
                    '--pairs', ','.join('%s:%s' % ab for ab in PAIRS), '--split', 'source=round2']
+            # the command line reads D538's own run only: twelve labels at 200 draws are refused, and nothing is
+            # written
             p = subprocess.run(cmd + ['--rule', 'd538', '--json', out, rows], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+            self.assertIn('--boot 4000 --seed 538', p.stderr)
+            self.assertFalse(os.path.exists(out))
+            p = subprocess.run(cmd[:5] + ['--boot', '4000', '--seed', '538'] + cmd[7:] + ['--rule', 'd538', rows],
+                               cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+            self.assertIn('515 labelled decisions; these labels have 12', p.stderr)
+            # the same read with the rule's run set to this file's, through main()
+            code = ('import sys; sys.path.insert(0, %r); import agreement as A; A.D538_RUN = %r; '
+                    'sys.exit(A.main(sys.argv[1:]))' % (T, RUN))
+            run = [sys.executable, '-I', '-c', code] + cmd[3:]
+            p = subprocess.run(run + ['--rule', 'd538', '--json', out, rows], cwd=ROOT, capture_output=True, text=True)
             self.assertEqual(p.returncode, 0, p.stderr)
             self.assertIn('search-v1-anytime - forge-default: n 12, +0.5000 [+0.5000, +0.5000]', p.stdout)
             self.assertIn('D538 verdict: AGREEMENT TRACKS ELO', p.stdout)
+            self.assertIn('D538 wave 2 (point 9): bought', p.stdout)
             with open(out) as f:
                 s = json.load(f)
             self.assertEqual(s['rule']['word'], 'AGREEMENT TRACKS ELO')
             self.assertEqual(s['pairs'][0]['subsets']['source!=round2']['n'], 8)
-            p = subprocess.run(cmd[:-2] + ['--rule', 'd538', rows], cwd=ROOT, capture_output=True, text=True)
+            p = subprocess.run(run[:-2] + ['--rule', 'd538', rows], cwd=ROOT, capture_output=True, text=True)
             self.assertEqual(p.returncode, 2)                             # the rule without its split
             p = subprocess.run(cmd + ['--pairs', 'a-b', rows], cwd=ROOT, capture_output=True, text=True)
             self.assertEqual(p.returncode, 2)
+
+    def test_the_json_is_not_a_rows_file(self):
+        # `--json ROWS` with no output name takes the first rows file as the output: refused before it is read
+        with tempfile.TemporaryDirectory() as d:
+            lab, rows, rows2 = (os.path.join(d, n) for n in ('labels.jsonl', 'rows.jsonl', 'rows2.jsonl'))
+            with open(lab, 'w') as f:
+                f.write(''.join(json.dumps(r) + '\n' for r in LABELS))
+            for name in (rows, rows2):
+                with open(name, 'w') as f:
+                    f.write(''.join(json.dumps(r) + '\n' for r in X))
+            with open(rows) as f:
+                before = f.read()
+            p = subprocess.run([sys.executable, '-I', os.path.join(T, 'agreement.py'), '--labels', lab, '--boot', '50',
+                                '--json', rows, rows2], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+            with open(rows) as f:
+                self.assertEqual(f.read(), before)
 
 
 if __name__ == '__main__':

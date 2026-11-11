@@ -10713,12 +10713,14 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    (`tools/label-probe.sh`) replays a spine's baseline to a recorded decision exactly as an atlas branch unit does
    and asks a ladder player, by its ladder config hash, which option it plays there; `tools/atlas/agreement.py`
    scores the rows against the labels by spine bootstrap. The rule is in code (`--rule d538`) and was written before
-   a probe row existed: the stops **VOID** (`forge-default` not on option 0) and **NOT READ** (an unsearched seat
-   that searched, or under 95% answered), then **AGREEMENT TRACKS ELO** when `search-v1-anytime` agrees more than
+   a probe row existed: the stops **VOID** (`forge-default` not on option 0, or off the atlas) and **NOT READ** (an
+   unsearched seat that searched, under 95% answered, or repeats missing), then **AGREEMENT TRACKS ELO** when `search-v1-anytime` agrees more than
    `forge-default` (interval above 0, and the point above 0 on the 409 labels no map selected) and more than
    `search-v2-rrandom` and `search-v2-rrandom4` (points above 0, one interval above 0), **DOES NOT TRACK** when any
    of the three intervals is below 0, **INCONCLUSIVE** otherwise. TRACKS buys wave 2 (392 decisions, about 6.5
-   million tokens) and makes agreement a screen read before an arm's ladder night; DOES NOT TRACK buys nothing more.
+   million tokens) and makes agreement a screen read before an arm's ladder night; DOES NOT TRACK buys nothing more;
+   INCONCLUSIVE buys wave 2 once, for one final second reading, only if the search's point over `forge-default` is
+   above 0 on all the labels and on the 409 unselected ones.
    The probe needed `PolicyControllerAi.choose` and two `SearchPolicy` loops opened up, which is the seat path D509
    froze: gate step 12m and `atlas-selftest` pass with no `--write`, or the lane does not merge. **Open:** J213 at
    the merge's pin, about 5 h, `alone: yes`, and its read.
@@ -11466,8 +11468,9 @@ Its follow-up is the cube lab's 55 ([the list](#fu-cube-lab)).
 <a id="d538-label-probe"></a>
 ## The judged labels and the label probe: does agreement with the judges track Elo (2026-11-11, D538)
 
-**Status: the labels are recorded; the probe is built on the lane; the validity night is unplayed. J213 plays it.**
-Branch `pc/label-probe`, on `pc/search-horizon`'s head, written while J211 held the machine alone and built after it.
+**Status: the labels are recorded; the probe is written on the lane and unbuilt; the validity night is unplayed. J213 plays it.**
+Branch `pc/label-probe`, on `pc/search-horizon`'s head, written while J211 held the machine alone; its first build
+is after J212 is posted.
 `docs/decisions/D538-label-probe.md` is the decision.
 
 - **The labels**: 605 atlas decisions each read by two blind Opus judges (seat A's view, both decklists, Oracle

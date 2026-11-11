@@ -404,14 +404,18 @@ public final class AtlasProbe {
         try {
             listed = new ArrayList<>(hook.decisions);
             probes = new ArrayList<>(hook.probes);
+            // a copy taken while the game thread appends can end in a slot not yet filled
+            listed.removeIf(x -> x == null);
+            probes.removeIf(x -> x == null);
         } catch (final RuntimeException e) {
             row.status = LabelProbe.ERROR;
             row.detail = "the hook's lists could not be read: " + e;
             return rc;
         }
-        if (rc != 0 && probes.isEmpty()) {
+        if (rc != 0 && probes.isEmpty() && hook.error == null) {
             // the worker must stop and the player was never asked: nothing was measured about this position, so it
-            // is an error (retried, see done()), never a mismatch, which is final
+            // is an error (retried, see done()), never a mismatch, which is final.  A divergence the hook itself
+            // found (hook.error) is a mismatch whatever the exit code: it falls through to the checks below
             row.status = LabelProbe.ERROR;
             row.detail = "the worker stops (exit " + rc + (rc == 3 ? ", the game thread is stuck" : "")
                     + ") before the player was asked; the replay had listed " + listed.size() + " decision(s)";

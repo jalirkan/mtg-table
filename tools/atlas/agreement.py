@@ -13,8 +13,8 @@ clustered by spine; and for each pair of players the paired difference in agreem
 READS the labels (one JSON object a line: `key` <night>/<spine>/d<d>, `kind` p/a/b, `label` the option both judges
 chose or null, `night`, `spine`) and the probe's rows (tools/label-probe.sh: `key`, `player`, `seat`, `hash`,
 `repeat`, `status`, `option`). WRITES the read as text to stdout (four decimals) and, with --json, as one JSON
-object to that file (unrounded: a rule is read from these numbers, never from the text). Standard library only; no
-engine.
+object to that file (unrounded: a rule is read from these numbers, never from the text; a file that exists and is
+not an earlier read is not overwritten). Standard library only; no engine.
 
 Definitions, fixed before any probe data:
   labelled      a labels row whose `label` is not null; nothing else is read from the labels.
@@ -44,13 +44,15 @@ Definitions, fixed before any probe data:
   otherIdentity an answered repeat whose picked option shares the pick's token but not its play identity.
 A player whose rows carry two seat configs is refused (two experiments under one name).
 
---rule d538 prints D538's stops and word (point 6 and point 7) from the same numbers; it needs D538's three pairs
-and --split source=round2, and refuses without them.
+--rule d538 prints D538's stops and word (point 6 and point 7) from the same numbers. It refuses (exit 2) anything
+but D538's own read: its three pairs, --split source=round2, --off-atlas miss, --boot 4000, --seed 538 and 515
+labelled decisions. Its stops look at every player in the rows, whatever --players names.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import sys
 
@@ -129,14 +131,17 @@ def collect(rows):
 
 def decisions(reps, labels, answered=ANSWERED):
     """key -> {'agree', 'zero', 'n'} over a player's answered repeats of labelled decisions, and the counts of what
-    was not answered (decisions, by their repeats' statuses)."""
+    was not answered (decisions, by their repeats' statuses); repeatsMin and repeatsMax are the fewest and the most
+    rows a probed labelled decision has, answered or not."""
     by_key = {}
     for (key, _rep), r in reps.items():
         if key in labels:
             by_key.setdefault(key, []).append(r)
     vals = {}
     counts = {'labelled': len(labels), 'probed': len(by_key), 'answered': 0, 'repeats': 0, 'offAtlas': 0,
-              'searched': 0, 'stable': 0, 'mixed': 0, 'otherIdentity': 0, 'off-atlas': 0}
+              'searched': 0, 'stable': 0, 'mixed': 0, 'otherIdentity': 0, 'off-atlas': 0, 'other': 0,
+              'repeatsMin': min((len(rs) for rs in by_key.values()), default=0),
+              'repeatsMax': max((len(rs) for rs in by_key.values()), default=0)}
     for s in NO_ANSWER:
         counts[s] = 0
     for key, rs in by_key.items():
@@ -150,6 +155,8 @@ def decisions(reps, labels, answered=ANSWERED):
                 if s in st:
                     counts[s] += 1
                     break
+            else:
+                counts['other'] += 1    # a status this read does not know
             continue
         picks = [r.get('option') if r.get('status') == 'ok' else None for r in ans]
         vals[key] = {'agree': sum(1 for o in picks if o == lab) / len(picks),
@@ -165,10 +172,12 @@ def decisions(reps, labels, answered=ANSWERED):
 
 
 def row_counts(reps):
-    """Over every row of a player, labelled or not: rows, ok rows, ok rows on option 0, rows whose search ran."""
+    """Over every row of a player, labelled or not: rows, ok rows, ok rows on option 0, off-atlas rows, rows whose
+    search ran."""
     rs = list(reps.values())
     ok = [r for r in rs if r.get('status') == 'ok']
     return {'rows': len(rs), 'ok': len(ok), 'okOption0': sum(1 for r in ok if r.get('option') == 0),
+            'offAtlas': sum(1 for r in rs if r.get('status') == 'off-atlas'),
             'searched': sum(1 for r in rs if r.get('searched') is True)}
 
 
@@ -258,7 +267,9 @@ def summarize(label_rows, probe_rows, players=None, boot=2000, seed=1, pairs=Non
                 names.append(p)
     out = {'v': 2, 'decision': 'D538', 'labels': {'labelled': len(labels), 'spines': len(clusters)},
            'boot': boot, 'seed': seed, 'offAtlas': off_atlas, 'split': '%s=%s' % split if split else None,
-           'subsets': list(subs), 'players': {}, 'pairs': []}
+           'subsets': list(subs), 'players': {}, 'pairs': [],
+           # every player in the rows, read or not: a rule's stops must not depend on --players
+           'allRows': {p: row_counts(e['reps']) for p, e in sorted(got.items())}}
     per = {}
     for p in names:
         e = got.get(p, {'seats': set(), 'hash': None, 'reps': {}})
@@ -296,40 +307,63 @@ D538_UNSELECTED = 'source!=round2'
 D538_PLAYERS = ('search-v1-anytime', 'forge-default', 'search-v2-rrandom', 'search-v2-rrandom4')
 D538_UNSEARCHED = ('forge-default', 'policy-outlet')
 D538_ANSWERED = 0.95
+# point 7's run: the bootstrap, the labelled decisions of labels-judged-v1.jsonl, and the repeats a decision.
+# Point 9's second reading is over another labels file: the decision that buys wave 2 writes its count here.
+D538_RUN = {'boot': 4000, 'seed': 538, 'labelled': 515,
+            'repeats': {'search-v1-anytime': 3, 'forge-default': 1, 'search-v2-rrandom': 3, 'search-v2-rrandom4': 3}}
 
 
-def d538(s):
-    """D538's reading of a summary: {'word', 'stops': [..], 'why': [..]}. Point 6's stops first, each a stop (VOID:
-    forge-default's ok rows are not all option 0; NOT READ: a player that must not search did, or one of the four
-    answered under 95% of the labels); then point 7's word, from the unrounded numbers with strict inequalities."""
+def d538(s, run=None):
+    """D538's reading of a summary: {'word', 'stops': [..], 'why': [..], ...}. A read that is not point 7's own (its
+    split, its pairs, off-atlas a miss, and `run`: the bootstrap's draws and seed, the labelled count) is refused
+    with ValueError. Then point 6's stops, each a stop (VOID: forge-default has an ok row off option 0 or an
+    off-atlas row; NOT READ: a player that must not search did, one of the four answered under 95% of the labels or
+    does not have its repeats at every probed decision, or a pair of the rule has no decision or no interval); then
+    point 7's word, from the unrounded numbers with strict inequalities. `run` is D538_RUN but for the unit tests."""
+    run = D538_RUN if run is None else run
     if s.get('split') != '%s=%s' % D538_SPLIT or s.get('offAtlas') != 'miss':
         raise ValueError('--rule d538 reads --split %s=%s and --off-atlas miss' % D538_SPLIT)
+    if (s.get('boot'), s.get('seed')) != (run['boot'], run['seed']):
+        raise ValueError('--rule d538 reads --boot %d --seed %d, not --boot %s --seed %s'
+                         % (run['boot'], run['seed'], s.get('boot'), s.get('seed')))
+    if s['labels']['labelled'] != run['labelled']:
+        raise ValueError('--rule d538 reads %d labelled decisions; these labels have %d'
+                         % (run['labelled'], s['labels']['labelled']))
     found = {(d['a'], d['b']): d for d in s['pairs']}
     for ab in D538_PAIRS:
         if ab not in found:
             raise ValueError('--rule d538 needs the pair %s:%s' % ab)
     stops = []
-    fd = s['players']['forge-default']['rows']
-    if fd['okOption0'] != fd['ok']:
-        stops.append('VOID: forge-default picks another option than 0 at %d of its %d ok rows'
-                     % (fd['ok'] - fd['okOption0'], fd['ok']))
+    every = s['allRows']
+    fd = every.get('forge-default', {'ok': 0, 'okOption0': 0, 'offAtlas': 0})
+    if fd['okOption0'] != fd['ok'] or fd['offAtlas']:
+        stops.append('VOID: forge-default is off option 0 at %d of its %d ok rows and off the atlas at %d rows'
+                     % (fd['ok'] - fd['okOption0'], fd['ok'], fd['offAtlas']))
     for p in D538_UNSEARCHED:
-        if p in s['players'] and s['players'][p]['rows']['searched']:
-            stops.append('NOT READ: %s searched at %d rows' % (p, s['players'][p]['rows']['searched']))
+        if p in every and every[p]['searched']:
+            stops.append('NOT READ: %s searched at %d rows' % (p, every[p]['searched']))
     for p in D538_PLAYERS:
         c = s['players'][p]['counts']
         if not c['labelled'] or c['answered'] < D538_ANSWERED * c['labelled']:
             stops.append('NOT READ: %s answered %d of %d labelled decisions, under %.0f%%'
                          % (p, c['answered'], c['labelled'], 100 * D538_ANSWERED))
+        want = run['repeats'][p]
+        if c['probed'] and (c['repeatsMin'], c['repeatsMax']) != (want, want):
+            stops.append('NOT READ: %s has %d to %d rows a labelled decision, not %d'
+                         % (p, c['repeatsMin'], c['repeatsMax'], want))
     p1, p2, p3 = (found[ab] for ab in D538_PAIRS)
     p1u = p1['subsets'][D538_UNSELECTED]
     why = ['P1 %s' % ci(p1, True), 'P1 on %s %s (n %d)' % (D538_UNSELECTED, ci(p1u, True), p1u['n']),
            'P2 %s' % ci(p2, True), 'P3 %s' % ci(p3, True)]
     if stops:
         word = 'VOID' if any(x.startswith('VOID') for x in stops) else 'NOT READ'
-    elif any(d['hi'] is None for d in (p1, p2, p3)) or p1u['mean'] is None:
+    elif any(d['mean'] is None for d in (p1, p2, p3, p1u)):
         word = 'NOT READ'
-        stops.append('NOT READ: a pair has no decision both players answered')
+        stops.append('NOT READ: a pair of the rule (P1 on %s among them) has no decision both players answered'
+                     % D538_UNSELECTED)
+    elif any(d['hi'] is None or d['lo'] is None for d in (p1, p2, p3)):
+        word = 'NOT READ'
+        stops.append('NOT READ: a pair of the rule has no interval (no resample held a decision of it)')
     elif any(d['hi'] < 0 for d in (p1, p2, p3)):
         word = 'AGREEMENT DOES NOT TRACK ELO'
     elif (p1['lo'] > 0 and p1u['mean'] > 0 and p2['mean'] > 0 and p3['mean'] > 0
@@ -337,7 +371,13 @@ def d538(s):
         word = 'AGREEMENT TRACKS ELO'
     else:
         word = 'INCONCLUSIVE'
-    return {'word': word, 'stops': stops, 'why': why, 'p1PointAboveZero': p1['mean'] is not None and p1['mean'] > 0}
+    above = p1['mean'] is not None and p1['mean'] > 0
+    above_u = p1u['mean'] is not None and p1u['mean'] > 0
+    # point 9: wave 2 is bought on TRACKS, and once on an INCONCLUSIVE whose P1 point is above 0 on all the labels
+    # and on the unselected ones
+    return {'word': word, 'stops': stops, 'why': why, 'p1PointAboveZero': above,
+            'p1UnselectedPointAboveZero': above_u,
+            'wave2': word == 'AGREEMENT TRACKS ELO' or (word == 'INCONCLUSIVE' and above and above_u)}
 
 
 def fmt(x, signed=False):
@@ -390,6 +430,7 @@ def text(s):
             lines.append('D538 stop: %s' % x)
         lines.append('D538: %s' % '; '.join(r['why']))
         lines.append('D538 verdict: %s' % r['word'])
+        lines.append('D538 wave 2 (point 9): %s' % ('bought' if r['wave2'] else 'not bought'))
     return '\n'.join(lines)
 
 
@@ -409,6 +450,16 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if a.boot < 1:
         ap.error('--boot must be at least 1')
+    if a.json and os.path.exists(a.json) and os.path.getsize(a.json):
+        # `--json ROWS...` with the output's name left out would write the read over the first rows file
+        try:
+            with open(a.json, encoding='utf-8') as f:
+                old = json.load(f)
+            ok = isinstance(old, dict) and 'players' in old and 'pairs' in old
+        except ValueError:
+            ok = False
+        if not ok:
+            ap.error('--json %s exists and is not an earlier read of this tool: it is not overwritten' % a.json)
     rows = []
     for f in a.rows:
         rows.extend(read_jsonl(f))

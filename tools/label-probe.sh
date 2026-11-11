@@ -131,14 +131,19 @@ for p in "${pids[@]}"; do wait "$p" || rc=1; done
 [ "$rc" = 0 ] || echo "label-probe: a shard failed -- see $dir/shard-*.log" >&2
 python3 -I -c '
 import collections, json, sys
-n = collections.Counter()
+last = {}
 for line in open(sys.argv[1]):
     try:
         r = json.loads(line)
     except ValueError:
         continue
-    if r.get("player") == sys.argv[2]:
-        n[r.get("status")] += 1
+    if r.get("player") != sys.argv[2]:
+        continue
+    k = (r.get("key"), r.get("repeat"))
+    # the row that is read: the last of a repeat that is not an error, else its last error (agreement.py)
+    if k not in last or r.get("status") != "error" or last[k].get("status") == "error":
+        last[k] = r
+n = collections.Counter(r.get("status") for r in last.values())
 print("label-probe: %s rows of %s: %s" % (sum(n.values()), sys.argv[2], ", ".join("%s %d" % kv for kv in sorted(n.items()))))
 ' "$out" "$player"
 exit "$rc"

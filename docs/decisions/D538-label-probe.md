@@ -1,14 +1,19 @@
 ## D538 — the judged labels (605 atlas decisions read by two blind judges, 515 with an agreed label), the label probe (which option a ladder player picks at a recorded atlas decision), and the rule that says whether agreement with the labels tracks measured Elo, written before the probe has run
 
-*Branch `pc/label-probe`, off main `d1d6b20f` (D536's merge). The probe's code (`LabelProbe.java`,
+*Branch `pc/label-probe`, on `pc/search-horizon` (`6e554017`, D537's lane), which is off main `d1d6b20f` (D536's
+merge); it merges after D537. The probe's code (`LabelProbe.java`,
 `tools/cubelab/AtlasProbe.java`, `tools/label-probe.sh`, `tools/atlas/agreement.py`, a probe block on an atlas
 unit, `ai-ladder.sh cfg`), the labels file, this file and PLAN's rows. **Written while J211 measured, alone: at the
 time of writing no line of the lane had been compiled or run**, so everything it says about the code is a plan
 until the build, the self-tests, gate step 12m and the smoke run of point 6 have passed. The live seat is meant to
 be unchanged (point 5); that is a claim the gate checks, not one this file can make. **Amended the same morning,
 after a read-only review and before any probe row existed**: the rule of point 7 gained a condition and a narrower
-claim, point 6's stops got their words, and the read became one command whose output is the verdict. The rule can
-still change until J213 is posted, and only in this file; from the posting on it is fixed.*
+claim, point 6's stops got their words, and the read became one command whose output is the verdict. **And a
+second time, after a second review, still before any row**: `forge-default` off the atlas is VOID too (it raised P1
+exactly as a wrong mapping would), the rule refuses any read but its own (4,000 draws, seed 538, the 515 labels, its
+repeats) and looks at every player in the rows, point 9's INCONCLUSIVE branch needs P1's point above 0 on the
+unselected labels as the word does, and point 7's command names its output file. The rule can still change until
+J213 is posted, and only in this file; from the posting on it is fixed.*
 
 **Status: the labels are recorded. The probe is written and unbuilt. The validity night is registered and unplayed.**
 
@@ -101,12 +106,15 @@ still change until J213 is posted, and only in this file; from the posting on it
    made under another seat config or seed is refused.
    `tools/atlas/agreement.py --labels LABELS ROWS…` is the read: per player the share of labelled decisions at
    which it picks the label and the share at which it picks option 0, over all labels, by kind, split by whether
-   the label is Forge's move, and on the two halves of `--split FIELD=VALUE`; its **departure precision** (of the
-   answers that leave option 0, the share that land on the label, where the label is not Forge's move); its row
-   counts (rows, `ok`, `ok` on option 0, `searched`); for each pair named by `--pairs A:B,…` the paired difference
+   the label is Forge's move, and on the two halves of `--split FIELD=VALUE`; its **departure precision** (of all the
+   answers that leave option 0, the share that land on the label; a departure where the label is Forge's move is a
+   miss); its row counts (rows, `ok`, `ok` on option 0, `off-atlas`, `searched`), for every player in the rows
+   whatever `--players` names; for each pair named by `--pairs A:B,…` the paired difference
    A − B **in the direction given**, on every subset; every interval a 95% percentile bootstrap over spines from one
    shared draw, printed to four decimals and carried unrounded in `--json`. `--rule d538` prints point 6's stops and
-   point 7's word from the unrounded numbers. Its definitions (a decision counts once, by the mean over its answered
+   point 7's word from the unrounded numbers, and exits 2 on any read that is not point 7's own: another split,
+   a pair missing, `--off-atlas drop`, a bootstrap that is not 4,000 draws on seed 538, a labels file that does not
+   hold 515 labelled decisions. `--json` does not overwrite a file that is not an earlier read. Its definitions (a decision counts once, by the mean over its answered
    repeats; `off-atlas` is an answer that is never the label and never option 0, or with `--off-atlas drop` no
    answer; `ambiguous`, `mismatch`, `unsupported` and `error` are no answer and are counted) are in its header and
    were fixed before any row existed. A worker that stops inside a replay writes `error`, never `mismatch`; an
@@ -133,12 +141,17 @@ still change until J213 is posted, and only in this file; from the posting on it
      `--write`, or the lane does not merge.
 6. **Before any reading: the run must be a measurement.** In this order, each a stop that `--rule d538` prints in
    place of point 7's word.
-   - **VOID**: `forge-default` has an `ok` row that is not option 0. It is Forge's own answer handed back, so
-     anything else is a fault in the mapping: the fault is fixed and the night is replayed. Not a finding.
-   - **NOT READ**: `forge-default` or `policy-outlet` has a row with `searched: true`; or one of point 7's four
-     players has an answer (`ok` or `off-atlas`) at fewer than 95% of the 515 labelled decisions; or a pair of the
-     rule shares no decision. The night is not read until the cause is explained in writing, and a replay after a
-     fix is read by the same rule.
+   - **VOID**: `forge-default` has an `ok` row that is not option 0, or an `off-atlas` row. It is Forge's own
+     answer handed back, so anything else is a fault in the mapping: the fault is fixed and the night is replayed.
+     Not a finding. (An `off-atlas` row of it where the label is Forge's move lowers Forge's agreement and raises
+     P1, which is the direction TRACKS needs; that is why it stops the read and is not counted as a miss.)
+   - **NOT READ**: `forge-default` or `policy-outlet` has a row with `searched: true`, labelled or not, whichever
+     players the read names; or one of point 7's four players has an answer (`ok` or `off-atlas`) at fewer than 95%
+     of the 515 labelled decisions; or one of the four does not have its repeats (3 rows for a search player, 1 for
+     `forge-default`) at every labelled decision it was probed at; or a pair of the rule, P1 on the unselected
+     labels among them, shares no decision or has no interval. The night is not read until the cause is explained
+     in writing, and a replay after a fix is read by the same rule. (A probe that stopped part-way is finished by
+     running its line again, point 4; that is no replay.)
 7. **The rule: does agreement track Elo?** One night (J213, after J212), alone, `{workers}` JVMs: the 605
    decisions, 3 repeats for a search player and 1 for `forge-default` and `policy-outlet`, `--seed 538`; read over
    the 515 labels with one command, whose `rule.word` is the verdict:
@@ -146,8 +159,11 @@ still change until J213 is posted, and only in this file; from the posting on it
    ```
    tools/atlas/agreement.py --labels fixtures/atlas/judged/labels-judged-v1.jsonl --boot 4000 --seed 538 \
      --pairs search-v1-anytime:forge-default,search-v1-anytime:search-v2-rrandom,search-v1-anytime:search-v2-rrandom4 \
-     --split source=round2 --rule d538 --json ROWS…
+     --split source=round2 --rule d538 --json READ.json ROWS…
    ```
+
+   `READ.json` is the file the read is written to and comes before the rows; the tool refuses to write it over a
+   rows file. The word is `rule.word` of that file, and `rule.wave2` is point 9's answer.
 
    The statistic is the tool's pair line, **Δ(A, B) = the mean over the labelled decisions both answered of (A's
    agreement − B's)**, A first, with its 95% interval; `off-atlas` counts as a miss. Every comparison below is strict
@@ -204,9 +220,10 @@ still change until J213 is posted, and only in this file; from the posting on it
      knowledge has shown remains J200's and J203's direct measurement on the map.
    - **INCONCLUSIVE**: the search changes Forge's move at about 18% of the decisions it searches (5,282 of 29,083
      in J210), so P1 rests on roughly a hundred decisions and may simply be too narrow a base. If P1's point is
-     above 0, wave 2 is bought once and the same rule is read once more on every label, and that second reading is
-     final; two looks at one rule, said here, so the chance of a false TRACKS is at most twice one look's. If P1's
-     point is at or below 0, wave 2 is not bought.
+     above 0 on all 515 labels and on the 409 nobody selected, wave 2 is bought once and the same rule is read once
+     more on every label (the decision that buys it writes the new labelled count into the rule's `D538_RUN`, and
+     nothing else), and that second reading is final; two looks at one rule, said here, so the chance of a false
+     TRACKS is at most twice one look's. If either point is at or below 0, wave 2 is not bought.
 10. **What is not decided.** No seat, budget, wire or protocol change. No player is registered. The judges are
     not put in a game loop (D418's seat is another thing). A policy distilled from the labels (D534 point 4's
     second road) needs a decision of its own, and this rule's TRACKS is a precondition for it, not a schedule.
@@ -229,9 +246,9 @@ still change until J213 is posted, and only in this file; from the posting on it
 
 **Unverified as written** (to be struck or corrected at the lane's first build).
 
-- That the lane compiles against the pinned jar, that the decision self-test reaches 425 checks off `d1d6b20f`
-  (433 once the lane sits on D537's 404), and that gate step 12m passes unchanged: none run. `agreement.py` and its
-  unit tests are Python and have run (16 tests).
+- That the lane compiles against the pinned jar, that the decision self-test reaches 433 checks (D537's 404
+  and this lane's 29), and that gate step 12m passes unchanged: none run. `agreement.py` and its unit tests are
+  Python and have run (18 tests; 26 in `tools/atlas/tests/`).
 - That every one of the 605 keys replays without a `mismatch` on today's bridge: J203 replayed all six nights'
   spines on 2026-11-09 without one, and since then only the search's rollouts changed.
 - The night's length: 605 × 3 × ten search players and 605 × 2 is 19,360 replays; at 6 s a replay and 7 workers
