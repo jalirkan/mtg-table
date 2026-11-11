@@ -1,0 +1,59 @@
+==== J210 run9 started 2026-11-11T02:03:52-05:00 in unit lab-J210-run9, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"written":1,"names":1,"present":8,"complete":8,"valid":8,"kindsOk":8,"seedsOk":8,"sidesOk":8,"rowsAgree":8,"scoresAgree":8,"allNight":1,"allJ194":0,"refValid":1,"whole":{"read":1,"n":600,"mean":0.12167,"se":0.01076,"lo":0.10058,"hi":0.14276,"rho":0.11151,"eloAbout":86.5,"eloHalfAbout":14.9,"above":1},"diagnose":0,"gate":1,"alone":{"p":{"read":1,"n":600,"mean":0.08583,"se":0.01053,"lo":0.0652,"hi":0.10647,"rho":0.05136,"eloAbout":60.3,"eloHalfAbout":14.5,"adds":1,"hurts":0,"notShown":0,"unread":0},"a":{"read":1,"n":600,"mean":0.03667,"se":0.00846,"lo":0.02009,"hi":0.05324,"rho":0.13802,"eloAbout":25.5,"eloHalfAbout":11.5,"adds":1,"hurts":0,"notShown":0,"unread":0},"b":{"read":1,"n":600,"mean":0.01583,"se":0.00517,"lo":0.0057,"hi":0.02596,"rho":0.35916,"eloAbout":11,"eloHalfAbout":7,"adds":1,"hurts":0,"notShown":0,"unread":0}},"last":{"p":{"read":1,"n":600,"mean":0.07417,"se":0.01264,"lo":0.04939,"hi":0.09895,"rho":0.12921,"eloAbout":53.3,"eloHalfAbout":17.8,"needed":1,"hurts":0,"notShown":0,"unread":0},"a":{"read":1,"n":600,"mean":0.03417,"se":0.00952,"lo":0.01551,"hi":0.05282,"rho":0.60166,"eloAbout":24.9,"eloHalfAbout":13.6,"needed":1,"hurts":0,"notShown":0,"unread":0},"b":{"read":1,"n":600,"mean":0.00167,"se":0.00842,"lo":-0.01484,"hi":0.01818,"rho":0.68812,"eloAbout":1.2,"eloHalfAbout":12.2,"needed":0,"hurts":0,"notShown":1,"unread":0}},"interaction":{"read":1,"n":600,"mean":-0.01667,"se":0.01338,"lo":-0.04289,"hi":0.00956},"replication":{"read":1,"n":600,"mean":0.0025,"se":0.00813,"lo":-0.01343,"hi":0.01843,"rho":0.7126,"eloAbout":1.9,"eloHalfAbout":11.8},"cand":{"b":{"name":"search-v2-only-b","read":1,"n":600,"mean":0.10583,"lo":0.08329,"hi":0.12837,"eloAbout":75.5,"eloHalfAbout":16,"candidate":0,"msPerGame":2236},"a":{"name":"search-v2-only-a","read":1,"n":600,"mean":0.085,"lo":0.05996,"hi":0.11004,"eloAbout":60.9,"eloHalfAbout":17.9,"candidate":0,"msPerGame":6157.6},"p":{"name":"search-v2-only-p","read":1,"n":600,"mean":0.03583,"lo":0.01692,"hi":0.05475,"eloAbout":26.1,"eloHalfAbout":13.8,"candidate":0,"msPerGame":17239.6},"ab":{"name":"search-v2-no-p","read":1,"n":600,"mean":0.07417,"lo":0.04939,"hi":0.09895,"eloAbout":53.3,"eloHalfAbout":17.8,"candidate":0,"msPerGame":7064.1},"pb":{"name":"search-v2-no-a","read":1,"n":600,"mean":0.03417,"lo":0.01551,"hi":0.05282,"eloAbout":24.9,"eloHalfAbout":13.6,"candidate":0,"msPerGame":18149.8},"pa":{"name":"search-v2-no-b","read":1,"n":600,"mean":0.00167,"lo":-0.01484,"hi":0.01818,"eloAbout":1.2,"eloHalfAbout":12.2,"candidate":1,"msPerGame":20852}},"candidates":1,"takenIndex":6,"taken":"search-v2-no-b","headToHead":1,"readings":14,"sharedMin":600,"liveSeatChanged":0}
+{"run":"20261110T234028-920980","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261111T000241-1429195","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261111T003127-2205495","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261111T010544-3682650","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261111T020808-3687983","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261111T025022-1409038","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261111T040324-2000761","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261111T053455-3647826","lines":1200,"aExact":1200,"bExact":1200,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"corners":8,"ok":8,"lines":9600,"by":{"none":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1},"b":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1},"a":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1},"p":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1},"ab":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1},"pb":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1},"pa":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1},"pab":{"lines":1200,"aExact":1200,"bExact":1200,"ok":1}}}
+# J210: where the search's strength is, by decision kind (D535)
+
+Corners valid 8 of 8 (present 8, complete 8, names and hashes as D535's on all eight: 1). `all` is read from the night's own all corner. WHOLE read 1, above 0: 1; the gate is open: 1; the night is diagnosed first: 0. Readings read 14 of 14, on at least 600 shared deals each. Candidates 1, taken forward: search-v2-no-b; a head-to-head is owed: 1. Live seat changed: 0.
+
+## The eight matches, each against forge-default
+
+| corner | player (hash) | searched | played / rows | complete | valid | score [95%] | Elo [95%] | draws, errors, timeouts | searched p / a / b | changed | ms a searched decision | search s a game | deals, blocks (first to last) | config lines exact A, B of lines | hours |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| none | policy-outlet (e350d94649a4) | nothing | 1200 / 1200 | 1 | 1 | 0.5042 [0.4988, 0.5096] | 2.9 [-0.9, 6.7] | 0, 0, 0 | 0 / 0 / 0 | 0 | 0 | 0.0 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 0.37 |
+| b | search-v2-only-b (c214a22644a2) | blocks | 1200 / 1200 | 1 | 1 | 0.52 [0.5093, 0.5307] | 13.9 [6.4, 21.4] | 0, 0, 0 | 0 / 0 / 2216 | 421 | 1210.828 | 2.2 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 0.47 |
+| a | search-v2-only-a (9f7945dd5b1b) | attacks | 1200 / 1200 | 1 | 1 | 0.5408 [0.5244, 0.5573] | 28.4 [17, 40] | 0, 0, 0 | 0 / 6722 / 0 | 1313 | 1099.25 | 6.2 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 0.57 |
+| p | search-v2-only-p (cf536ce63aee) | priority | 1200 / 1200 | 1 | 1 | 0.59 [0.5698, 0.6102] | 63.2 [48.8, 77.8] | 0, 0, 0 | 20462 / 0 / 0 | 3914 | 1011.024 | 17.2 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 1.04 |
+| ab | search-v2-no-p (d8508f47552b) | attacks and blocks | 1200 / 1200 | 1 | 1 | 0.5517 [0.5355, 0.5678] | 36 [24.7, 47.4] | 0, 0, 0 | 0 / 6733 / 1924 | 1600 | 979.204 | 7.1 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 0.7 |
+| pb | search-v2-no-a (ba2eafaee6fb) | priority and blocks | 1200 / 1200 | 1 | 1 | 0.5917 [0.5709, 0.6125] | 64.4 [49.6, 79.5] | 0, 0, 0 | 20568 / 0 / 2079 | 4281 | 961.708 | 18.1 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 1.22 |
+| pa | search-v2-no-b (59505e241363) | priority and attacks | 1200 / 1200 | 1 | 1 | 0.6242 [0.6034, 0.645] | 88.1 [72.9, 103.7] | 0, 0, 0 | 20351 / 6850 / 0 | 5041 | 919.907 | 20.9 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 1.52 |
+| pab | search-v1-anytime (cdd55e02a89c) | everything | 1200 / 1200 | 1 | 1 | 0.6258 [0.6048, 0.6468] | 89.4 [73.9, 105.1] | 0, 0, 0 | 20356 / 6861 / 1866 | 5282 | 934.772 | 22.7 | 600, 150 (114900000 to 114900149) | 1200, 1200 of 1200 | 1.48 |
+| J194 (a), information | search-v1-anytime (cdd55e02a89c) at pin 72302c69 | everything | 1200 / 1200 | 1 | 1 | 0.6233 [0.6023, 0.6444] | 87.5 [72.1, 103.2] | 0, 0, 0 | 20434 / 6839 / 1906 | 5381 | 930.434 | 22.6 | 600, 150 (114900000 to 114900149) | | |
+
+The eight matches' hours sum to 7.37 (estimate about 6). Validity parts, each a count of corners: kinds searched as `what=` names 8, batch seeds in 114,900,000-114,900,149 8, both seats on every deal 8, rows agree with the match line in count 8 and in score 8. Config lines: 8 of 8 corners with every batch line's config A exactly the arm's and config B exactly `Default` (9600 lines).
+
+## The readings (D535 point 5), paired by deal, in score
+
+| reading | what minus what | shared deals | difference [95%] | about, in Elo | correlation | flag |
+|---|---|---|---|---|---|---|
+| WHOLE | all minus none | 600 | +0.1217 [+0.1006, +0.1428] | +86.5 +-14.9 | 0.11151 | above 0: the gate is open |
+| ALONE priority | only-p minus none | 600 | +0.0858 [+0.0652, +0.1065] | +60.3 +-14.5 | 0.05136 | ADDS ALONE |
+| ALONE attacks | only-a minus none | 600 | +0.0367 [+0.0201, +0.0532] | +25.5 +-11.5 | 0.13802 | ADDS ALONE |
+| ALONE blocks | only-b minus none | 600 | +0.0158 [+0.0057, +0.0260] | +11 +-7 | 0.35916 | ADDS ALONE |
+| LAST priority | all minus no-p (ab) | 600 | +0.0742 [+0.0494, +0.0989] | +53.3 +-17.8 | 0.12921 | NEEDED |
+| LAST attacks | all minus no-a (pb) | 600 | +0.0342 [+0.0155, +0.0528] | +24.9 +-13.6 | 0.60166 | NEEDED |
+| LAST blocks | all minus no-b (pa) | 600 | +0.0017 [-0.0148, +0.0182] | +1.2 +-12.2 | 0.68812 | NOT SHOWN NEEDED |
+| INTERACTION (information) | (all minus none) minus the three ALONE | 600 | -0.0167 [-0.0429, +0.0096] | | | read |
+| REPLICATION (information) | the night's all minus J194 (a)'s rows | 600 | +0.0025 [-0.0134, +0.0184] | +1.9 +-11.8 | 0.7126 | read |
+
+Every LAST row and WHOLE use `all` from the night's own all corner. A flag is the interval's side of 0 and nothing more: an interval that includes 0 is NOT SHOWN, never "no effect". "About, in Elo" is the difference of the two corners' Elo at their own scores, with the interval's half-width at that slope: information beside the score, which is what the rule reads.
+
+## The faster-seat candidate rule (D535 point 6)
+
+| arm | searches | all minus the arm, shared deals | difference [95%] | about, in Elo | point at or under +0.0140 | search s a game | candidate |
+|---|---|---|---|---|---|---|---|
+| search-v2-only-b | blocks | 600 | +0.1058 [+0.0833, +0.1284] | +75.5 +-16 | 0 | 2.2 | 0 |
+| search-v2-only-a | attacks | 600 | +0.0850 [+0.0600, +0.1100] | +60.9 +-17.9 | 0 | 6.2 | 0 |
+| search-v2-only-p | priority | 600 | +0.0358 [+0.0169, +0.0548] | +26.1 +-13.8 | 0 | 17.2 | 0 |
+| search-v2-no-p | attacks and blocks | 600 | +0.0742 [+0.0494, +0.0989] | +53.3 +-17.8 | 0 | 7.1 | 0 |
+| search-v2-no-a | priority and blocks | 600 | +0.0342 [+0.0155, +0.0528] | +24.9 +-13.6 | 0 | 18.1 | 0 |
+| search-v2-no-b | priority and attacks | 600 | +0.0017 [-0.0148, +0.0182] | +1.2 +-12.2 | 1 | 20.9 | 1 |
+
+`all` here is the night's own all corner; its own search time a game is 22.7 s. Candidates: 1. Taken forward (the least search time a game): search-v2-no-b, which earns a 4,800-game head-to-head against search-v1-anytime as its own job under its own decision; a candidate is not a result. No reading of this night changes the live seat (D509).

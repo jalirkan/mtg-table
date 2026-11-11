@@ -2,20 +2,22 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-11T02:03:52-05:00
+- time: 2026-11-11T02:04:07-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
+- state: idle
 - ALERT: J210 started with 6 of 7 workers at 2026-11-10T21:08:07-05:00, as many as fit (MemAvailable 23.9 GB, 3.33 GB a worker); raised toward 7 as memory frees
 - ALERT: J208 started with 6 of 7 workers at 2026-11-10T13:12:14-05:00, as many as fit (MemAvailable 25.1 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
-- running: J210 commands 9/9, 9592/9600 games, 807.8/h, ETA 2026-11-11T02:04:28-05:00, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 3.86; memory 8/30.5 GB, swap 4893 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 3.57; memory 8/30.5 GB, swap 4893 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J209 done at 2026-11-10T18:15:59-05:00: cm.played 1200 · cm.score 0.49 · cm.elo -6.9 · cm.eloLo -17.8 · cm.eloHi 3.9 · cm.aSearch.msPerDecision 923.313 · cm.bSearch.msPerDecision 910.695 · ro.aRolloutsPerDecision 16.02 · ro.bRolloutsPerDecision 15.55 · ro.ratio 1.03 · ro.aPriorityShare.fromPass 0.066 · ro.bPriorityShare.fromPass 0.082 · ro.aChangedShare.a 0.117 · ro.aChangedShare.b 0.182 · v.shown 0 · v.inconclusive 0 · v.indistinguishable 0 · v.noWeaker 0 · v.worseNotBadly 1 · v.losesBadly 0 · v.candidate 0 · v.confirm 0 · v.trackCloses 1 · v.repost 0 · v.mix.forgeRoundsPerDecision 3.464 · v.mix.randomRoundsPerDecision 2.943 · v.mix.meanDForge 793.078 · v.mix.meanDRandom 692.584 · v.mix.disagreeShare 0.105 · v.info.minusJ208Same 12.2 · v.info.minusJ206 16.3 · v.info.minusJ204b.diff 77.5 · v.chainDeals 1 · w.lost 612
+- last finished: J210 done at 2026-11-11T02:04:06-05:00: mn.played 1200 · mn.elo 2.9 · mb.elo 13.9 · ma.elo 28.4 · mp.elo 63.2 · mab.elo 36 · mpb.elo 64.4 · mpa.elo 88.1 · mall.played 1200 · mall.elo 89.4 · mall.eloLo 73.9 · mall.eloHi 105.1 · v.whole.mean 0.122 · v.whole.lo 0.101 · v.whole.hi 0.143 · v.gate 1 · v.alone.p.mean 0.086 · v.alone.a.mean 0.037 · v.alone.b.mean 0.016 · v.alone.p.adds 1 · v.alone.a.adds 1 · v.alone.b.adds 1 · v.last.p.mean 0.074 · v.last.a.mean 0.034 · v.last.b.mean 0.002 · v.last.p.needed 1 · v.last.a.needed 1 · v.last.b.needed 0 · v.interaction.mean -0.017 · v.replication.mean 0.003 · v.candidates 1 · v.takenIndex 6 · v.readings 14 · v.allNight 1
 
 ## Messages
+
+- FOLLOW-UP READY [J210@2026-11-11T02:04:06-05:00] (the runner, for the cloud session): J210 is done; write and post the template morning-read. It decides: D535 points 5 and 6, from the night's eight match lines and their rows, paired by deal (D535 point 4), every threshold compared in ten-thousandths of score. WHOLE = the all corner's pair score minus the none corner's, the search's whole gain: its lower end not above 0 means something is broken, nothing else is read and the night is diagnosed first. ALONE for each of priority, attacks and blocks (only-k minus none): ADDS ALONE, HURTS ALONE or NOT SHOWN ALONE. LAST for each (all minus no-k): NEEDED, HURTS or NOT SHOWN NEEDED. INTERACTION and REPLICATION (all minus J194 (a)'s rows) are information only. The faster-seat candidate rule: a partial arm X is a candidate when all minus X has its point at or under +0.014 score with WHOLE above 0; among several the one with the least search time a game is taken forward, and it earns a 4,800-game head-to-head against search-v1-anytime as its own job under its own decision (J198's shape). No candidate is the expected reading: the table then says where the next lane's compute goes (D535 point 7). No reading of this night changes the live seat (D509: a seat-queue row and the owner's). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J209@2026-11-10T18:15:59-05:00] (the runner, for the cloud session): J209 is done; write and post the template morning-read. It decides: D533 point 7's pre-registered rule, the arm from its own match line alone, every threshold compared in integer tenths of Elo (and ten-thousandths of score) as the line carries them. THE ARM under D527's table against search-v1-anytime, its SHOWN row restated for a random4-them candidate and read for a mix as D532 point 6 reads it: SHOWN (a 4,800-game confirmation under D519's readings, then Forge's opponent model leaves the rollout loop for this arm; Forge stays for the searching seat's own continuation and, under mix4-them, for half the rollouts), INCONCLUSIVE (a 4,800-game confirmation first), NOT SHOWN indistinguishable or no weaker (a candidate, confirmed at 4,800 games), NOT SHOWN worse not badly or loses badly. WHAT FOLLOWS, only when the match is complete, exactly one: a 4,800-game confirmation of the arm, as its own job, when it is a candidate (holding, the random-rollout track closes as reached; failing, it closes); otherwise the random-rollout track closes, with a closing decision (D532 point 6), no further iteration. An incomplete match gives no reading and is reposted alone, and nothing follows until it is read. Every comparison with an earlier job is information, labelled as across D533's merge (which changes bridge/src and by D533 point 3 leaves every earlier value's play unchanged). The self-play-from-random path does not open on any reading; any change to the live seat is a separate decision (a seat-queue row, D509), never this job's. Ledger: LEDGER.md. Delete this line once posted.
 

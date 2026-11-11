@@ -1,0 +1,77 @@
+{
+ "v": 1,
+ "at": "2026-11-11T04:03:16.732Z",
+ "id": "justin-a-B650-GAMING-X-AX-V2:20261111T025022-1409038",
+ "host": "justin-a-B650-GAMING-X-AX-V2",
+ "a": "search-v2-no-a",
+ "b": "forge-default",
+ "ah": "ba2eafaee6fb",
+ "bh": "3ed453ffef1c",
+ "set": "tools/ai-bench/pairs-confirm.txt",
+ "target": 1200,
+ "planned": 1200,
+ "complete": true,
+ "played": 1200,
+ "draws": 0,
+ "errors": 0,
+ "timeouts": 0,
+ "decisive": 1200,
+ "pairs": 600,
+ "aWins": 710,
+ "score": 0.5917,
+ "se": 0.0106,
+ "lo": 0.5709,
+ "hi": 0.6125,
+ "elo": 64.4,
+ "eloLo": 49.6,
+ "eloHi": 79.5,
+ "aSearch": {
+  "games": 1199,
+  "searched": 22647,
+  "changed": 4281,
+  "fallback": {
+   "unmappable": 22,
+   "budget": 207
+  },
+  "budgetRate": 0.00914,
+  "budgetLo": 0.005321,
+  "budgetHi": 0.01296,
+  "byKind": {
+   "p": {
+    "searched": 20568,
+    "changed": 3929,
+    "rate": 0.191025
+   },
+   "b": {
+    "searched": 2079,
+    "changed": 352,
+    "rate": 0.169312
+   }
+  },
+  "msMean": {
+   "p": 961.684,
+   "b": 961.938
+  },
+  "msPerDecision": 961.708,
+  "evalLeaves": 0,
+  "evalLeafUs": null,
+  "stepTimeouts": 10,
+  "unavailable": 0
+ },
+ "bSearch": {
+  "games": 0,
+  "searched": 0,
+  "changed": 0,
+  "fallback": {},
+  "budgetRate": 0,
+  "budgetLo": null,
+  "budgetHi": null,
+  "byKind": {},
+  "msMean": {},
+  "msPerDecision": null,
+  "evalLeaves": 0,
+  "evalLeafUs": null,
+  "stepTimeouts": 0,
+  "unavailable": 0
+ }
+}
