@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-11T12:35:26-05:00",
- "heartbeat": "2026-11-11T12:35:26-05:00",
+ "updated": "2026-11-11T12:40:05-05:00",
+ "heartbeat": "2026-11-11T12:40:05-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -29,10 +29,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.98,
-  "memUsedGb": 8.7,
+  "load1": 3.6,
+  "memUsedGb": 10,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5851,
+  "swapUsedMb": 5850,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -48,7 +48,7 @@
    "cpu": "heavy",
    "phase": "pilot 4/5",
    "started": "2026-11-11T12:33:37-05:00",
-   "elapsed": 110,
+   "elapsed": 388,
    "done": 0,
    "total": 3600,
    "unit": "games",
@@ -60,7 +60,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-11T12:33:37-05:00",
-   "memGb": 0.01,
+   "memGb": 1.3,
    "live": {
     "mt1.played": 0,
     "mt1.elo": 0,
@@ -95,13 +95,13 @@
     "dst.checks": 404,
     "dst.failures": 0,
     "dst.ok": 1,
-    "elapsed_s": 69,
-    "hb.first": 0,
-    "hb.ok": 0,
-    "hb.own": 0,
+    "elapsed_s": 388,
+    "hb.first": 114900000,
+    "hb.ok": 1,
+    "hb.own": 114000000,
+    "hb.pilot": 467000000,
     "j212_err": 0,
-    "j212_games": 0,
-    "ma1.errors": 0
+    "j212_games": 0
    },
    "liveHeadline": [
     "mt1.played",
