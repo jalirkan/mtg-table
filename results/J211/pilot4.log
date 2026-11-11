@@ -1,0 +1,16 @@
+==== J211 pilot4 started 2026-11-11T02:55:43-05:00 in unit lab-J211-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-no-b vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-no-b vs search-v1-anytime (match:j211-pilot:20261111T075544-1856188, seed 321900000, 1 pair(s))
+  done   w0 search-v2-no-b 2-2 search-v1-anytime (0 draws) in 239 s
+  4 decisive games (2 pairs): search-v2-no-b scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-no-b scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-no-b: 124 decisions searched in 4 games, 22 changed Forge's answer (17.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-no-b by kind: p 20/94, a 2/30
+search-v2-no-b time per decision: 943.579 ms (p+a+b); by kind p 996.18, a 778.76
+search-v1-anytime: 129 decisions searched in 4 games, 20 changed Forge's answer (15.5%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 12/81, a 3/30, b 5/18
+search-v1-anytime time per decision: 851.188 ms (p+a+b); by kind p 834.703, a 765.713, b 1067.827
+{"run":"20261111T075544-1856188","a":"search-v2-no-b","b":"search-v1-anytime","aRolloutsPerDecision":15.82,"bRolloutsPerDecision":15.29,"aRoundsPerDecision":6.31,"bRoundsPerDecision":5.88,"aDecisions":124,"bDecisions":129,"aPriority":94,"aAttacks":30,"aBlocks":0,"bPriority":81,"bAttacks":30,"bBlocks":18,"aShort":4,"bShort":3,"aShortShare":0.0323,"bShortShare":0.0233,"aRanked":0,"bRanked":0,"aPriorPlayouts":0,"aPriorCut":0,"aPriorTimedOut":0,"aExposedGames":0,"bExposedGames":0,"aPolicyGames":0,"bPolicyGames":0,"aTouchedGames":0,"games":4,"ratio":1.035}
+{"written":1,"aP":94,"aA":30,"aB":0,"bP":81,"bA":30,"bB":18,"namesOk":1,"hashesOk":1}
