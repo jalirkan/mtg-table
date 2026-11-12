@@ -1,0 +1,5 @@
+==== J213 run1 started 2026-11-11T23:32:19-05:00 in unit lab-J213-run1, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J213: ./tools/label-probe.sh --decisions fixtures/atlas/judged/labels-judged-v1.jsonl --player forge-default --data /home/justin-a/code/lab/data --repeats 1 --seed 538 --workers 6 --game-timeout 180 --out var/j213/rows-forge-default.jsonl
+label-probe: forge-default (3ed453ffef1c), 6 worker(s) -> var/j213/rows-forge-default.jsonl; logs under /home/justin-a/code/lab/mtg-table/var/label-probe/rows-forge-default-forge-default
+label-probe: 605 rows of forge-default: ok 605
+J213: forge-default: {"error": 0, "expected": 605, "extra": 0, "missing": 0, "rows": 605, "statuses": {"ok": 605}, "unsettled": 0}
