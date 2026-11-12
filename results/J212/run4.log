@@ -1,0 +1,45 @@
+==== J212 run4 started 2026-11-11T22:07:24-05:00 in unit lab-J212-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"purpose":"match:justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439","games":1200,"blocks":150,"min":114900000,"max":114900149,"fullBlocks":150,"otherGames":0}
+{"purpose":"match:justin-a-B650-GAMING-X-AX-V2:20261111T202144-1936383","games":1200,"blocks":150,"min":114900000,"max":114900149,"fullBlocks":150,"otherGames":0}
+{"purpose":"match:justin-a-B650-GAMING-X-AX-V2:20261111T224854-1399339","games":1200,"blocks":150,"min":114900000,"max":114900149,"fullBlocks":150,"otherGames":0}
+{"written":1,"games":1200,"bar":60,"first":114900000,"last":114900149,"completeCount":3,"readings":3,"candidates":0,"t1Gain":0,"a1Gain":0,"x3Gain":0,"perRolloutOnly":0,"horizonClosedPB":0,"horizonClosedA":0,"liveSeatChanged":0,"t1":{"match":1,"names":1,"hashes":1,"kindsOk":1,"blocks":1,"cfgs":1,"played":1200,"errors":0,"timeouts":0,"pairs":600,"score":0.4975,"lo":0.4789,"hi":0.5161,"elo":-1.7,"eloLo":-14.6,"eloHi":11.2,"aSearched":27514,"bSearched":27541,"aP":18952,"aA":6195,"aB":2367,"bP":18987,"bA":6178,"bB":2376,"aMs":1210.296,"bMs":898.588,"aMsP":1313.635,"aMsA":863.58,"aMsB":1290.329,"bMsP":905.676,"bMsA":861.555,"bMsB":938.235,"complete":1,"shown":0,"smallGain":0,"inconclusive1200":0,"notShown":1,"candidate":0,"measuredLoss":0,"measuredGain":0,"indistinguishable":1,"aSecPerGame":27.75,"bSecPerGame":20.623,"costRatio":1.3456,"liveSeatChanged":0},"a1":{"match":1,"names":1,"hashes":1,"kindsOk":1,"blocks":1,"cfgs":1,"played":1200,"errors":0,"timeouts":0,"pairs":600,"score":0.5075,"lo":0.4917,"hi":0.5233,"elo":5.2,"eloLo":-5.7,"eloHi":16.2,"aSearched":28554,"bSearched":28233,"aP":19541,"aA":6444,"aB":2569,"bP":19576,"bA":6428,"bB":2229,"aMs":1019.686,"bMs":915.387,"aMsP":920.609,"aMsA":1340.902,"aMsB":967.583,"bMsP":925.268,"bMsA":880.502,"bMsB":929.212,"complete":1,"shown":0,"smallGain":0,"inconclusive1200":1,"notShown":0,"candidate":0,"measuredLoss":0,"measuredGain":0,"indistinguishable":1,"aSecPerGame":24.263,"bSecPerGame":21.537,"costRatio":1.1266,"liveSeatChanged":0},"x3":{"match":1,"names":1,"hashes":1,"kindsOk":1,"blocks":1,"cfgs":1,"played":1200,"errors":0,"timeouts":0,"pairs":600,"score":0.5142,"lo":0.4976,"hi":0.5307,"elo":9.8,"eloLo":-1.7,"eloHi":21.4,"aSearched":27584,"bSearched":27638,"aP":19098,"aA":6164,"aB":2322,"bP":19135,"bA":6136,"bB":2367,"aMs":2342.996,"bMs":859.836,"aMsP":2662.248,"aMsA":1247.27,"aMsB":2625.931,"bMsP":865.706,"bMsA":825.912,"bMsB":900.319,"complete":1,"shown":0,"smallGain":0,"inconclusive1200":1,"notShown":0,"candidate":0,"measuredLoss":0,"measuredGain":0,"indistinguishable":1,"aSecPerGame":53.858,"bSecPerGame":19.803,"costRatio":2.7197,"liveSeatChanged":0}}
+# J212: the search's horizon, three arms against search-v1-anytime, 1,200 games each (D398; D537; D519's four readings)
+
+**Readings under the pre-registered rule:**
+
+- search-v2-t1: NOT SHOWN (indistinguishable): -1.7 Elo [-14.6, 11.2], score 0.4975 [0.4789, 0.5161]; 27.75 against 20.623 search seconds a game (x1.3456), 1210.296 against 898.588 ms a searched decision, 92.1 against 49.7 ms of play a rollout (x1.853), 11.47 against 15.79 rollouts a decision; not a candidate; the live seat is unchanged
+- search-v2-a1: INCONCLUSIVE AT 1,200 (indistinguishable): 5.2 Elo [-5.7, 16.2], score 0.5075 [0.4917, 0.5233]; 24.263 against 21.537 search seconds a game (x1.1266), 1019.686 against 915.387 ms a searched decision, 61.3 against 51.2 ms of play a rollout (x1.197), 14.39 against 15.53 rollouts a decision; not a candidate; the live seat is unchanged
+- search-v2-t1-x3: INCONCLUSIVE AT 1,200 (indistinguishable): 9.8 Elo [-1.7, 21.4], score 0.5142 [0.4976, 0.5307]; 53.858 against 19.803 search seconds a game (x2.7197), 2342.996 against 859.836 ms a searched decision, 114.9 against 46.1 ms of play a rollout (x2.492), 19.08 against 16.43 rollouts a decision; not a candidate; the live seat is unchanged
+
+**Candidates for a 4,800-game confirmation (SHOWN or SMALL GAIN):** 0. **The live seat:** unchanged by this job (liveSeatChanged 0).
+
+**The night's pattern (D537 point 8, descriptions, not rules):** t1 a candidate 0, a1 a candidate 0, t1-x3 a candidate 0; per rollout but not per second (t1-x3 a candidate, t1 not) 0; the horizon closed for priority and blocks at this leaf (t1 and t1-x3 both NOT SHOWN) 0; the deeper attack horizon closed (a1 NOT SHOWN) 0.
+
+| arm | played / planned | complete | score [95%] | Elo [95%] | reading | described | pairs | draws, errors, timeouts | hours |
+|---|---|---|---|---|---|---|---|---|---|
+| search-v2-t1 | 1200 / 1200 | true | 0.4975 [0.4789, 0.5161] | -1.7 [-14.6, 11.2] | NOT SHOWN | indistinguishable | 600 | 0, 0, 0 | 2.51 |
+| search-v2-a1 | 1200 / 1200 | true | 0.5075 [0.4917, 0.5233] | 5.2 [-5.7, 16.2] | INCONCLUSIVE AT 1,200 | indistinguishable | 600 | 0, 0, 0 | 2.45 |
+| search-v2-t1-x3 | 1200 / 1200 | true | 0.5142 [0.4976, 0.5307] | 9.8 [-1.7, 21.4] | INCONCLUSIVE AT 1,200 | indistinguishable | 600 | 0, 0, 0 | 4.31 |
+
+**The cost and the horizon, A against B on the same games (description only; the seconds are this machine's, D388):**
+
+| arm | search s a game A / B (x) | ms a decision A / B | ms p, a, b A | ms p, a, b B | rollouts a decision A / B | rounds a decision A / B | ms of play a rollout A / B (x) | copy ms a rollout A / B | fewer than 2 rounds A / B | from pass, to other, to pass a p decision A | same, B | land windows a game A / B | step caps A / B |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| search-v2-t1 | 27.75 / 20.623 (x1.3456) | 1210.296 / 898.588 | 1313.635, 863.58, 1290.329 | 905.676, 861.555, 938.235 | 11.47 / 15.79 | 4.21 / 6.09 | 92.1 / 49.7 (x1.853) | 4.7 / 4.6 | 11.78% / 2.83% | 8.7%, 6.4%, 5.9% | 8.0%, 6.3%, 4.6% | 7.18 / 7.14 | 0 / 0 |
+| search-v2-a1 | 24.263 / 21.537 (x1.1266) | 1019.686 / 915.387 | 920.609, 1340.902, 967.583 | 925.268, 880.502, 929.212 | 14.39 / 15.53 | 5.62 / 6 | 61.3 / 51.2 (x1.197) | 4.6 / 4.6 | 7.73% / 3.44% | 8.1%, 6.2%, 4.8% | 8.1%, 6.4%, 4.9% | 7.29 / 7.29 | 0 / 0 |
+| search-v2-t1-x3 | 53.858 / 19.803 (x2.7197) | 2342.996 / 859.836 | 2662.248, 1247.27, 2625.931 | 865.706, 825.912, 900.319 | 19.08 / 16.43 | 7.26 / 6.34 | 114.9 / 46.1 (x2.492) | 4.2 / 4.2 | 1.55% / 2.35% | 8.4%, 7.4%, 5.7% | 8.1%, 6.4%, 5.0% | 7.15 / 7.16 | 0 / 0 |
+
+| side | decisions searched (games) | changed Forge: p | a | b | all | budget fallbacks [95%] | other fallbacks | step timeouts |
+|---|---|---|---|---|---|---|---|---|
+| search-v2-t1 | 27514 (1199) | 3979/18952 (21.0%) | 968/6195 (15.6%) | 517/2367 (21.8%) | 5464/27514 (19.9%) | 698 = 2.5% [2.0%, 3.0%] | unmappable 22 | 17 |
+| search-v1-anytime (vs search-v2-t1) | 27541 (1199) | 3599/18987 (19.0%) | 942/6178 (15.2%) | 550/2376 (23.1%) | 5091/27541 (18.5%) | 109 = 0.4% [0.2%, 0.5%] | unmappable 25 | 7 |
+| search-v2-a1 | 28554 (1199) | 3734/19541 (19.1%) | 1065/6444 (16.5%) | 590/2569 (23.0%) | 5389/28554 (18.9%) | 399 = 1.4% [1.1%, 1.7%] | unmappable 29 | 15 |
+| search-v1-anytime (vs search-v2-a1) | 28233 (1199) | 3788/19576 (19.4%) | 1086/6428 (16.9%) | 457/2229 (20.5%) | 5331/28233 (18.9%) | 166 = 0.6% [0.4%, 0.8%] | unmappable 28 | 16 |
+| search-v2-t1-x3 | 27584 (1199) | 4101/19098 (21.5%) | 952/6164 (15.4%) | 558/2322 (24.0%) | 5611/27584 (20.3%) | 74 = 0.3% [0.1%, 0.4%] | unmappable 21 | 4 |
+| search-v1-anytime (vs search-v2-t1-x3) | 27638 (1199) | 3740/19135 (19.5%) | 977/6136 (15.9%) | 554/2367 (23.4%) | 5271/27638 (19.1%) | 64 = 0.2% [0.2%, 0.3%] | unmappable 33 | 0 |
+
+search-v2-t1: rule parts names 1, hashes 1, seat configs 1, the registered blocks 1 (150 blocks 114900000 to 114900149, 1200 games, 0 of another match), all three kinds on both sides 1, complete 1. SHOWN 0, SMALL GAIN 0, INCONCLUSIVE AT 1,200 0, NOT SHOWN 1; candidate 0. Described: indistinguishable 1, a measured loss 0, a measured gain 0. Match id justin-a-B650-GAMING-X-AX-V2:20261111T175056-372439, set tools/ai-bench/pairs-confirm.txt.
+
+search-v2-a1: rule parts names 1, hashes 1, seat configs 1, the registered blocks 1 (150 blocks 114900000 to 114900149, 1200 games, 0 of another match), all three kinds on both sides 1, complete 1. SHOWN 0, SMALL GAIN 0, INCONCLUSIVE AT 1,200 1, NOT SHOWN 0; candidate 0. Described: indistinguishable 1, a measured loss 0, a measured gain 0. Match id justin-a-B650-GAMING-X-AX-V2:20261111T202144-1936383, set tools/ai-bench/pairs-confirm.txt.
+
+search-v2-t1-x3: rule parts names 1, hashes 1, seat configs 1, the registered blocks 1 (150 blocks 114900000 to 114900149, 1200 games, 0 of another match), all three kinds on both sides 1, complete 1. SHOWN 0, SMALL GAIN 0, INCONCLUSIVE AT 1,200 1, NOT SHOWN 0; candidate 0. Described: indistinguishable 1, a measured loss 0, a measured gain 0. Match id justin-a-B650-GAMING-X-AX-V2:20261111T224854-1399339, set tools/ai-bench/pairs-confirm.txt.
