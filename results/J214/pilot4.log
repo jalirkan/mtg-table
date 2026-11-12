@@ -1,0 +1,6 @@
+==== J214 pilot4 started 2026-11-12T05:08:43-05:00 in unit lab-J214-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+ok   1 window a game, B clean (a D540 counter at 0 is clean): exposed, clean, both kinds
+ok   B with search.p.lands.windows 1 in one game: not clean
+ok   1 window in 8 games fired but is under 0.25 a game; 2 in 8 is exactly 0.25 and exposed
+ok   A with no attack search: kindsOk 0
+{"ok":1,"cases":4,"passed":4}
