@@ -299,8 +299,9 @@ resolution, where a copy (no stack) cannot start, and stay Forge's.
 
 **Three widenings of the priority search, off by default (D540).** `declined=1`
 adds every castable spell Forge's `canPlaySa` declines for any reason (D312 took
-only untargeted `CantPlayAi` spells), aimed by Forge's own targeting — the
-targets `canPlaySa` left, else Forge's mandatory choice
+only untargeted `CantPlayAi` spells), aimed after every `canPlaySa` judgment of
+the window — the targets `canPlaySa` left if each is still legal (D485's
+staleness test), else Forge's forced-trigger choice
 (`doTriggerNoCostWithSubs(..., true)`, the coach grader's `Grader.aim`) — and
 dropped when it has no legal target; the widened plays come after today's, so
 today's candidates are the head of the list, and an own-main window Forge passed
@@ -312,8 +313,10 @@ a mana ability, as the main-phase windows are: the install is the same
 at that step with itself as the first to have it (so after a forced pass in the
 opponent's turn the opponent gets one more priority in the copy than in the real
 game; D540 says so). `lands=1` searches a land drop where a land of another name
-is legal: Forge's land against the first land of each other name in
-`Decisions.landPlays`, no pass. Play exploration's listing (D358, D509's frozen
+is legal: Forge's land against the first land of each other name and face in
+`Decisions.landPlays`, no pass. A widened pick that did not happen when the seat
+is asked again in the same step turns that key off for the rest of the step
+(`search.p.<key>.retry`). Play exploration's listing (D358, D509's frozen
 atlas seat) never takes the widening.
 
 **Measured** (`docs/evidence/search-ai.md`): 56.5% against Default's 47.0% on

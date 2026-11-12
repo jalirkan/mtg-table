@@ -104,37 +104,58 @@ of the ladder's `configHash` (`tools/ai-ladder/registry.ts`), checked on three r
    search-v3 in its one field), by text and round trip, and that neither the live parse nor `parse("")` turns one on.
    A live seat may name them (`--ai-search lands=1`); none is measurement-only in the way a random rollout is,
    because none reads anything the seat may not see.
+   **A retry guard, common to the three.** Forge's main loop asks an AI seat again after a play it could not make
+   (up to 999 times, `PhaseHandler.mainLoopStep`), and a ladder seat has no pay cap (D465's is the atlas seat's).
+   So when the search has picked a widened play (an aimed declined spell, any play in an instant-speed window, a
+   land of another name) and the seat is asked again in the same turn and step with an empty stack and nothing it
+   plays has moved since (spells cast this turn, lands played this turn and that play's activations this turn, all
+   unchanged), that key is off for the rest of the step — today's path only — and the ask is counted,
+   `search.p.<key>.retry`. With every key off the guard's state is never read and nothing is counted.
 2. **`declined=1`: castable spells Forge declines, aimed by Forge's own targeting.** In `SearchPolicy.alternatives`,
    a spell that is castable and affordable and that `canPlaySa` answers with anything but `WillPlay`, and that is not
-   D312's untargeted `CantPlayAi` spell, is aimed (`aimDeclined`, the coach grader's two steps, `Grader.aim`: the
-   targets `canPlaySa` left on it, else Forge's mandatory choice for its effect, `doTriggerNoCostWithSubs(seat, sa,
-   true)`) and listed after today's plays; one whose every targeted part still lacks a legal number of targets (a
-   Counterspell on an empty stack) is dropped and counted. The aiming runs inside `Decisions.quiet`, so Forge's random
-   stream is not moved by it. Today's candidates are the head of the widened list, so the cut at `cands` keeps every
-   candidate search-v3 had; and a window Forge passed in with nothing else to consider (the 4,122) is searched when
-   such a spell exists. Activations stay as they are (Rejected). Counters: `search.p.declined.listed` (aimed spells
+   D312's untargeted `CantPlayAi` spell, is set aside in the loop and aimed in a second pass after it (`aimDeclined`):
+   the targets `canPlaySa` left on it if every one is still legal — a valid count, and each target among the part's
+   candidates (`getAllCandidates(part, false)`) that `canTarget` accepts, over every part (`Explorer.castParts`),
+   Explorer's staleness test (D485), because many refusals return before Forge touches the targets and what is there
+   can be an earlier evaluation's, ours included — else, the stale parts cleared, Forge's FORCED-trigger path
+   (`doTriggerNoCostWithSubs(seat, sa, true)`, the coach grader's second step, `Grader.aim`). It is listed after
+   today's plays; one with no legal aim even then (a Counterspell on an empty stack) is dropped and counted. The
+   aiming runs inside `Decisions.quiet`, so Forge's random stream is not moved by it, and after the loop because the
+   AI paths it reaches can write the seat's AI memory (`ChangeZoneAi` remembers a bounce, `BounceOnce` reads it):
+   aimed in the loop, a spell judged later could be judged differently. So today's candidates are the head of the
+   widened list and the cut at `cands` keeps every candidate search-v3 had; but Forge's *later* answers in the real
+   game can still differ after an aim, because the memory an aim wrote persists. A window Forge passed in with
+   nothing else to consider (the 4,122) is searched when such a spell exists. Activations stay as they are (Rejected). Counters: `search.p.declined.listed` (aimed spells
    listed), `.noTarget` (dropped), `.windows` and `.cands` (windows where one became a candidate, and how many),
    `.changed` (the search picked one).
 3. **`instant=1`: the instant-speed windows where Forge plays.** `wantsPriority(seat, forge)` is today's test, or,
    with the key on: outside the seat's own main phases, on an empty stack, on either turn, Forge's answer one play
    that is not a land ability and not a mana ability. The window is searched as a main-phase one is: Forge's play,
-   pass and the alternatives, rolled out to the end of that turn. Counters: `search.p.instant.windows`, `.cands`,
-   `.changed`. The stack windows wait (Rejected).
+   pass and the alternatives, rolled out to the end of that turn. The listing's engine calls there (`alternatives`,
+   its `canPlaySa` calls) run inside `Decisions.quiet`: B searches nothing in those windows and draws nothing from the
+   real game's random stream there, so the arm may not either. Today's main-phase calls are not wrapped, so the
+   keys-off path is unchanged. Counters: `search.p.instant.windows`, `.cands`, `.changed`, `.retry`. The stack windows
+   wait (Rejected).
 4. **`lands=1`: the land drop.** Where Forge's answer is one land and a land of another name is legal
-   (`Decisions.landPlays`, D466's one listing), Forge's land is rolled out against the first land of each other name,
-   up to `cands`; no pass, no holding the land. With no other name it is Forge's drop, unsearched, as before.
-   Counters: `search.p.lands.windows`, `.cands`, `.changed`; such a window also counts `search.p.considered`, and its
-   override `search.p.changed.toOther`.
+   (`Decisions.landPlays`, D466's one listing, read inside `Decisions.quiet`), Forge's land is rolled out against the
+   first land of each other name and face (a land's name with the face it is played as, `getCardStateName`, so a
+   two-faced land offers both faces), up to `cands`; no pass, no holding the land. With no other name it is Forge's drop, unsearched, as before.
+   Counters: `search.p.lands.windows`, `.cands`, `.changed`, `.retry`; such a window also counts
+   `search.p.considered`, and its override `search.p.changed.toOther`.
 5. **What the install does at an instant-speed step, read and tested.** A priority candidate is installed with
-   `PhaseHandler.setPriority(seat)` and `onStackResolved()` (D312). In Forge's source (the 2.0.15 checkout at
-   `~/code/forge-src`, `579d0a84c`; the pinned 2.0.14 jar's source was not read), `setPriority` sets both the
+   `PhaseHandler.setPriority(seat)` and `onStackResolved()` (D312). In Forge's source at the `forge-2.0.14` tag
+   (`~/code/forge-src`, read with `git show`; `PhaseHandler.java:138-141`, `:1040-1147`, `:1257-1259`, the same
+   lines as the 2.0.15 checkout's), `setPriority` sets both the
    player with priority and the first player to have it, and `onStackResolved` sets `givePriorityToPlayer`, so the
    next `mainLoopStep` asks the seat at whatever step the copy is in, its play gives it priority again (117.3c), and
    when every player has passed in turn the step ends. One difference follows for the opponent's turn: in the real
    game the active opponent had priority first and passed it to the seat, so the seat's pass ends the step; on the
    copy the seat is the first to have had it, so after a forced pass the opponent is asked once more before the step
    ends. Every candidate but pass gives the seat priority again and is unaffected; the pass candidate's rollout gives
-   the opponent one window the real game would not. The ai-bench self-test (`searchCandidatesScenarios`) installs a
+   the opponent one window the real game would not. **Which way that leans, and the sentence J214's report must
+   carry for the instant arm:** the extra window can only help the opponent after a pass, so it leans against
+   passing, toward keeping Forge's play; a NOT SHOWN `instant` reading is therefore weaker evidence than the other
+   two arms', and a SHOWN one is not inflated by it. The ai-bench self-test (`searchCandidatesScenarios`) installs a
    forced Bolt and a forced pass on a copy at the opponent's end step, the seat's upkeep and its beginning of combat,
    and its messages say what the copy showed after the install and at the leaf.
 6. **J214: three fixed 1,200-game matches** (D398: 600 mirrored pairs, no stopping rule) on the confirm set,
@@ -156,11 +177,12 @@ of the ladder's `configHash` (`tools/ai-ladder/registry.ts`), checked on three r
    `complete: true`, played all 1,200 games with errors plus timeouts at most 60, carries `score`, `lo`, `elo`,
    `eloLo` and `eloHi`, was played on exactly blocks 416,900,000–416,900,149 with no other match's game in its
    folder, every batch line carried the two seat configs of point 6 exactly, both sides searched priority and attack
-   decisions and neither searched a block, and **the arm's key fired**: A's summed batch counters show
-   `search.p.<key>.windows` above 0 (for `declined`, `search.p.declined.windows`) and B's show no `search.p.declined.`,
-   `search.p.instant.` or `search.p.lands.` counter above 0. A match whose key fired in no window is **NOT READ**
-   (the arm played search-v3 and says nothing), and like an incomplete match gets no reading and is reposted alone
-   under a new job id after its cause is found. Exactly one reading of a complete match, in this precedence, compared
+   decisions and neither searched a block, and **the arm's key fired often enough**: A's batch counters show
+   `search.p.<key>.windows` summed over the match's games at least 0.25 a game played (300 at 1,200 games; for
+   `declined`, `search.p.declined.windows`), and B's show no `search.p.declined.`, `search.p.instant.` or
+   `search.p.lands.` counter above 0. A match under that rate is **NOT READ**: the report gives the rate, the match
+   gets no reading, and the arm is not played again without a new decision. A match incomplete for any other reason
+   gets no reading and is reposted alone under a new job id after its cause is found. Exactly one reading of a complete match, in this precedence, compared
    as the line carries them (`lo` in integer ten-thousandths, Elo in integer tenths):
    - **SHOWN**: `lo` above 0.5 and `elo` at least +15;
    - **SMALL GAIN**: `lo` above 0.5 and `elo` below +15;
@@ -181,19 +203,22 @@ of the ladder's `configHash` (`tools/ai-ladder/registry.ts`), checked on three r
     windows left to Forge a game.
 11. **The pilot, before the matches** (the *unverified* list below, measured): the build, the decision self-test
     and the ai-bench self-test with D540's scenarios passing; the three players at their hashes and seat configs;
-    a 4-game ladder match per arm against `search-v2-no-b` in pilot folders under another host (both sides search,
-    the names, hashes and seat configs exact, A's key counters above 0 and B's absent); and a 4-game recorded run
-    per arm against Forge Default (`ai-bench.sh play --record-all`), whose decision records give each arm's ms by
-    candidate count and its searched windows by kind, printed with the counters. A pilot whose key never fired in
-    its 4 recorded games is reported and does not stop the night (4 games is small); a pilot whose key fired in B,
-    or in A under the wrong window, stops it.
+    a 4-game ladder match per arm against `search-v2-no-b` in pilot folders under another host (both sides search
+    priority and attacks and no block, the names, hashes and seat configs exact, B's D540 counters absent); and a
+    4-game recorded run per arm against Forge Default (`ai-bench.sh play --record-all`), whose decision records give
+    each arm's ms by candidate count and its searched windows by kind, printed with the counters. **An arm is played
+    that night only if its pilot passes**: A's `search.p.<key>.windows` summed over its 4 ladder games and its 4
+    recorded games above 0, none of its 8 games an error or a timeout, and `search.p.<key>.retry` at most 2 a game.
+    An arm that fails is not played that night and the report says which condition it failed; a key that fired in
+    B, or in A under the wrong window, stops the night.
 12. **Time** (D537 point 11's fit: a 1,200-game match against search-v2's family on this host at 7 workers, alone,
     takes about 0.47 h + 0.0436 h × both sides' search seconds a game; residual sd 0.15 h). B searches about 19.3 s a
     game (J211). Estimated, from the recording's ms by candidate count: `declined` about 21.8 s (+0.2 candidates a
     searched decision at about 300 ms, and about 2.5 more windows a game at about 0.6 s), about 2.3 h; `instant`
     about 20.5 s (about 2 windows a game at about 0.6 s), about 2.2 h; `lands` about 21.7 s (about 3.65 windows a
     game at about 0.65 s), about 2.3 h. With the pilot (about 0.75 h), about 7.5 h, 8.8 h if memory pressure holds
-    the night at 6 workers. Each match stops itself at `--hours 3.5`.
+    the night at 6 workers. Each match stops itself at `--hours 3.5`, so the night is at most about 11.25 h with the
+    pilot; the job's timeout is 12 h.
 13. **What each outcome leads to** (consequences, read from the three readings together; not rules):
     - `declined` a candidate: the search was missing plays, not values; its confirmation first, and a seat with the
       declined casts and today's activations Forge declines is a later arm under a later decision.
@@ -232,9 +257,14 @@ seat's plays and listings are unchanged:
   paragraph is the admission. `tools/ai-bench/AiBench.java` gains self-test scenarios only.
 
 **Hidden information (hard rule 8) and threads (hard rule 3).** No arm reads anything hidden. `declined` lists the
-seat's own castable spells (`ComputerUtilAbility.getAvailableCards` for the seat, as today) and aims them with Forge's
-own targeting, the calls Forge's chooser makes for this seat at every priority, among the objects the spell may
-target; the targets go nowhere but onto the play. `instant` adds no listing at all: it lets today's search run in
+seat's own castable spells (`ComputerUtilAbility.getAvailableCards` for the seat, as today) and aims each one with
+the targets `canPlaySa` left on it where they are still legal, else with Forge's forced-trigger path
+(`doTriggerNoCostWithSubs` with `mandatory` true). That path is not the choice Forge's chooser makes at a priority:
+it is what Forge answers for a trigger it must put on the stack, chosen per effect (for a harmful one an opponent's
+object first, then an ally's, then the seat's own, as the review read Forge's AI), so a harmful spell can come back
+aimed at our own side (the rollout scores it, and it
+costs one of the six candidate slots). Both choose among the objects the spell may target, through Forge's own
+targeting rules, and the targets go nowhere but onto the play. `instant` adds no listing at all: it lets today's search run in
 more windows. `lands` lists the seat's own playable lands (its hand, or a zone a may-play permission opens to it,
 D466). Every rollout redeals what the seat cannot see exactly as today (`Determinizer`), in the opponent's turn as
 in a block search. Nothing touches the wire, `Snap` or a `CardView`. Every new call runs inside
@@ -263,18 +293,23 @@ three.
 **What is unverified.**
 
 - **Everything in this lane is uncompiled and untested** (J213 held the machine): the three keys, the search's
-  branches, `DecisionSelfTest.searchCandidates` (29 checks), the ai-bench scenarios, the ladder test and the hashes.
+  branches, the retry guard, `DecisionSelfTest.searchCandidates` (29 checks), the ai-bench scenarios (each of which
+  first asserts that its board gives Forge the answer the arm needs, then requires the arm to fire: a board that
+  does not is a failure to fix, not a pass), the ladder test and the hashes.
+- **The retry guard** has no self-test of its own: no board here makes a widened pick fail to cast. The pilot's
+  `search.p.<key>.retry` a game is its measure (point 11).
 - **The costs** (point 12): ms a decision for the new candidates and windows is interpolated from the recording,
   never measured; the pilot measures it.
 - **That `mapSa` puts an aimed declined spell's targets on the copy** for every kind of target; the self-test holds
   one (Giant Growth on the seat's own Bears).
-- **That Forge's mandatory targeting behaves on the real game inside `chooseSpellAbilityToPlay`** as it does on the
-  grader's rebuilt position, and that the targets it leaves on a declined spell the search does not pick do not
-  change Forge's next answer (inferred: Forge's AI resets a play's targets before it aims it).
+- **That Forge's forced-trigger targeting behaves on the real game inside `chooseSpellAbilityToPlay`** as it does on
+  the grader's rebuilt position, and how far an aim moves Forge's later answers: the targets it leaves on a declined
+  spell the search does not pick are checked for staleness before they are trusted again (point 2), but the AI
+  memory an aim writes is not undone.
 - **Which refusal kept each left-out cast out** (`CantPlayAi` targeted, another `AiPlayDecision`, or the `cands` cut):
   the records do not carry `canPlaySa`'s answer; the pilot's counters say how many aimed spells the arm lists.
-- **The install at an instant-speed step on the pinned 2.0.14**: point 5 is read from the 2.0.15 checkout; the
-  self-test runs on 2.0.14 and says what it saw, including whether the opponent gets the extra priority after a pass.
+- **The install at an instant-speed step on the pinned jar**: point 5 is read from the `forge-2.0.14` tag's source,
+  not the jar's bytecode; the self-test runs on the jar and says what it saw.
 - **That `mapSa` maps a land ability** onto a copy (the land drop is a `LandAbility`, matched by description and
   kind); the self-test holds two lands.
 - **The labels' 103 MAIN1 casts**: whether they were candidates by `WillPlay` or as D312's declined spells,

@@ -1541,9 +1541,12 @@ public final class AiBench {
      * beginning of combat: the seat holds priority there, the forced play (Lightning Bolt on
      * the Bears) is played, and the step then proceeds to the end of the turn; the forced
      * pass leaves the Bolt in hand and the turn ends too.  Each check says what it saw, so a
-     * failure is a description of the engine's behaviour, not a guess.  Then the search with
-     * the key on at the opponent's end step searches the window if and only if Forge plays
-     * there, and the key-off search never does.
+     * failure is a description of the engine's behaviour, not a guess.  Then, on a board where
+     * Forge's own answer at the opponent's end step is first asserted to be a play (Think Twice),
+     * the search with the key on searches that window, and the key-off search never does.  Every
+     * arm's scenario first asserts the board gives Forge the answer the arm needs, then requires
+     * the arm to FIRE (a declined spell aimed and searched, an instant-speed window searched, a
+     * land window searched): a board that does not fire is a failure, never a pass.
      */
     static void searchCandidatesScenarios() throws Exception {
         System.out.println("== ai-bench selftest: what the priority search considers (D540, engine)");
@@ -1554,6 +1557,11 @@ public final class AiBench {
         scenario("d540-declined-list", declinedBoard, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
             final Game g = ai.getGame();
             final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            // the board must hold what the arm needs: a targeted spell Forge's own judgment declines here
+            final forge.ai.AiPlayDecision forgeSays = ((forge.ai.PlayerControllerAi) ai.getController()).getAi()
+                    .canPlaySa(playOf(ai, "Giant Growth", (sa) -> true));
+            check(forgeSays != forge.ai.AiPlayDecision.WillPlay,
+                    "D540: the board: Forge declines Giant Growth in a first main phase with no combat (canPlaySa " + forgeSays + ")");
             final List<forge.game.spellability.SpellAbility> today = mtgtable.ai.SearchPolicy.alternativesForTest(ai, null);
             final CountSink sink = new CountSink();
             final List<forge.game.spellability.SpellAbility> aimed = new ArrayList<>();
@@ -1569,7 +1577,7 @@ public final class AiBench {
             for (int i = firstAimed; i < wide.size(); i++) {
                 tail &= aimed.contains(wide.get(i));
             }
-            check(tail && wide.size() >= aimed.size() && sink.get("search.p.declined.listed") == aimed.size(),
+            check(!aimed.isEmpty() && tail && wide.size() >= aimed.size() && sink.get("search.p.declined.listed") == aimed.size(),
                     "D540: the aimed plays come after today's, and are counted (today " + labelsOf(today) + "; widened "
                             + labelsOf(wide) + "; aimed " + labelsOf(aimed) + "; " + sink.counts + ")");
             forge.game.spellability.SpellAbility growth = null;
@@ -1577,7 +1585,8 @@ public final class AiBench {
                 growth = growth == null && "Giant Growth".equals(sa.getHostCard().getName()) ? sa : growth;
             }
             final boolean growthToday = labelsOf(today).toString().contains("Giant Growth");
-            check(growth != null && growth.getTargets().size() == 1 && growth.getTargets().getFirstTargetedCard() == bears,
+            check(growth != null && aimed.contains(growth) && !growthToday
+                            && growth.getTargets().size() == 1 && growth.getTargets().getFirstTargetedCard() == bears,
                     "D540: Giant Growth is a candidate aimed at the seat's own Bears (" + (growth == null ? "not listed"
                             : (aimed.contains(growth) ? "aimed by declined=1" : "already in today's list, Forge's WillPlay")
                             + ", targets " + growth.getTargets()) + "; today's list " + (growthToday ? "has" : "lacks") + " it)");
@@ -1602,10 +1611,11 @@ public final class AiBench {
                     final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
                     final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
                     final Map<String, Integer> c = ctl.counts();
-                    check(c.getOrDefault("search.p.declined.noTarget", 0) >= 1 && c.containsKey("search.p.declined.listed")
-                                    && c.getOrDefault("search.rolloutErrors", 0) == 0
-                                    && (c.getOrDefault("search.p.declined.windows", 0) == 0 || c.getOrDefault("search.rollouts", 0) >= 2),
-                            "D540: the search with declined=1 lists, counts and rolls out on the board (pick " + pick + "; " + c + ")");
+                    check(c.getOrDefault("search.p.declined.noTarget", 0) >= 1 && c.getOrDefault("search.p.declined.listed", 0) >= 1
+                                    && c.getOrDefault("search.p.declined.windows", 0) >= 1 && c.getOrDefault("search.rollouts", 0) >= 2
+                                    && c.getOrDefault("search.rolloutErrors", 0) == 0,
+                            "D540: the search with declined=1 fires on the board -- a declined Giant Growth searched, the Counterspell "
+                                    + "dropped (pick " + pick + "; " + c + ")");
                     check(ai.getCardsIn(ZoneType.Hand).size() == 2, "D540: the real game is untouched: both cards still in hand");
                 });
         scenario("d540-declined-off", declinedBoard, PolicyLobbyPlayerAi.Outlets.OFF,
@@ -1707,20 +1717,27 @@ public final class AiBench {
                         "D540: the real game is untouched at " + at[1]);
             });
         }
+        // a plain draw instant in hand at the opponent's end step: Forge's DrawAi holds a draw until main 2 or later
+        // (checkPhaseRestrictions at the forge-2.0.14 tag), so it is expected to cast it here
         final List<String> eot = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=END_OF_TURN",
                 "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
-                "aihand=Lightning Bolt", "ailibrary=Mountain;Mountain;Mountain;Mountain", "aibattlefield=Mountain");
+                "aihand=Think Twice", "ailibrary=Island;Island;Island;Island", "aibattlefield=Island;Island");
+        scenario("d540-instant-forge", eot, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final List<forge.game.spellability.SpellAbility> pick = ((PolicyControllerAi) ai.getController()).chooseSpellAbilityToPlay();
+            check(pick != null && pick.size() == 1 && !pick.get(0).isLandAbility() && !pick.get(0).isManaAbility()
+                            && "Think Twice".equals(pick.get(0).getHostCard().getName()),
+                    "D540: the board: Forge's own answer at the opponent's end step is a play, Think Twice (got " + pick + ")");
+        });
         scenario("d540-instant-search", eot, PolicyLobbyPlayerAi.Outlets.OFF,
                 SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,instant=1"), (ai, pol) -> {
                     final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
                     final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
                     final Map<String, Integer> c = ctl.counts();
                     final int w = c.getOrDefault("search.p.instant.windows", 0);
-                    check(w <= 1 && (w == 0 ? c.getOrDefault("search.rollouts", 0) == 0
-                                    : c.getOrDefault("search.rollouts", 0) >= 2 && c.getOrDefault("search.rolloutErrors", 0) == 0
-                                    && c.getOrDefault("search.p.instant.cands", 0) >= 2),
-                            "D540: at the opponent's end step instant=1 searches the window when Forge plays (" + (w == 1
-                                    ? "it did" : "Forge passed, so it did not") + "; pick " + pick + "; " + c + ")");
+                    check(w == 1 && c.getOrDefault("search.rollouts", 0) >= 2 && c.getOrDefault("search.rolloutErrors", 0) == 0
+                                    && c.getOrDefault("search.p.instant.cands", 0) >= 2 && c.getOrDefault("search.p.considered", 0) == 1,
+                            "D540: instant=1 fires at the opponent's end step where Forge plays: one window searched, Forge's play "
+                                    + "against pass at least (pick " + pick + "; " + c + ")");
                 });
         scenario("d540-instant-off", eot, PolicyLobbyPlayerAi.Outlets.OFF,
                 SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p"), (ai, pol) -> {
