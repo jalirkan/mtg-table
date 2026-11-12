@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-12T10:47:59-05:00",
- "heartbeat": "2026-11-12T10:47:59-05:00",
+ "updated": "2026-11-12T10:50:59-05:00",
+ "heartbeat": "2026-11-12T10:50:59-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,10 +19,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 8.31,
+  "load1": 8.79,
   "memUsedGb": 10.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4810,
+  "swapUsedMb": 4795,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -38,19 +38,19 @@
    "cpu": "heavy",
    "phase": "commands 3/4",
    "started": "2026-11-12T05:06:55-05:00",
-   "elapsed": 20464,
-   "done": 3080,
+   "elapsed": 20644,
+   "done": 3112,
    "total": 3600,
    "unit": "games",
-   "ratePerHour": 589.7,
-   "eta": "2026-11-12T11:40:54-05:00",
-   "workers": 5,
+   "ratePerHour": 557.7,
+   "eta": "2026-11-12T11:43:29-05:00",
+   "workers": 6,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-12T10:46:41-05:00",
-   "memGb": 5.52,
+   "dataUpdated": "2026-11-12T10:49:55-05:00",
+   "memGb": 5.65,
    "live": {
     "mde.played": 1200,
     "mde.elo": 5.8,
@@ -84,9 +84,9 @@
     "v.lands.notPlayed": 0,
     "v.candidates": -1,
     "v.notRead": -1,
-    "elapsed_s": 20451,
+    "elapsed_s": 20644,
     "j214_err": 0,
-    "j214_games": 3080,
+    "j214_games": 3112,
     "mde.aSearch.budgetHi": 0.006359,
     "mde.aSearch.budgetLo": 0.003054,
     "mde.aSearch.budgetRate": 0.004707,
@@ -130,12 +130,6 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [
-    {
-     "at": "2026-11-12T05:29:56-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0.2
-    },
     {
      "at": "2026-11-12T05:34:52-05:00",
      "kind": "drop",
@@ -248,6 +242,12 @@
      "at": "2026-11-12T10:43:27-05:00",
      "kind": "drop",
      "workers": 5,
+     "pressure": 0
+    },
+    {
+     "at": "2026-11-12T10:50:59-05:00",
+     "kind": "raise",
+     "workers": 6,
      "pressure": 0
     }
    ],
