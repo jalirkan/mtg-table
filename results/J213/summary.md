@@ -24,8 +24,8 @@ The seat that is 89 Elo above Forge's AI agrees with the labels no more than For
 option 0 at the right places. The random-rollout searches depart most (41% of answers against 28%) and hit the
 label at 51% of their departures; the live seat departs less and hits at 40%. They are also the least stable
 players: repeats of one decision agree 77% of the time against 93%. So the labels reward a willingness to leave
-Forge's move that the ladder does not reward. Among the seven Forge-rollout searches, which span 16 Elo, agreement
-spans 57.0% to 59.5% with every pairwise interval inside or touching 0: no signal there either.
+Forge's move that the ladder does not reward. Among the seven searches within 17 Elo of each other (the live seat and six arms of it), agreement
+spans 57.0% to 59.5% and every interval against the live seat holds 0: no signal there either.
 
 **What it decides (D538 point 9).** Wave 2 (392 more decisions judged, about 6.5M tokens) is **not bought**.
 Agreement with these labels is **not** used as a screen before ladder nights; arms keep going to the ladder. The
