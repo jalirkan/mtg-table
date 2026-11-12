@@ -1,0 +1,5 @@
+==== J213 run5 started 2026-11-12T00:26:10-05:00 in unit lab-J213-run5, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J213: ./tools/label-probe.sh --decisions fixtures/atlas/judged/labels-judged-v1.jsonl --player policy-outlet --data /home/justin-a/code/lab/data --repeats 1 --seed 538 --workers 6 --game-timeout 180 --out var/j213/rows-policy-outlet.jsonl
+label-probe: policy-outlet (e350d94649a4), 6 worker(s) -> var/j213/rows-policy-outlet.jsonl; logs under /home/justin-a/code/lab/mtg-table/var/label-probe/rows-policy-outlet-policy-outlet
+label-probe: 605 rows of policy-outlet: mismatch 1, ok 604
+J213: policy-outlet: {"error": 0, "expected": 605, "extra": 0, "missing": 0, "rows": 605, "statuses": {"mismatch": 1, "ok": 604}, "unsettled": 0}
