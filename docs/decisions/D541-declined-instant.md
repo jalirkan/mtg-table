@@ -200,6 +200,18 @@ width it cannot happen (point 5).
   other line identical to the list main prints (55 players, their hashes and configs unchanged).
 - `node --test web/test/ai-ladder.test.ts` 56 of 56; `web/test/claude-md.test.ts` 5 of 5; `node tools/decisions.mjs
   check` OK.
+- **J215's pilot, dry-run at the lane's head `c474f9a9b`** (`tools/runner.sh dry-run --pilot-only`, sandboxed over
+  this worktree, 2 workers): seven blocks, each exit 0 (51 s, the build and the self-tests; 154 s, the 4-game ladder
+  match; 62 s, the 4-game recorded run); 45 of its 46 pilot checks pass, the one that fails being `merged == 1`
+  (the lane is not on `origin/main`); the verdict's self-test 47 of 47 cases, the exposure reader's 5 of 5, the
+  recording reader's 13 of 13, the block, rollout and gate readers' each ok; the ai-bench self-test 352 checks, 0
+  failures. **The gate passed:** over the 8 games `search.p.declined.windows` 46 (33 ladder, 13 recorded) and
+  `search.p.instant.windows` 15 (7 and 8), no error or timeout, no retry; B's D540 counters and A's lands counters
+  all 0; both sides searched priority and attacks and no block. In the recorded games every searched priority
+  decision was in the seat's own main phase (63) or an empty-stack instant-speed window (8, all with 2 candidates:
+  no declined spell was listed in one in these 4 games), none on a stack and none in a land window. A searched 19.9
+  s a game against B's 16.5 over the 4 ladder games (×1.21; J214's pilots ran ×1.18 to ×1.29 and the matches ×1.03
+  to ×1.16).
 - Not run on the lane: the full gate (the coordinator's, at the merge; its line is in the merge commit's message).
 
 **Follow-up.** J215 plays the match at this lane's merge; its `report.md` carries the reading, both keys' exposure
