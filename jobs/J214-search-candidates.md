@@ -2,7 +2,7 @@ id: J214
 title: What the search considers (D540): three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) of search-v3 with one widening of its priority search against search-v2-no-b (search-v3, the live seat since D539), each in a ladder folder of its own under --host j214 on blocks 416,900,000-416,900,149 -- search-v3-declined (castable spells Forge declines, aimed by Forge's own targeting), search-v3-instant (the empty-stack instant-speed windows where Forge plays, either turn), search-v3-lands (Forge's land drop against each other-named land) -- each read by D519's four readings at 1,200 games with D537's completeness rule and D540's exposure condition, pre-registered in D540. This job never changes the live seat
 public_title: The search considers more: three 1,200-game matches
 public_est: ~8 h (one night)
-public_decides: Whether the search AI is stronger when it also looks at spells Forge rejects, at instant speed, or at which land to play
+public_decides: Whether the search AI gains from declined spells, instant speed or land choice
 cpu: heavy
 cores: 7
 pilot_cores: 3
