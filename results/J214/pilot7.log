@@ -1,0 +1,48 @@
+==== J214 pilot7 started 2026-11-12T05:14:16-05:00 in unit lab-J214-pilot7, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+tools/ai-bench/decks/sets/fair-fight-900000001-A.dck tools/ai-bench/decks/sets/fair-fight-900000001-B.dck   # fair-fight seed 900000001
+ai-bench: run j214-pilot-rec-declined, 2 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j214-pilot-rec-declined
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J214.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+== Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1 vs Default
+  games 4: A 1, B 3, draws 0 (timeouts 0, engine errors 0)
+  A win rate 25.0% of 4 decisive  (95% Wilson CI 4.6-69.9%)
+  focus deck (first of each pair) win rate 75.0% of 4  (95% CI 30.1-95.4%)
+  game time mean 15.0 s, median 14.6 s, max 19.1 s; turns mean 18.3; AI eval timeouts 0 (0.00/game)
+  A vs the known 50%: 25.0% over 2 deal(s) (2 mirrored, both sides played), 95% CI 0.0-85.0%, p = 0.414 (-191 Elo, CI -1200 to +302)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {search.a.changed=2, search.a.considered=18, search.a.ms=13511, search.a.us=13519643, search.anytime.pruned=5, search.anytime.retired=74, search.copyUs=5571166, search.p.changed=6, search.p.changed.fromPass=3, search.p.changed.toOther=2, search.p.changed.toPass=1, search.p.considered=51, search.p.declined.cands=4, search.p.declined.changed=2, search.p.declined.listed=4, search.p.declined.noTarget=23, search.p.declined.windows=4, search.p.ms=36225, search.p.skipLand=28, search.p.us=36249628, search.playUs=43250658, search.rollouts=1267, search.rounds=524}
+  B counters:     {}
+  focus counters: {search.a.changed=2, search.a.considered=8, search.a.ms=7161, search.a.us=7164933, search.anytime.pruned=3, search.anytime.retired=46, search.copyUs=2556774, search.p.changed=4, search.p.changed.fromPass=1, search.p.changed.toOther=2, search.p.changed.toPass=1, search.p.considered=26, search.p.declined.cands=1, search.p.declined.changed=1, search.p.declined.listed=1, search.p.declined.noTarget=16, search.p.declined.windows=1, search.p.ms=19655, search.p.skipLand=17, search.p.us=19667637, search.playUs=23697603, search.rollouts=607, search.rounds=244}
+{"written":1,"files":8,"searchLogs":4,"bad":0,"games":4,"pSearched":51,"aSearched":18,"bSearched":0,"ownMainSearched":51,"landSearched":0,"instantSearched":0,"outsideOwnMain":0,"onStack":0,"noState":0,"benchGames":4,"benchErrors":0,"benchTimeouts":0,"declinedWindows":4,"declinedRetry":0} {"land":{"n":0,"candidates":{},"candidatesMean":null,"msMean":null,"overrode":0},"ownMain":{"n":51,"candidates":{"2":34,"3":10,"4":7},"candidatesMean":2.471,"msMean":710.3,"overrode":6},"instant":{"n":0,"candidates":{},"candidatesMean":null,"msMean":null,"overrode":0}} {"2":{"n":34,"msMean":580.4},"3":{"n":10,"msMean":929},"4":{"n":7,"msMean":1028.7}} {"search.p.declined.listed":4,"search.p.declined.noTarget":23,"search.p.declined.cands":4,"search.p.declined.changed":2,"search.p.declined.windows":4}
+ai-bench: run j214-pilot-rec-instant, 2 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j214-pilot-rec-instant
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J214.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+== Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,instant=1 vs Default
+  games 4: A 2, B 2, draws 0 (timeouts 0, engine errors 0)
+  A win rate 50.0% of 4 decisive  (95% Wilson CI 15.0-85.0%)
+  focus deck (first of each pair) win rate 100.0% of 4  (95% CI 51.0-100.0%)
+  game time mean 19.9 s, median 18.3 s, max 30.1 s; turns mean 18.5; AI eval timeouts 0 (0.00/game)
+  A vs the known 50%: 50.0% over 2 deal(s) (2 mirrored, both sides played), 95% CI 1.0-99.0%, p = 1.000 (-0 Elo, CI -798 to +798)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {search.a.changed=1, search.a.considered=17, search.a.ms=12248, search.a.us=12257273, search.anytime.pruned=9, search.anytime.retired=63, search.copyUs=6130792, search.p.changed=10, search.p.changed.fromPass=6, search.p.changed.toOther=3, search.p.changed.toPass=1, search.p.considered=67, search.p.instant.cands=30, search.p.instant.windows=15, search.p.ms=56870, search.p.skipLand=24, search.p.us=56901708, search.playUs=61395714, search.rollouts=1502, search.rounds=644}
+  B counters:     {}
+  focus counters: {search.a.changed=1, search.a.considered=9, search.a.ms=6629, search.a.us=6632430, search.anytime.pruned=5, search.anytime.retired=45, search.copyUs=3116468, search.p.changed=8, search.p.changed.fromPass=4, search.p.changed.toOther=3, search.p.changed.toPass=1, search.p.considered=38, search.p.instant.cands=24, search.p.instant.windows=12, search.p.ms=33594, search.p.skipLand=13, search.p.us=33610227, search.playUs=36092366, search.rollouts=780, search.rounds=330}
+{"written":1,"files":8,"searchLogs":4,"bad":0,"games":4,"pSearched":67,"aSearched":17,"bSearched":0,"ownMainSearched":52,"landSearched":0,"instantSearched":15,"outsideOwnMain":15,"onStack":0,"noState":0,"benchGames":4,"benchErrors":0,"benchTimeouts":0,"instantWindows":15,"instantRetry":0} {"land":{"n":0,"candidates":{},"candidatesMean":null,"msMean":null,"overrode":0},"ownMain":{"n":52,"candidates":{"2":31,"3":13,"4":7,"5":1},"candidatesMean":2.577,"msMean":854.6,"overrode":10},"instant":{"n":15,"candidates":{"2":15},"candidatesMean":2,"msMean":828.6,"overrode":0}} {"2":{"n":46,"msMean":686.6},"3":{"n":13,"msMean":1148.2},"4":{"n":7,"msMean":1264.1},"5":{"n":1,"msMean":1511}} {"search.p.instant.cands":30,"search.p.instant.windows":15}
+ai-bench: run j214-pilot-rec-lands, 2 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j214-pilot-rec-lands
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J214.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+== Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,lands=1 vs Default
+  games 4: A 1, B 3, draws 0 (timeouts 0, engine errors 0)
+  A win rate 25.0% of 4 decisive  (95% Wilson CI 4.6-69.9%)
+  focus deck (first of each pair) win rate 75.0% of 4  (95% CI 30.1-95.4%)
+  game time mean 16.9 s, median 14.4 s, max 35.9 s; turns mean 18.8; AI eval timeouts 0 (0.00/game)
+  A vs the known 50%: 25.0% over 2 deal(s) (2 mirrored, both sides played), 95% CI 0.0-85.0%, p = 0.414 (-191 Elo, CI -1200 to +302)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {search.a.changed=1, search.a.considered=16, search.a.ms=12925, search.a.us=12932793, search.anytime.pruned=17, search.anytime.retired=52, search.anytime.short=1, search.copyUs=5247786, search.p.changed=10, search.p.changed.fromPass=5, search.p.changed.toOther=4, search.p.changed.toPass=1, search.p.considered=56, search.p.lands.cands=28, search.p.lands.changed=2, search.p.lands.windows=13, search.p.ms=44645, search.p.skipLand=14, search.p.us=44674320, search.playUs=50837040, search.rollouts=1168, search.rounds=492}
+  B counters:     {}
+  focus counters: {search.a.changed=1, search.a.considered=8, search.a.ms=8155, search.a.us=8160002, search.anytime.pruned=16, search.anytime.retired=23, search.anytime.short=1, search.copyUs=2907725, search.p.changed=7, search.p.changed.fromPass=4, search.p.changed.toOther=3, search.p.considered=34, search.p.lands.cands=19, search.p.lands.changed=1, search.p.lands.windows=9, search.p.ms=28206, search.p.skipLand=7, search.p.us=28224911, search.playUs=32343530, search.rollouts=693, search.rounds=284}
+{"written":1,"files":8,"searchLogs":4,"bad":0,"games":4,"pSearched":56,"aSearched":16,"bSearched":0,"ownMainSearched":43,"landSearched":13,"instantSearched":0,"outsideOwnMain":0,"onStack":0,"noState":0,"benchGames":4,"benchErrors":0,"benchTimeouts":0,"landsWindows":13,"landsRetry":0} {"land":{"n":13,"candidates":{"2":11,"3":2},"candidatesMean":2.154,"msMean":660.8,"overrode":2},"ownMain":{"n":43,"candidates":{"2":31,"3":7,"4":4,"5":1},"candidatesMean":2.419,"msMean":838.5,"overrode":8},"instant":{"n":0,"candidates":{},"candidatesMean":null,"msMean":null,"overrode":0}} {"2":{"n":42,"msMean":698.2},"3":{"n":9,"msMean":1014.8},"4":{"n":4,"msMean":1170.8},"5":{"n":1,"msMean":1506}} {"search.p.lands.cands":28,"search.p.lands.windows":13,"search.p.lands.changed":2}
+{"written":1,"play":["declined","instant","lands"],"reasons":{},"arms":{"declined":{"ladderGames":4,"benchGames":4,"games":8,"ladderWindows":35,"benchWindows":4,"windows":39,"errorsTimeouts":0,"retry":0,"retryPerGame":0,"pass":1},"instant":{"ladderGames":4,"benchGames":4,"games":8,"ladderWindows":4,"benchWindows":15,"windows":19,"errorsTimeouts":0,"retry":0,"retryPerGame":0,"pass":1},"lands":{"ladderGames":4,"benchGames":4,"games":8,"ladderWindows":10,"benchWindows":13,"windows":23,"errorsTimeouts":0,"retry":0,"retryPerGame":0,"pass":1}},"playCount":3}
