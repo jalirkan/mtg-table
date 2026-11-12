@@ -11502,9 +11502,11 @@ Its follow-up is the cube lab's 56 ([the list](#fu-cube-lab)).
 <a id="d539-live-seat-no-block"></a>
 ## The live seat stops searching blocks: search-v3 (2026-11-11, D539)
 
-**Status: written as text on the lane; to be built, tested and gated by the coordinator before the merge (D539's
-*Verification*).** Branch `pc/live-seat-no-block` off main `31daf3ec`, written while J212 and J213 held the machine
-alone: no Java, build or test was run beside them. `docs/decisions/D539-live-seat-no-block.md` is the decision.
+**Status: done (2026-11-12).** Built, tested and played by hand on `57283de35` once J213 had ended (D539's
+*Verification*: the decision self-test 443 checks and 0 failures, seat-identity all four golden games, a game in the
+seat in which the AI blocked 4 ms after the attack was confirmed and searched its other decisions for up to
+1.5 s); ForgeCoach's `pc/search-v3` merged and deployed first. Branch `pc/live-seat-no-block` off main `31daf3ec`,
+written while J212 and J213 held the machine alone. `docs/decisions/D539-live-seat-no-block.md` is the decision.
 
 - **The evidence**: J211, D536's pre-registered head-to-head, read NO-BLOCK SEAT HOLDS: `search-v2-no-b` against
   `search-v1-anytime` −2.2 Elo [−7.4, +3.1] over 4,800 games, 19.3 against 21.6 search seconds a game. The owner

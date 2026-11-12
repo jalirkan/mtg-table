@@ -142,10 +142,39 @@ starts a folder of its own, and no reading pools the two.
 - D537's and D538's pre-registered reads name `search-v1-anytime` by name and hash as "search-v2" and "the live
   search"; they stand as written, and a sentence of theirs about the live seat is about search-v2 after D539.
 
-**Verification (filled in by the coordinator after the build and gate):**
+**Verification (the coordinator's, 2026-11-12, on `57283de35`, after J213 ended and the machine was free).**
 
-*(placeholder — the build, `DecisionSelfTest`'s count and failures, the web tests, `test_human.py`, the
-watch-runner and match-launcher self-tests, gate step 12m and the full gate's line go here)*
+- **The build**: `./bridge/build.sh` in the lane's worktree, which had no `bridge/out`, `build OK`: the lint and its self-test, the
+  decision self-test **443 checks, 0 failures** (434 on main; the nine are this lane's), `TableSelfTest` 114 and 0,
+  `StalledGameSelfTest` 156 and 0, the eval self-test 8,039 checks, the grade self-test 132 and 0, the distill
+  self-test 38 and 0.
+- **The tests the change touches**: `web/test/ai-ladder.test.ts`, `cubelab-watch.test.ts` and `claude-md.test.ts`,
+  72 pass, 0 fail; the watch runner's self-test 157 checks, 0 failures; the match launcher's 238 checks;
+  `test_human.py` 15 tests OK; `node tools/decisions.mjs check` OK, next is D540.
+- **Gate step 12m**: `cubelab.sh seat-identity`, the forge, search, explore and plain seats, "all 4 games are the
+  golden's" each: no decision record of an atlas seat moved.
+- **The live seat, read off a real run**: `./scripts/play.sh --no-open` on this lane; the engine's start line is
+  `ai policy = search (ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1; search-v3, D412,
+  D539)` and the session header's `ai` is `version: search-v3` with the same config.
+- **A game played by hand** (the coordinator in the seat, Pacho SHIELD against Doom Legion, seed 64775,
+  `--games 3`). Game 1, 12 turns, no stall, no error: the AI played a land a turn, cast Aerial Doombot, Frozen in
+  Ice on the seat's Wasp, Crossbones, Kang and Madame Hydra, resolved their triggers, attacked on its turns 6, 8, 10
+  and 12 and won on the last. The New Game row started game 2 of the match. In game 2 the seat attacked on turn 9
+  with Peggy Carter 2/1 and Agents of S.H.I.E.L.D. 2/4 into the AI's untapped A.I.M. Bot 2/3: **the AI declared a
+  block, A.I.M. Bot on the Agents, and let Peggy through** (20 → 16 → 14 over the two attacks), the board drew it,
+  and combat damage resolved. The frame log's clock: from the seat's `buttonOk` confirming attackers to the
+  `COMBAT_DECLARE_BLOCKERS` state, **4 ms** (3 ms on turn 7, when the AI had no creature); the same AI's searched
+  decisions in those two games took up to **1,512 ms** (eight engine-side gaps of 300 ms or more in game 1, four in
+  game 2). So the seat still searches its priority and attack decisions and answers a block at Forge's speed.
+- **ForgeCoach** (point 6): `pc/search-v3` (`77d33b3`, `SEARCH_ID = /^search(-v\d+)?$/i`), typecheck clean, 208
+  test files and 3,190 tests, the seat's e2e 29 passed; merged as jalirkan/ForgeCoach#217 (`52e7c54`) and its Pages
+  deploy run before this lane merged.
+- **The full gate**: on the merged tree, from a deleted `bridge/out`; its line is in the merge commit's message.
+
+Two things seen at the board during the game that are not this lane's and are not fixed here: in combat the
+panel's "2 bands, as the engine reports them" line overlaps the graveyard row's labels at 1440×900, and after Alpha
+Strike the line "DECLARE ATTACKERS: nothing declared yet" stays until the attack is confirmed, though the button
+has become Call Back.
 
 **Follow-up.** The seat-queue row for `search-v2-no-b` (D509, `~/code/pc-results/study/seat-queue.md`, in
 pc-results, which this lane does not write) is marked landed by D539 at the merge. The cube lab's follow-up 54 is
