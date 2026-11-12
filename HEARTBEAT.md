@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-11T21:46:55-05:00
+- time: 2026-11-11T21:51:36-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J212 started with 6 of 7 workers at 2026-11-11T15:21:44-05:00, as many as fit (MemAvailable 24 GB, 3.07 GB a worker); raised toward 7 as memory frees
-- running: J212 commands 3/5, 3496/3600 games, 281.4/h, ETA 2026-11-11T22:09:05-05:00, 6 worker(s), 7 core(s)
+- running: J212 commands 3/5, 3520/3600 games, 281.4/h, ETA 2026-11-11T22:08:39-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 10.04; memory 16.1/30.5 GB, swap 4693 MB, pressure 0% (lab budget 23.4 GB)
+- load: 10.07; memory 15.9/30.5 GB, swap 4692 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J213
 - waiting: nothing
 - last finished: J211 done at 2026-11-11T11:34:38-05:00: cm.played 4800 · cm.score 0.497 · cm.lo 0.489 · cm.hi 0.504 · cm.elo -2.2 · cm.eloLo -7.4 · cm.eloHi 3.1 · v.holds 1 · v.fails 0 · v.inconclusive4800 0 · v.indistinguishable 1 · v.measuredLoss 0 · v.measuredGain 0 · v.aSecPerGame 19.345 · v.bSecPerGame 21.554 · v.costRatio 0.898 · v.secSaved 2.209 · cm.aSearch.msPerDecision 905.487 · cm.bSearch.msPerDecision 915.802 · v.aSearched 102548 · v.bSearched 112970 · v.aBlocksSearched 0 · v.bBlocksSearched 9674 · v.liveSeatCandidate 1 · bs.min 931900000 · bs.max 931900599
