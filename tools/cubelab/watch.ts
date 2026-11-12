@@ -5,7 +5,7 @@
 //   tools/cubelab.sh watch cubes/fair-fight-cube-180.md [--format grid] [--seed S] [--games 3]
 //       [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<x.picks.json>] [--drafter-b ...]
 //       [--shape-a|--shape-b <shape>] (D446; both sides the lab drafter)
-//       [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>]
+//       [--player-a <Profile>|search-v3] [--player-b ...] [--pace 600] [--out <dir>]
 //       [--ratings <tsv>] [--game-timeout <sec>]
 //       [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]
 //
@@ -56,9 +56,11 @@
 // decklist, never what B holds.
 //
 // A player is a Forge AI profile (an .ai file: Default, Cautious, Reckless,
-// Experimental) or `search` -- search-v2, the live search seat (Default plus
-// D310's outlets plus D412's anytime search; the ladder's search-v1-anytime),
-// seated by RecordMatch's --policy search.
+// Experimental) or `search` -- search-v3, the live search seat (Default plus
+// D310's outlets plus D412's anytime search, its blocks left to Forge since
+// D539; the ladder's search-v2-no-b), seated by RecordMatch's --policy search.
+// `search-v3` names it too, and so does `search-v2`, its name before D539, so a
+// request stored then still starts (it plays the live seat, search-v3).
 //
 // match.json is rewritten whole (a temp file renamed over it) after every change,
 // so a reader never sees half of one; draft.json is written once.  The coach
@@ -83,24 +85,28 @@ import { RESERVED_SEED_MIN, VERIFY_SEED_MIN } from './seeds.ts';
 export type Side = 'A' | 'B';
 export type WatchStatus = 'drafting' | 'playing' | 'done' | 'error' | 'stopped';
 
-/** One seat's player: a Forge profile, or `search` (search-v2 on the Default profile). */
+/** One seat's player: a Forge profile, or `search` (search-v3 on the Default profile, D539). */
 export interface Player { player: string; profile: string; policy: 'plain' | 'search' }
 
-/** The live search seat's version, as RecordMatch prints it (SearchConfig.LIVE_VERSION). */
-export const SEARCH_VERSION = 'search-v2';
+/** The live search seat's version, as RecordMatch prints it (SearchConfig.LIVE_VERSION; search-v2 until D539). */
+export const SEARCH_VERSION = 'search-v3';
 
-/** `--player-a` / `--player-b`: a profile name (any case) or `search` / `search-v2`. */
+/** `--player-a` / `--player-b`: a profile name (any case) or `search` / `search-v3` (or `search-v2`, its name until D539). */
 export function parsePlayer(text: string, profiles: string[]): Player {
   const t = text.trim();
-  if (/^search(-v2)?$/i.test(t)) return { player: 'search', profile: 'Default', policy: 'search' };
+  if (/^search(-v[23])?$/i.test(t)) return { player: 'search', profile: 'Default', policy: 'search' };
   const p = profiles.find((x) => x.toLowerCase() === t.toLowerCase());
   if (!p) throw new Error(`player "${text}" is not search or one of the profiles ${profiles.join(', ')}`);
   return { player: p, profile: p, policy: 'plain' };
 }
 
-/** The seat spec `run` records for this player (run.json's profiles; games 0 plays none). */
+/**
+ * The seat spec `run` records for this player (run.json's profiles; games 0 plays none).  A search player's
+ * mirrors the live seat by hand -- SearchConfig.LIVE_DEFAULTS, `what=pa,anytime=1` since D539 (`anytime=1` from
+ * D412) -- because a seat spec is parsed by SearchConfig.parse, whose own defaults are the bench's.
+ */
 export function seatSpecOf(p: Player): string {
-  return p.policy === 'search' ? `${p.profile}+outlets+search:anytime=1` : p.profile;
+  return p.policy === 'search' ? `${p.profile}+outlets+search:what=pa,anytime=1` : p.profile;
 }
 
 // ------------------------------------------------------------------ draft.json

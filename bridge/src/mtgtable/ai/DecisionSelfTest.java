@@ -148,6 +148,7 @@ public final class DecisionSelfTest {
         budgetAndRoundsOnly();
         knobAndCurveArms();
         horizonArms();
+        liveSeatNoBlock();
         rolloutRandom();
         rolloutRandomV3();
         rolloutRandomV4();
@@ -523,15 +524,18 @@ public final class DecisionSelfTest {
             }
             check(threw, "refused: " + bad);
         }
-        // D412: the live seat is search-v2 (search-v1 + anytime=1); the bench's parse is unchanged.
+        // D412: the live seat ran search-v2 (search-v1 + anytime=1); D539: it is search-v3 (search-v2 + what=pa,
+        // blocks left to Forge).  The bench's parse is unchanged by either.
         final SearchConfig live = SearchConfig.parseLive("");
-        check("search-v2".equals(SearchConfig.LIVE_VERSION) && live.anytime
-                && (def.toString() + ",anytime=1").equals(live.toString()), "the live seat's default is search-v2: " + live);
+        check("search-v3".equals(SearchConfig.LIVE_VERSION) && live.anytime
+                && (def.toString().replace(",what=pab", ",what=pa") + ",anytime=1").equals(live.toString()),
+                "the live seat's default is search-v3 (search-v1's text with what=pa, plus anytime=1): " + live);
         check(SearchConfig.parseLive(null).toString().equals(live.toString()), "no --ai-search text is the same seat");
         check(SearchConfig.parseLive("ms=3000").anytime && SearchConfig.parseLive("ms=3000").budgetMs == 3000,
                 "a budget from the picker (--ai-search ms=N) keeps the anytime loop");
-        check(!SearchConfig.parseLive("anytime=0").anytime
-                && SearchConfig.parseLive("anytime=0").toString().equals(def.toString()), "anytime=0 is search-v1's loop again");
+        check(!SearchConfig.parseLive("anytime=0,what=pab").anytime
+                && SearchConfig.parseLive("anytime=0,what=pab").toString().equals(def.toString()),
+                "anytime=0,what=pab is search-v1's loop again");
         check(!SearchConfig.parse("").anytime && !SearchConfig.parse("ms=1500").anytime,
                 "the bench's parse keeps anytime off (search-v1 and every ladder player mean what they meant)");
 
@@ -588,15 +592,17 @@ public final class DecisionSelfTest {
         final SearchConfig def = SearchConfig.defaults();
         final SearchConfig live = SearchConfig.parseLive("");
         check(!def.mull && !def.targets && !live.mull && !live.targets, "mull and targets are off by default, live seat included");
-        check((def.toString() + ",anytime=1").equals(live.toString()) && !live.toString().contains("mull")
-                && !live.toString().contains("targets"), "search-v2's config string is unchanged: " + live);
+        check(SearchConfig.parse("anytime=1").toString().equals(def.toString() + ",anytime=1")
+                && !live.toString().contains("mull") && !live.toString().contains("targets"),
+                "search-v2's config string is unchanged, and the live seat's (search-v3, D539) names neither: " + live);
         check(def.mullMs == SearchConfig.MULL_MS && def.mullTurns == SearchConfig.MULL_TURNS && SearchConfig.MULL_MS == 6000
                 && SearchConfig.MULL_TURNS == 3, "the mulligan's defaults: 6000 ms, 3 turns a seat (game turn 6)");
         final SearchConfig m = SearchConfig.parseLive("mull=1");
         check(m.mull && !m.targets && m.anytime && m.toString().equals(live.toString() + ",mull=1"),
-                "search-v2 + mull=1 prints as search-v2 plus the switch: " + m);
+                "the live seat + mull=1 prints as the live seat plus the switch: " + m);
         final SearchConfig t = SearchConfig.parse("anytime=1,targets=1");
-        check(t.targets && !t.mull && t.toString().equals(live.toString() + ",targets=1"), "targets=1: " + t);
+        check(t.targets && !t.mull && t.toString().equals(SearchConfig.parse("anytime=1").toString() + ",targets=1"),
+                "targets=1: search-v2 plus the switch: " + t);
         final SearchConfig mt = SearchConfig.parse("anytime=1,mull=1,targets=1,mullms=8000,mullturns=5");
         check(mt.mull && mt.targets && mt.mullMs == 8000 && mt.mullTurns == 5
                 && SearchConfig.parse(mt.toString()).toString().equals(mt.toString()), "both, with knobs, round-trip: " + mt);
@@ -657,7 +663,7 @@ public final class DecisionSelfTest {
         // The same holds wherever the key sits in the text, and leaf=hand is search-v2 itself.
         check(SearchConfig.parse("leaf=eval:" + model + "," + v2Text).toString().equals(ev.toString()), "key order does not matter");
         check(SearchConfig.parse(v2Text + ",leaf=hand").toString().equals(v2.toString()), "leaf=hand is search-v2");
-        // The default stays the hand leaf: the live seat (search-v2) and parse's defaults name no model.
+        // The default stays the hand leaf: the live seat (search-v3 since D539) and parse's defaults name no model.
         check(SearchConfig.parseLive("").leafModel == null && SearchConfig.defaults().leafModel == null
                 && !SearchConfig.LIVE_DEFAULTS.contains("leaf"), "the live seat's leaf stays hand");
     }
@@ -795,6 +801,47 @@ public final class DecisionSelfTest {
         final SearchConfig live = SearchConfig.parseLive("");
         check(live.horizonFor("p") == 0 && live.horizonFor("a") == 0 && live.horizonFor("b") == 0 && live.attackTurns == -1
                 && !SearchConfig.LIVE_DEFAULTS.contains("turns"), "the live seat keeps turns=0 with aturns unset");
+    }
+
+    /**
+     * D539: the live seat is search-v3, search-v2 with {@code what=pa} -- its
+     * priority plays and attacks searched, its block declarations left to
+     * Forge -- which the ladder rates as {@code search-v2-no-b} (J210, J211).
+     * Every public field but {@code blocks} equals search-v2's (by reflection),
+     * the text is search-v2-no-b's seat config without its {@code seed=0}
+     * ({@link SearchConfig#toString} never prints the seed), a key the caller
+     * names still wins
+     * ({@code what=pab} is search-v2 again), a budget from the picker keeps
+     * {@code what=pa}, and {@link SearchConfig#parse} -- the bench's, the cube
+     * lab's, the atlas's and every ladder player's -- still searches all three
+     * kinds.
+     */
+    private static void liveSeatNoBlock() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig live = SearchConfig.parseLive("");
+        check("search-v3".equals(SearchConfig.LIVE_VERSION) && "what=pa,anytime=1".equals(SearchConfig.LIVE_DEFAULTS),
+                "D539: the live seat is search-v3, LIVE_DEFAULTS what=pa,anytime=1");
+        check(live.priority && live.attacks && !live.blocks && live.anytime,
+                "D539: the live seat searches priority plays and attacks, not blocks, with the anytime loop");
+        configOnly("D539: search-v3 against search-v2", v2, live, List.of("blocks"));
+        check(live.toString().equals(v2.toString().replace(",what=pab", ",what=pa")),
+                "D539: the live text is search-v2's with what=pa: " + live);
+        final SearchConfig noB = SearchConfig.parse(v2Text.replace(",what=pab", ",what=pa"));
+        check(noB.toString().equals(live.toString()), "D539: the live seat is search-v2-no-b's config (J211's A side): " + noB);
+        final SearchConfig back = SearchConfig.parseLive("what=pab");
+        check(back.blocks && back.priority && back.attacks && back.toString().equals(v2.toString()),
+                "D539: --ai-search what=pab is search-v2's loop again: " + back);
+        final SearchConfig picked = SearchConfig.parseLive("ms=3000");
+        check(picked.budgetMs == 3000 && !picked.blocks && picked.priority && picked.attacks && picked.anytime
+                        && picked.toString().equals(live.toString().replace("ms=1500,", "ms=3000,")),
+                "D539: a budget from the picker (ms=3000) keeps what=pa and the anytime loop: " + picked);
+        check(SearchConfig.parseLive("what=p").priority && !SearchConfig.parseLive("what=p").attacks
+                        && !SearchConfig.parseLive("what=p").blocks, "D539: a caller's own what= wins over the live default");
+        final SearchConfig bench = SearchConfig.parse("");
+        check(bench.priority && bench.attacks && bench.blocks && !bench.anytime
+                        && SearchConfig.defaults().toString().endsWith(",what=pab"),
+                "D539: parse()'s defaults still search all three kinds (every ladder, bench and lab seat unchanged)");
     }
 
     /**

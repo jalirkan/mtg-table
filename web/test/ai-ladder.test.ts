@@ -404,7 +404,7 @@ test('search kind, D388–D390: the week-3 switches stay out of the hash at thei
   for (const n of ['search-v1-anytime', 'search-v1-fixed3-ranked', 'search-v1-fixed3-routlets']) assert.ok(by.get(n)?.cfg, `${n} is registered and playable`);
 });
 
-test('D412: the live seat is search-v2 = search-v1 + anytime=1, which the ladder already rates as search-v1-anytime', () => {
+test('D412: search-v2 = search-v1 + anytime=1, which the ladder already rates as search-v1-anytime (the live seat until D539)', () => {
   const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
   const by = new Map(reg.map((x) => [x.name, x]));
   const v1 = by.get('search-v1')!, any = by.get('search-v1-anytime')!;
@@ -413,15 +413,39 @@ test('D412: the live seat is search-v2 = search-v1 + anytime=1, which the ladder
   assert.equal(any.hash, 'cdd55e02a89c', 'search-v1-anytime keeps its hash');
   assert.equal(v1.hash, '81058679773e', 'search-v1 keeps its hash');
   // The engine side: MtgTable --ai-policy search parses over SearchConfig.LIVE_DEFAULTS; the bench's parse is unchanged.
+  // Since D539 the live defaults carry what=pa too (the D539 test below); the anytime switch is still among them.
   const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
-  assert.match(java, /LIVE_VERSION = "search-v2";/);
   const live = /LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!;
-  assert.equal(live, 'anytime=1', 'the live seat adds exactly the anytime switch');
-  for (const kv of live.split(',')) {
-    assert.ok(any.cfg!.split(/[:,]/).includes(kv), `${kv} is in search-v1-anytime's seat config`);
-    assert.ok(!v1.cfg!.split(/[:,]/).includes(kv), `${kv} is not in search-v1's`);
-  }
+  assert.ok(live.split(',').includes('anytime=1'), 'the live seat still adds the anytime switch');
+  assert.ok(any.cfg!.split(/[:,]/).includes('anytime=1'), "anytime=1 is in search-v1-anytime's seat config");
+  assert.ok(!v1.cfg!.split(/[:,]/).includes('anytime=1'), "anytime=1 is not in search-v1's");
   assert.match(java, /boolean anytime = false;/, "parse()'s own default stays off, so every ladder seat config means what it meant");
+});
+
+test('D539: the live seat is search-v3 = search-v2 + what=pa, which the ladder already rates as search-v2-no-b', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!, noB = by.get('search-v2-no-b')!;
+  assert.equal(noB.cfg, v2.cfg!.replace(',what=pab,', ',what=pa,'), 'search-v2-no-b is search-v2 with what=pa and nothing else');
+  // the hashes J211's games were played under (results/J211/verdict.json: ah, bh)
+  assert.equal(noB.hash, '59505e241363', 'search-v2-no-b keeps its hash');
+  assert.equal(v2.hash, 'cdd55e02a89c', 'search-v1-anytime (search-v2) keeps its hash');
+  assert.equal(reg.filter((x) => x.hash === noB.hash).length, 1, 'no second name is registered for the live config');
+  assert.equal(by.get('search-v3'), undefined, 'the ladder rates search-v3 as search-v2-no-b; no alias is registered');
+  // The engine side: LIVE_VERSION and LIVE_DEFAULTS name it, and parse()'s own default still searches all three kinds.
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  assert.match(java, /LIVE_VERSION = "search-v3";/);
+  const live = /LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!;
+  assert.equal(live, 'what=pa,anytime=1', 'the live seat adds exactly the anytime switch and what=pa');
+  for (const kv of live.split(',')) {
+    assert.ok(noB.cfg!.split(/[:,]/).includes(kv), `${kv} is in search-v2-no-b's seat config`);
+  }
+  assert.ok(!v2.cfg!.split(/[:,]/).includes('what=pa'), "what=pa is not in search-v2's");
+  assert.match(java, /String what = "pab";/, "parse()'s own what= stays pab, so every ladder, bench and lab seat means what it meant");
+  const noBraw = raw.players.find((p) => p.name === 'search-v2-no-b')!;
+  assert.match(noBraw.note ?? '', /D539/, "search-v2-no-b's note says it is the live seat's config");
+  assert.match(raw.players.find((p) => p.name === 'search-v1-anytime')!.note ?? '', /until D539/);
 });
 
 test('addPlayer never overwrites', () => {
@@ -768,7 +792,7 @@ test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
   const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
   assert.equal(Number(/MULL_MS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullMs!.default);
   assert.equal(Number(/MULL_TURNS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullTurns!.default);
-  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v2) does not turn them on');
+  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v3 since D539) does not turn them on');
 });
 
 test('D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled', () => {
@@ -1161,7 +1185,8 @@ test('D535: the six kind arms are search-v2 with what= alone changed, and no sec
     assert.deepEqual(xrest, brest, 'every other resolved param is search-v2\'s');
     assert.equal(x!.cfg, v2.cfg!.replace(',what=pab,', `,what=${what},`), `the seat config is search-v2's with what=${what}`);
     assert.equal(x!.hash, hash, `${name}'s config hash (D535)`);
-    assert.match(xr.note ?? '', /never the live seat/);
+    // D539 made search-v2-no-b's config the live seat (search-v3); its note says so, and the other five stay measurement.
+    assert.match(xr.note ?? '', name === 'search-v2-no-b' ? /D539.*search-v3/ : /never the live seat/);
   }
   assert.equal(new Set(arms.map(([, w]) => w)).size, 6, 'six different partial corners');
   assert.equal(new Set(arms.map(([, , h]) => h)).size, 6);

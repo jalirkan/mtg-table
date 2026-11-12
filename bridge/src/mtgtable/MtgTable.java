@@ -225,7 +225,7 @@ public final class MtgTable {
         if (!"plain".equals(a.aiPolicy)) {
             System.out.println("ai policy     = " + a.aiPolicy + ("search".equals(a.aiPolicy)
                     ? "  (" + SearchConfig.parseLive(a.aiSearch) + (a.aiSearch.isBlank()
-                            ? "; " + SearchConfig.LIVE_VERSION + ", D412" : "") + ")" : ""));
+                            ? "; " + SearchConfig.LIVE_VERSION + ", D412, D539" : "") + ")" : ""));
         }
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
@@ -345,8 +345,9 @@ public final class MtgTable {
         // default, and every gate step) is Forge's own AI, exactly as before;
         // "outlets" puts D310's sacrifice-outlet policy in front of it; "search"
         // adds D312's determinized rollout search behind the policy.  Opt-in only.
-        // Its defaults are SearchConfig.parseLive's: search-v2, the anytime loop
-        // (D388, adopted for the live seat by D412).
+        // Its defaults are SearchConfig.parseLive's: search-v3, the anytime loop
+        // (D388, adopted for the live seat by D412) with block declarations left
+        // to Forge (what=pa, D539).
         final LobbyPlayer aiLobby = "plain".equals(a.aiPolicy)
                 ? Bootstrap.createAiPlayer(a.aiName, 0, aiProfile)
                 : Bootstrap.createAiSeat(a.aiName, 0, aiProfile, null, PolicyLobbyPlayerAi.Outlets.ON,
@@ -1076,8 +1077,9 @@ public final class MtgTable {
         // names the policy, and only this says a search seat's version and
         // budget.  Omitted for plain Forge, so no plain recording changes.  The
         // search's config is its own knobs (no card, no deck).  `version` is the
-        // live default's name (search-v2, D412) when the seat runs it, at any
-        // budget; null when other knobs were changed.
+        // live default's name (search-v3 since D539; search-v2 from D412 until
+        // then) when the seat runs it, at any budget; null when other knobs were
+        // changed (so --ai-search what=pab, search-v2's loop, names none).
         if (!"plain".equals(a.aiPolicy)) {
             o.key("ai").obj().n("policy", a.aiPolicy);
             if ("search".equals(a.aiPolicy)) {

@@ -1221,7 +1221,7 @@ which extends the run (the pairing is prefix-stable; `plan.json` records it unde
 hits an engine error is retried once on fresh workers at the end of the run and its row marked `retried`;
 a second error stays on the row. `census-play.json` is the tally (decisive, drawn, timeouts, engine errors,
 retried, the first player's rate, games an hour per session). `--policy-a` /
-`--policy-b search` seat the live search seat (`RecordMatch --policy search`'s: search-v2 at 1.5 s);
+`--policy-b search` seat the live search seat (`RecordMatch --policy search`'s: search-v3 at 1.5 s since D539, search-v2 before it);
 `--replay <games.jsonl>` plays exactly the listed games — numbers, sides, seeds — under this run's
 pilots. Plain against plain, a replay gave the same winner and turn count in all five games tried
 (D447's smoke).
@@ -2016,7 +2016,7 @@ you follow as it is played.
 
 ```bash
 tools/cubelab.sh watch cubes/fair-fight-cube-180.md                       # Default vs Default, best of 3, a random seed
-tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search-v2 --games 5
+tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search-v3 --games 5
 tools/cubelab.sh watch cubes/fair-fight-cube-180.md --games 1 --pace 0    # the smoke: about 20 s
 tools/cubelab.sh watch cubes/fair-fight-cube-180.md --drafter-b llm:sonnet   # Claude drafts B: SPENDS, at most $1 (D443)
 ```
@@ -2027,7 +2027,7 @@ tools/cubelab.sh watch cubes/fair-fight-cube-180.md --drafter-b llm:sonnet   # C
 | `--seed S` | random 1–99,999 (printed in the id) | the draft's seed, as `run`'s; game `n` plays at `S × 10 + n` |
 | `--games N` | 3 | a best of N (odd, 1–7); it stops once a side has more than half |
 | `--drafter-a`, `--drafter-b` | `lab` | `lab`, or for one side `forge-ranks`, `llm:<model>[:thinking=…]` (D439) or `human-picks:<x.picks.json>` (D416); the other side is then `lab` (D443) |
-| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search-v2` (`search` also; the live search seat, through RecordMatch's `--policy search`). No Claude player: RecordMatch seats Forge AIs only |
+| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search-v3` (`search` and `search-v2`, its name until D539, also; the live search seat, through RecordMatch's `--policy search`). No Claude player: RecordMatch seats Forge AIs only |
 | `--llm-max-usd X`, `--llm-max-calls N`, `--llm-fallback-rate R` | 1, 40, 0.25 | an `llm:` drafter's cap for the whole watch and its fallback stop (D442): past either cap, or past R of its picks falling back to the lab drafter's line, the watch ends `error` with the reason |
 | `--pace ms` | 600 | the recorder's pace (M47); 0 = engine speed |
 | `--shape-a`, `--shape-b` | `auto` | the lab drafter's deck shape per seat (D446; not with `human-picks`) |

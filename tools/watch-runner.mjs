@@ -11,11 +11,11 @@
 //
 //   GET  /health           + "watch": 0|1, "watchRunning": "<id>"|null, and (D443) the choices:
 //                          "watchDrafters": [{id, label, costNote?}]  (lab, forge-ranks, llm:haiku, llm:sonnet)
-//                          "watchPlayers":  [{id, label}]             (each forge-home/res/ai/*.ai, search-v2)
+//                          "watchPlayers":  [{id, label}]             (each forge-home/res/ai/*.ai, search-v3)
 //                          "watchLlmCap":   {maxUsd, maxCalls, maxFallbackRate}   (one watch's llm: cap)
 //   POST /watch            {"cube": "fair-fight-cube-180", "seed"?: 1..799999999, "games"?: 1|3|5|7,
 //                           "drafterA"?: <a watchDrafters id>, "drafterB"?: ...   (default "lab"; one side at most not lab),
-//                           "playerA"?: <a watchPlayers id, any case; "search" too>, "playerB"?: ..., "pace"?: 0..5000,
+//                           "playerA"?: <a watchPlayers id, any case; "search" and "search-v2" too>, "playerB"?: ..., "pace"?: 0..5000,
 //                           "cubeDoc"?: {"title": <1-80 chars>, "markdown": <a cube document, at most 256 KB>}}
 //                          (D444: with cubeDoc, "cube" is "my-<slug>" (^my-[a-z0-9-]{1,60}$), a cube of the
 //                          caller's own -- ForgeCoach's cube builder -- that is not in cubes/: the markdown is
@@ -137,13 +137,17 @@ export function watchDrafters(cap = DEFAULT_WATCH_LLM_CAP) {
 export function watchPlayers(profiles) {
   return [
     ...profiles.map((p) => ({ id: p, label: `Forge AI (${p})` })),
-    { id: 'search-v2', label: 'Search AI (search-v2: Forge AI plus a look-ahead search)' },
+    { id: 'search-v3', label: 'Search AI (search-v3: Forge AI plus a look-ahead search)' },
   ];
 }
 
-/** A player id (or the older `search`) -> the seat watch.ts records, as its parsePlayer makes it; null if unknown. */
+/**
+ * A player id (or the older `search`, or `search-v2`, the live search seat's id until D539) -> the seat watch.ts
+ * records, as its parsePlayer makes it; null if unknown.  Every one of the three is the live search seat that
+ * RecordMatch's --policy search seats today, search-v3 (D539), so a request stored before D539 still starts.
+ */
 function playerOf(v, profiles) {
-  if (/^search(-v2)?$/i.test(v)) return { id: 'search-v2', arg: 'search-v2', player: 'search', profile: 'Default', policy: 'search' };
+  if (/^search(-v[23])?$/i.test(v)) return { id: 'search-v3', arg: 'search-v3', player: 'search', profile: 'Default', policy: 'search' };
   const p = profiles.find((x) => x.toLowerCase() === v.toLowerCase());
   return p ? { id: p, arg: p, player: p, profile: p, policy: 'plain' } : null;
 }

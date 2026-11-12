@@ -69,17 +69,19 @@ const until = async (f, ms = 4000) => { const t = Date.now(); while (Date.now() 
 console.log('the body');
 const ctx = { cubes: ['fair-fight-cube-180', 'pauper-cube-180'], profiles: ['Default', 'Reckless'] };
 const ok = validateWatch({ cube: 'fair-fight-cube-180', seed: 7, games: 3, playerA: 'reckless', playerB: 'search-v2', pace: 0 }, ctx).req;
-check(ok && ok.id === 'watch-fair-fight-cube-180-7' && ok.playerA.id === 'Reckless' && ok.playerB.id === 'search-v2' && ok.playerB.policy === 'search' && ok.pace === 0 && WATCH_ID.test(ok.id), 'a full body: the id, the canonical profile, search');
+check(ok && ok.id === 'watch-fair-fight-cube-180-7' && ok.playerA.id === 'Reckless' && ok.playerB.id === 'search-v3' && ok.playerB.policy === 'search' && ok.pace === 0 && WATCH_ID.test(ok.id), 'a full body: the id, the canonical profile, search (search-v2, its id before D539, names search-v3)');
+const v3 = validateWatch({ cube: 'fair-fight-cube-180', seed: 7, playerB: 'Search-V3' }, ctx).req;
+check(v3 && v3.playerB.id === 'search-v3' && v3.playerB.arg === 'search-v3' && v3.playerB.policy === 'search', 'D539: search-v3, any case, is the live search seat');
 const dflt = validateWatch({ cube: 'pauper-cube-180.md' }, ctx).req;
 check(dflt && dflt.games === 3 && dflt.playerA.id === 'Default' && dflt.playerB.id === 'Default' && dflt.drafterA === 'lab' && dflt.drafterB === 'lab' && !dflt.llm && dflt.pace === 600 && dflt.seed >= 1,
   'defaults: best of 3, lab drafts and Default plays both sides, 600 ms, a random seed; ".md" accepted');
 const withLlm = validateWatch({ cube: 'fair-fight-cube-180', drafterB: 'llm:sonnet', playerA: 'search' }, ctx).req;
-check(withLlm && withLlm.drafterB === 'llm:sonnet' && withLlm.drafterA === 'lab' && withLlm.llm === true && withLlm.playerA.id === 'search-v2', 'drafterB llm:sonnet; the older "search" still names search-v2');
+check(withLlm && withLlm.drafterB === 'llm:sonnet' && withLlm.drafterA === 'lab' && withLlm.llm === true && withLlm.playerA.id === 'search-v3', 'drafterB llm:sonnet; the older "search" still names the live search seat, search-v3');
 check(validateWatch({ cube: 'fair-fight-cube-180', drafterA: 'forge-ranks' }, ctx).req?.drafterA === 'forge-ranks', 'drafterA forge-ranks');
 const unknownD = validateWatch({ cube: 'fair-fight-cube-180', drafterA: 'llm:opus' }, ctx);
 check(unknownD.status === 400 && /"drafterA" is one of lab, forge-ranks, llm:haiku, llm:sonnet/.test(unknownD.message), `400: an unknown drafter id, listing the known ones (${unknownD.message})`);
 const unknownP = validateWatch({ cube: 'fair-fight-cube-180', playerB: 'sonnet' }, ctx);
-check(unknownP.status === 400 && /"playerB" is one of Default, Reckless, search-v2/.test(unknownP.message), `400: an unknown player id, listing the known ones (${unknownP.message})`);
+check(unknownP.status === 400 && /"playerB" is one of Default, Reckless, search-v3/.test(unknownP.message), `400: an unknown player id, listing the known ones (${unknownP.message})`);
 const bad = (q, what) => check(validateWatch(q, ctx).req === undefined && validateWatch(q, ctx).status === 400, `400: ${what}`);
 bad(null, 'no object');
 bad({ cube: '../cubes/fair-fight-cube-180' }, 'a path for the cube');
@@ -142,8 +144,8 @@ check(JSON.stringify(hl.watchDrafters.map((d) => d.id)) === JSON.stringify(['lab
   && hl.watchDrafters.every((d) => typeof d.label === 'string' && Object.keys(d).every((k) => ['id', 'label', 'costNote'].includes(k)))
   && hl.watchDrafters.filter((d) => d.costNote).map((d) => d.id).join() === 'llm:haiku,llm:sonnet'
   && hl.watchDrafters.every((d) => !d.costNote || (/\$1 and 40 calls a watch/.test(d.costNote) && /confirm/.test(d.costNote))), 'watchDrafters: {id, label, costNote?}, the cost note on the llm ones (the cap, a confirm)');
-check(JSON.stringify(hl.watchPlayers.map((p) => p.id)) === JSON.stringify(['Default', 'Reckless', 'search-v2']) && hl.watchPlayers.every((p) => typeof p.label === 'string' && !('costNote' in p)),
-  'watchPlayers: the profiles from forge-home/res/ai and search-v2, no Claude seat');
+check(JSON.stringify(hl.watchPlayers.map((p) => p.id)) === JSON.stringify(['Default', 'Reckless', 'search-v3']) && hl.watchPlayers.every((p) => typeof p.label === 'string' && !('costNote' in p)),
+  'watchPlayers: the profiles from forge-home/res/ai and search-v3, no Claude seat');
 check(JSON.stringify(hl.watchLlmCap) === JSON.stringify({ maxUsd: 1, maxCalls: 40, maxFallbackRate: 0.25 }), 'watchLlmCap: the defaults');
 check(hl.watchCustom === 1, 'watchCustom: 1 (D444)');
 const hl2 = createWatchRunner({ repoRoot: ROOT, available: () => true, llmCap: { maxUsd: 0.5, maxCalls: 20, maxFallbackRate: 0.25 } }).health();
@@ -444,7 +446,7 @@ await until(() => wa.running() === null);
 const flag = (args, k) => args[args.indexOf(k) + 1];
 const [a1, a2] = argvSeen;
 check(a1[0] === 'watch' && a1[1] === 'cubes/pauper-cube-180.md' && flag(a1, '--drafter-a') === 'lab' && flag(a1, '--drafter-b') === 'llm:sonnet'
-  && flag(a1, '--player-a') === 'Reckless' && flag(a1, '--player-b') === 'search-v2'
+  && flag(a1, '--player-a') === 'Reckless' && flag(a1, '--player-b') === 'search-v3'
   && flag(a1, '--llm-max-usd') === '0.75' && flag(a1, '--llm-max-calls') === '30' && flag(a1, '--llm-fallback-rate') === '0.2', `an llm: drafter: its id and the cap in the argv (${a1.join(' ')})`);
 check(flag(a2, '--drafter-a') === 'forge-ranks' && !a2.includes('--llm-max-usd') && flag(a2, '--player-a') === 'Default', 'no llm: drafter, no cap flags');
 // D444: a custom cube -- cube.md written before the 202, its path the watch's cube, match.json naming it
@@ -530,7 +532,7 @@ const h = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins, t
 const port = await h.listen();
 const hh = await call(port, 'GET', '/health');
 check(hh.status === 200 && hh.body.watch === 1 && hh.body.watchRunning === null, '/health carries "watch": 1');
-check(Array.isArray(hh.body.watchDrafters) && hh.body.watchDrafters[0]?.id === 'lab' && hh.body.watchPlayers?.at(-1)?.id === 'search-v2' && hh.body.watchLlmCap?.maxUsd === 1, '/health carries watchDrafters, watchPlayers and watchLlmCap');
+check(Array.isArray(hh.body.watchDrafters) && hh.body.watchDrafters[0]?.id === 'lab' && hh.body.watchPlayers?.at(-1)?.id === 'search-v3' && hh.body.watchLlmCap?.maxUsd === 1, '/health carries watchDrafters, watchPlayers and watchLlmCap');
 const p400 = await call(port, 'POST', '/watch', { cube: 'fair-fight-cube-180', drafterA: 'gpt' });
 check(p400.status === 400 && /one of lab, forge-ranks, llm:haiku, llm:sonnet/.test(p400.body.message), 'POST /watch with an unknown drafter: 400 naming the known ones');
 check(hh.body.watchCustom === 1, '/health carries "watchCustom": 1 (D444)');

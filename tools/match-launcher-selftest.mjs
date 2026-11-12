@@ -297,7 +297,7 @@ try {
   check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
   check('the deck name never reached a command line', !second.some((a) => a.includes('Rock')));
   check('D414: a bare play.sh starts the search AI: one --ai-policy search, no --ai-search', argOf(first[0].argv, '--ai-policy') === 'search'
-    && first[0].argv.filter((a) => a === '--ai-policy').length === 1 && !first[0].argv.includes('--ai-search') && /AI policy: search-v2 \(the default, D414/.test(A.out()), first[0].argv.join(' '));
+    && first[0].argv.filter((a) => a === '--ai-policy').length === 1 && !first[0].argv.includes('--ai-search') && /AI policy: search-v3 \(the default, D414/.test(A.out()), first[0].argv.join(' '));
   check('no aiPolicy: the AI as play.sh started it (search, D414), one --ai-policy, no --ai-search', r.json?.aiPolicy === 'search'
     && second.filter((a) => a === '--ai-policy').length === 1 && argOf(second, '--ai-policy') === 'search' && !second.includes('--ai-search'), `${r.body} ${second.join(' ')}`);
   check('the old engine is gone', !alive(first[0].pid));
