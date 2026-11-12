@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-12T04:15:18-05:00",
- "heartbeat": "2026-11-12T04:15:18-05:00",
+ "updated": "2026-11-12T04:19:52-05:00",
+ "heartbeat": "2026-11-12T04:19:52-05:00",
  "paused": false,
  "state": "idle",
  "alerts": [
@@ -17,13 +17,13 @@
   }
  ],
  "idleSince": "2026-11-12T02:34:11-05:00",
- "idleReason": "queue empty",
+ "idleReason": "job file needs fixing",
  "host": {
-  "load1": 4.76,
+  "load1": 2,
   "memUsedGb": 5.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4538,
-  "pressure": 0,
+  "swapUsedMb": 4525,
+  "pressure": 2.6,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 0,
@@ -31,7 +31,17 @@
  },
  "running": [],
  "queue": [],
- "waiting": [],
+ "waiting": [
+  {
+   "publicTitle": "The search considers more: three 1,200-game matches",
+   "publicEst": "~8 h (one night)",
+   "id": "J214",
+   "title": "What the search considers (D540): three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) of search-v3 with one widening of its priority search against search-v2-no-b (search-v3, the live seat since D539), each in a ladder folder of its own under --host j214 on blocks 416,900,000-416,900,149 -- search-v3-declined (castable spells Forge declines, aimed by Forge's own targeting), search-v3-instant (the empty-stack instant-speed windows where Forge plays, either turn), search-v3-lands (Forge's land drop against each other-named land) -- each read by D519's four readings at 1,200 games with D537's completeness rule and D540's exposure condition, pre-registered in D540. This job never changes the live seat",
+   "reason": "the job file needs fixing",
+   "est": "~8 h at 7 workers (an estimate; range 7-9.5 h), 11.25 h at worst (the three stops and the pilot). From this host at 7 workers, alone: a 1,200-game match against the search's family takes about 0.47 h + 0.0436 h x both sides' search seconds a game (D537 point 11's fit; residual sd 0.15 h). B searches about 19.3 s a game (J211). declined ~22.8 s: ~2.3 h; instant ~24.4 s: ~2.4 h; lands ~24.8 s: ~2.4 h (the lane's pilot's A/B search-time ratios, x1.18, x1.26 and x1.29, applied to B's 19.3 s; D540's Verification). Pilot ~0.75 h (the build, the tests, three 4-game ladder matches and three 4-game recorded runs). The matches stop themselves at --hours 3.5 each, under the job's 12 h timeout; a match that reaches its own stop reports complete: false and gets no reading. Memory pressure holding the night at 5 or 6 workers adds about a fifth",
+   "detail": "the job file has errors: public_decides: \"Whether the search AI is stronger when it also looks at spells Forge rejects, at instant speed, or at which land to play\" may hold only letters, digits, spaces and , : ; ( ) + % ~ # & - (80 at most)"
+  }
+ ],
  "finished": [
   {
    "publicTitle": "Label probe: do stronger AI seats agree more with judged move labels",
