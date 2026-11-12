@@ -69,6 +69,12 @@ written**; what the build, the self-tests and the gate showed is the *Verificati
    accepted as aliases of it, so a request ForgeCoach stored before D539 still starts; they answer as
    `search-v3`. `watch.ts`'s `seatSpecOf`, which spells the live seat by hand for `run.json`'s `profiles` (a seat
    spec is parsed by `parse`, not `parseLive`), becomes `<profile>+outlets+search:what=pa,anytime=1`.
+   **ForgeCoach first** (found after the lane's review): its watch page read the listed id with
+   `/^search(-v2)?$/`, so against a helper listing `search-v3` it would have offered the seat as a Forge profile
+   named "search-v3" and started its form on `Default`. ForgeCoach's `pc/search-v3` reads `search` or
+   `search-v<n>` and says what the seat does now; it is merged and deployed before this lane merges, and a
+   ForgeCoach page from before it, against a D539 helper, shows exactly that degraded picker and nothing worse (the
+   POST carries the id the helper listed).
 
 **Under D509: the atlas's seat is unchanged.** D509 point 1 freezes `bridge/src` for the atlas's population, and a
 lane that changes it between landings writes the argument that the seat's plays and listings are unchanged. This
