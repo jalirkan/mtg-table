@@ -174,7 +174,17 @@ public final class SearchPolicy {
             @Override
             public void event(final String text) {
             }
-        });
+        }, null);
+    }
+
+    /**
+     * For the self-test only (D540): {@link #alternatives} with {@code declined=1}'s widening on, its counters into
+     * {@code sink}; the plays the widening added (aimed, after today's) are put in {@code aimed}.
+     */
+    public static List<SpellAbility> alternativesDeclinedForTest(final Player ai, final SpellAbility forgeSa,
+                                                                 final Sink sink, final List<SpellAbility> aimed) {
+        final AiController aic = ((forge.ai.PlayerControllerAi) ai.getController()).getAi();
+        return alternatives(ai, aic, forgeSa, sink, aimed);
     }
 
     /** For the self-test only (D483): the label a priority candidate of {@code sa} carries. */
@@ -577,17 +587,54 @@ public final class SearchPolicy {
     }
 
     /**
+     * Whether a priority decision whose Forge answer is {@code forge} (null or empty = pass) is one the search looks
+     * at: {@link #wantsPriority(Player)}'s windows, and with {@code instant=1} (D540) an instant-speed window --
+     * outside the seat's own main phases, on an empty stack, either turn -- where Forge plays something that is not
+     * a land and not a mana ability.  With {@code instant} off this is {@link #wantsPriority(Player)} and reads
+     * nothing more.
+     */
+    public boolean wantsPriority(final Player ai, final List<SpellAbility> forge) {
+        if (wantsPriority(ai)) {
+            return true;
+        }
+        if (!cfg.instant || !cfg.priority || forge == null || forge.size() != 1) {
+            return false;
+        }
+        final SpellAbility f = forge.get(0);
+        if (f == null || f.isLandAbility() || f.isManaAbility()) {
+            return false;
+        }
+        final Game g = ai.getGame();
+        final PhaseHandler ph = g.getPhaseHandler();
+        return ph.getPhase() != null && !ownMain(ai) && g.getStack().isEmpty();
+    }
+
+    /** The seat's own first or second main phase (D540: what an instant-speed window is not). */
+    private static boolean ownMain(final Player ai) {
+        final PhaseHandler ph = ai.getGame().getPhaseHandler();
+        return ph.isPlayerTurn(ai) && (ph.is(PhaseType.MAIN1) || ph.is(PhaseType.MAIN2));
+    }
+
+    /**
      * Forge chose {@code forge} (null or empty = pass).  Return it, or a better
      * play found by the search.
      */
     public List<SpellAbility> choosePriority(final Player ai, final AiController aic, final List<SpellAbility> forge) {
         final SpellAbility forgeSa = forge == null || forge.isEmpty() ? null : forge.get(0);
         if (forgeSa != null && (forge.size() != 1 || forgeSa.isLandAbility())) {
+            if (cfg.lands && forge.size() == 1) {
+                final List<SpellAbility> r = chooseLand(ai, forge, forgeSa);
+                if (r != null) {
+                    return r;
+                }
+            }
             sink.add("search.p.skipLand", 1);
             return forge;   // a land drop (or a multi-ability land list): Forge's
         }
         final long t0 = System.nanoTime();
-        final List<SpellAbility> alts = alternatives(ai, aic, forgeSa, sink);
+        // D540: declined=1 widens the list (the widened plays after today's, so today's are its head); off, null
+        final List<SpellAbility> aimed = cfg.declined ? new ArrayList<>() : null;
+        final List<SpellAbility> alts = alternatives(ai, aic, forgeSa, sink, aimed);
         if (alts.isEmpty() && forgeSa == null) {
             return forge;   // nothing to choose between
         }
@@ -604,6 +651,17 @@ public final class SearchPolicy {
         }
         rank(ai, cands, "p", forgeSa != null ? 2 : 1, t0);
         sink.add("search.p.considered", 1);
+        // D540's exposure counters: a window the widening reached, its candidates, and (below) its changes
+        final boolean instant = cfg.instant && !ownMain(ai);
+        if (instant) {
+            sink.add("search.p.instant.windows", 1);
+            sink.add("search.p.instant.cands", cands.size());
+        }
+        final int fromDeclined = aimed == null ? 0 : countSas(cands, aimed);
+        if (fromDeclined > 0) {
+            sink.add("search.p.declined.windows", 1);
+            sink.add("search.p.declined.cands", fromDeclined);
+        }
         final double[] st = stateFor(ai);
         final Outcome o = decide(ai, cands, "p", t0, st);
         exportRow(ai, cands, "p", o == null || o.chosen <= 0 ? 0 : o.chosen, st, t0);
@@ -615,11 +673,87 @@ public final class SearchPolicy {
         sink.add("search.p.changed", 1);
         sink.add(pick == null ? "search.p.changed.toPass" : (forgeSa == null ? "search.p.changed.fromPass"
                 : "search.p.changed.toOther"), 1);
+        if (instant) {
+            sink.add("search.p.instant.changed", 1);
+        }
+        if (pick != null && aimed != null && containsSa(aimed, pick)) {
+            sink.add("search.p.declined.changed", 1);
+        }
         sink.event(String.format(Locale.ROOT, "search P: %s over Forge's %s (%s, %d rounds)", c.label,
                 cands.get(0).label, means(cands, o), o.rounds));
         if (pick == null) {
             return null;
         }
+        final List<SpellAbility> l = new ArrayList<>(1);
+        l.add(pick);
+        return l;
+    }
+
+    /** D540: how many of {@code cands}' priority plays are in {@code sas} (by identity of the object). */
+    private static int countSas(final List<Cand> cands, final List<SpellAbility> sas) {
+        int n = 0;
+        for (final Cand c : cands) {
+            if (c instanceof PriorityCand && ((PriorityCand) c).sa != null && containsSa(sas, ((PriorityCand) c).sa)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    private static boolean containsSa(final List<SpellAbility> sas, final SpellAbility sa) {
+        for (final SpellAbility s : sas) {
+            if (s == sa) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * D540 ({@code lands=1}): Forge chose to play the land {@code forgeSa}.  When a land of another name is legal
+     * too, roll Forge's land out against each other-named land (the first play of each name in
+     * {@link Decisions#landPlays}' order, the one listing the records and the random seat share, D466), up to the
+     * candidate cap; no pass and no holding the land.  Null when no other name is legal: the caller leaves the land
+     * drop to Forge as before.  The lands listed are the seat's own (its hand, or a zone a may-play permission
+     * opens to it), so nothing hidden is read.
+     */
+    private List<SpellAbility> chooseLand(final Player ai, final List<SpellAbility> forge, final SpellAbility forgeSa) {
+        final long t0 = System.nanoTime();
+        final List<Cand> cands = new ArrayList<>();
+        cands.add(priorityCand(forgeSa));
+        final Set<String> names = new HashSet<>();
+        names.add(forgeSa.getHostCard().getName());
+        final Map<String, List<SpellAbility>> lands = Decisions.quiet(() -> Decisions.landPlays(ai));
+        for (final List<SpellAbility> las : lands.values()) {
+            if (cands.size() >= genLimit()) {
+                break;
+            }
+            final SpellAbility la = las.isEmpty() ? null : las.get(0);
+            if (la == null || la.getHostCard() == null || !names.add(la.getHostCard().getName())) {
+                continue;   // Forge's own land, or another of a name already listed (two Forests are one choice)
+            }
+            cands.add(priorityCand(la));
+        }
+        if (cands.size() < 2) {
+            return null;
+        }
+        rank(ai, cands, "p", 1, t0);
+        sink.add("search.p.considered", 1);
+        sink.add("search.p.lands.windows", 1);
+        sink.add("search.p.lands.cands", cands.size());
+        final double[] st = stateFor(ai);
+        final Outcome o = decide(ai, cands, "p", t0, st);
+        exportRow(ai, cands, "p", o == null || o.chosen <= 0 ? 0 : o.chosen, st, t0);
+        if (o == null || o.chosen <= 0) {
+            return forge;
+        }
+        final Cand c = cands.get(o.chosen);
+        final SpellAbility pick = ((PriorityCand) c).sa;
+        sink.add("search.p.changed", 1);
+        sink.add("search.p.changed.toOther", 1);
+        sink.add("search.p.lands.changed", 1);
+        sink.event(String.format(Locale.ROOT, "search L: %s over Forge's %s (%s, %d rounds)", c.label,
+                cands.get(0).label, means(cands, o), o.rounds));
         final List<SpellAbility> l = new ArrayList<>(1);
         l.add(pick);
         return l;
@@ -664,11 +798,20 @@ public final class SearchPolicy {
      * (D483), Forge's own pick counted as listed: the first of a set of plays with one
      * identity is kept, in Forge's order.  Static, with its counters' sink passed in:
      * play exploration (D358, {@link Explorer}) draws from the same list.
+     *
+     * <p>D540 ({@code declined=1}): with {@code aimed} non-null, every other castable,
+     * affordable spell Forge declines -- for any reason, targeted or not -- is aimed by
+     * Forge's own targeting ({@link #aimDeclined}) and listed after today's plays, and
+     * put in {@code aimed} too; one with no legal aim is dropped and counted
+     * ({@code search.p.declined.noTarget}).  So today's list is the head of the widened
+     * one.  With {@code aimed} null (every caller but the search with the key on, and
+     * play exploration always) nothing here makes a call it did not make before.
      */
     static List<SpellAbility> alternatives(final Player ai, final AiController aic, final SpellAbility forgeSa,
-                                           final Sink sink) {
+                                           final Sink sink, final List<SpellAbility> aimed) {
         final List<SpellAbility> willPlay = new ArrayList<>();
         final List<SpellAbility> declined = new ArrayList<>();
+        final List<SpellAbility> widened = new ArrayList<>();   // D540
         final Set<String> seen = new HashSet<>();
         if (forgeSa != null) {
             seen.add(playIdentity(forgeSa));
@@ -708,13 +851,60 @@ public final class SearchPolicy {
                 } else if (d == AiPlayDecision.CantPlayAi && !anyTargeting(sa) && sa.getPayCosts() != null
                         && sa.isSpell()) {
                     declined.add(sa);
+                } else if (aimed != null && sa.isSpell() && sa.getPayCosts() != null) {
+                    // D540: declined for another reason, or targeted: aimed as Forge would aim it, else not a play
+                    if (Decisions.quiet(() -> aimDeclined(ai, sa))) {
+                        widened.add(sa);
+                    } else {
+                        sink.add("search.p.declined.noTarget", 1);
+                    }
                 }
             } catch (final RuntimeException e) {
                 sink.add("search.p.candidateError", 1);
             }
         }
         willPlay.addAll(declined);
+        if (aimed != null) {
+            sink.add("search.p.declined.listed", widened.size());
+            willPlay.addAll(widened);
+            aimed.addAll(widened);
+        }
         return willPlay;
+    }
+
+    /**
+     * D540: give a spell Forge declined Forge's own targets, the coach grader's two steps
+     * ({@code mtgtable.grade.Grader.aim}): the targets {@code canPlaySa} left on it (the
+     * caller has just asked it), else Forge's mandatory choice for its effect
+     * ({@code doTriggerNoCostWithSubs} with {@code mandatory} true, what Forge itself
+     * answers for a forced trigger); false when every targeted part still lacks a legal
+     * number of targets (a Counterspell with nothing on the stack).  The targets are
+     * chosen by Forge's AI on the real game, among objects any targeting may name --
+     * the same calls Forge's own chooser makes at every priority -- and the caller runs
+     * this inside {@link Decisions#quiet}, so Forge's random stream is not moved.
+     */
+    static boolean aimDeclined(final Player ai, final SpellAbility sa) {
+        if (!anyTargeting(sa)) {
+            return true;
+        }
+        if (!targetsValid(sa) && sa.getApi() != null) {
+            try {
+                forge.ai.SpellApiToAi.Converter.get(sa.getApi()).doTriggerNoCostWithSubs(ai, sa, true);
+            } catch (final RuntimeException e) {
+                return false;
+            }
+        }
+        return targetsValid(sa);
+    }
+
+    /** D540: every targeted part of {@code sa} has a legal number of targets ({@code Grader.targetsValid}). */
+    static boolean targetsValid(final SpellAbility sa) {
+        for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+            if (s.usesTargeting() && !s.isTargetNumberValid()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean anyTargeting(final SpellAbility sa) {

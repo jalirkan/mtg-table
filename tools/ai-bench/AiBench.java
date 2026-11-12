@@ -1523,6 +1523,225 @@ public final class AiBench {
         cardTargetScenarios();
         modalScenarios();
         targetCostScenarios();
+        searchCandidatesScenarios();
+    }
+
+    /**
+     * D540's three widenings of what the priority search considers, on built positions.
+     * (a) {@code declined=1}: a castable spell Forge declines is listed after today's plays
+     * with a legal aim (Giant Growth on the seat's own Bears in a first main phase with no
+     * combat) and maps onto a copy with its target; a Counterspell with an empty stack has no
+     * legal aim, is never listed and is counted ({@code search.p.declined.noTarget}); the
+     * search with the key on runs on that board and the key-off search counts nothing of
+     * D540's.  (b) {@code lands=1}: two lands of different names give two candidates (two
+     * Islands are one), each land ability maps onto a copy, and the search runs; off, the
+     * land drop is Forge's ({@code search.p.skipLand}).  (c) {@code instant=1}: what
+     * {@code PriorityCand.install}'s {@code setPriority} + {@code onStackResolved} does on a
+     * copy at an instant-speed step -- the opponent's end step, and the seat's own upkeep and
+     * beginning of combat: the seat holds priority there, the forced play (Lightning Bolt on
+     * the Bears) is played, and the step then proceeds to the end of the turn; the forced
+     * pass leaves the Bolt in hand and the turn ends too.  Each check says what it saw, so a
+     * failure is a description of the engine's behaviour, not a guess.  Then the search with
+     * the key on at the opponent's end step searches the window if and only if Forge plays
+     * there, and the key-off search never does.
+     */
+    static void searchCandidatesScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: what the priority search considers (D540, engine)");
+        final List<String> declinedBoard = List.of("humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "aihand=Giant Growth;Counterspell", "ailibrary=Island;Island;Island;Island",
+                "aibattlefield=Grizzly Bears;Forest;Island;Island");
+        scenario("d540-declined-list", declinedBoard, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final List<forge.game.spellability.SpellAbility> today = mtgtable.ai.SearchPolicy.alternativesForTest(ai, null);
+            final CountSink sink = new CountSink();
+            final List<forge.game.spellability.SpellAbility> aimed = new ArrayList<>();
+            final List<forge.game.spellability.SpellAbility> wide =
+                    mtgtable.ai.SearchPolicy.alternativesDeclinedForTest(ai, null, sink, aimed);
+            int firstAimed = wide.size();
+            for (int i = 0; i < wide.size(); i++) {
+                if (aimed.contains(wide.get(i))) {
+                    firstAimed = Math.min(firstAimed, i);
+                }
+            }
+            boolean tail = true;
+            for (int i = firstAimed; i < wide.size(); i++) {
+                tail &= aimed.contains(wide.get(i));
+            }
+            check(tail && wide.size() >= aimed.size() && sink.get("search.p.declined.listed") == aimed.size(),
+                    "D540: the aimed plays come after today's, and are counted (today " + labelsOf(today) + "; widened "
+                            + labelsOf(wide) + "; aimed " + labelsOf(aimed) + "; " + sink.counts + ")");
+            forge.game.spellability.SpellAbility growth = null;
+            for (final forge.game.spellability.SpellAbility sa : wide) {
+                growth = growth == null && "Giant Growth".equals(sa.getHostCard().getName()) ? sa : growth;
+            }
+            final boolean growthToday = labelsOf(today).toString().contains("Giant Growth");
+            check(growth != null && growth.getTargets().size() == 1 && growth.getTargets().getFirstTargetedCard() == bears,
+                    "D540: Giant Growth is a candidate aimed at the seat's own Bears (" + (growth == null ? "not listed"
+                            : (aimed.contains(growth) ? "aimed by declined=1" : "already in today's list, Forge's WillPlay")
+                            + ", targets " + growth.getTargets()) + "; today's list " + (growthToday ? "has" : "lacks") + " it)");
+            boolean counter = false;
+            for (final forge.game.spellability.SpellAbility sa : wide) {
+                counter |= "Counterspell".equals(sa.getHostCard().getName());
+            }
+            check(!counter && sink.get("search.p.declined.noTarget") >= 1,
+                    "D540: a Counterspell with an empty stack is never a candidate, and its missing aim is counted ("
+                            + labelsOf(wide) + "; " + sink.counts + ")");
+            if (growth != null) {
+                final forge.game.spellability.SpellAbility m = mtgtable.ai.SearchPolicy.mapForTest(ai, growth);
+                check(m != null && m.getHostCard().getGame() != g && m.getTargets().size() == 1
+                                && "Grizzly Bears".equals(m.getTargets().getFirstTargetedCard().getName())
+                                && m.getTargets().getFirstTargetedCard() != bears,
+                        "D540: the aimed Giant Growth maps onto a copy, its target the copy's Bears (got "
+                                + (m == null ? null : m.getTargets()) + ")");
+            }
+        });
+        scenario("d540-declined-search", declinedBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,declined=1"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                    final Map<String, Integer> c = ctl.counts();
+                    check(c.getOrDefault("search.p.declined.noTarget", 0) >= 1 && c.containsKey("search.p.declined.listed")
+                                    && c.getOrDefault("search.rolloutErrors", 0) == 0
+                                    && (c.getOrDefault("search.p.declined.windows", 0) == 0 || c.getOrDefault("search.rollouts", 0) >= 2),
+                            "D540: the search with declined=1 lists, counts and rolls out on the board (pick " + pick + "; " + c + ")");
+                    check(ai.getCardsIn(ZoneType.Hand).size() == 2, "D540: the real game is untouched: both cards still in hand");
+                });
+        scenario("d540-declined-off", declinedBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    ctl.chooseSpellAbilityToPlay();
+                    boolean any = false;
+                    for (final String k : ctl.counts().keySet()) {
+                        any |= k.startsWith("search.p.declined.") || k.startsWith("search.p.instant.") || k.startsWith("search.p.lands.");
+                    }
+                    check(!any, "D540: with the keys off, nothing of D540's is counted (" + ctl.counts() + ")");
+                });
+
+        final List<String> landBoard = List.of("humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "aihand=Forest;Island;Island;Grizzly Bears", "ailibrary=Swamp;Swamp;Swamp;Swamp", "aibattlefield=Forest");
+        scenario("d540-lands-map", landBoard, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final java.util.Set<String> names = new java.util.TreeSet<>();
+            for (final Map.Entry<String, List<forge.game.spellability.SpellAbility>> e : mtgtable.ai.Decisions.landPlays(ai).entrySet()) {
+                final forge.game.spellability.SpellAbility la = e.getValue().get(0);
+                names.add(la.getHostCard().getName());
+                final forge.game.spellability.SpellAbility m = mtgtable.ai.SearchPolicy.mapForTest(ai, la);
+                check(m != null && m.isLandAbility() && m.getHostCard().getGame() != g
+                                && la.getHostCard().getName().equals(m.getHostCard().getName()),
+                        "D540: " + e.getKey() + " (" + la.getHostCard().getName() + ", " + la.getDescription()
+                                + ") maps onto a copy's land ability (got " + (m == null ? null : m.getHostCard() + ": " + m.getDescription()) + ")");
+            }
+            check(names.equals(new java.util.TreeSet<>(List.of("Forest", "Island"))),
+                    "D540: the land listing names Forest and Island (" + names + ")");
+        });
+        scenario("d540-lands-search", landBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,lands=1"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                    final Map<String, Integer> c = ctl.counts();
+                    check(pick != null && pick.size() == 1 && pick.get(0).isLandAbility()
+                                    && c.getOrDefault("search.p.lands.windows", 0) == 1 && c.getOrDefault("search.p.lands.cands", 0) == 2
+                                    && c.getOrDefault("search.p.skipLand", 0) == 0 && c.getOrDefault("search.rollouts", 0) >= 2
+                                    && c.getOrDefault("search.rolloutErrors", 0) == 0 && c.getOrDefault("search.fallback.unmappable", 0) == 0,
+                            "D540: lands=1 rolls Forge's land out against the other name (two Islands are one): two candidates, a land played ("
+                                    + pick + "; " + c + ")");
+                });
+        scenario("d540-lands-off", landBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                    final Map<String, Integer> c = ctl.counts();
+                    check(pick != null && pick.get(0).isLandAbility() && c.getOrDefault("search.p.skipLand", 0) == 1
+                                    && !c.containsKey("search.p.lands.windows") && c.getOrDefault("search.rollouts", 0) == 0,
+                            "D540: with lands off the land drop is Forge's, unsearched (" + pick + "; " + c + ")");
+                });
+
+        // (c) the install at an instant-speed step, on a copy, for a forced Bolt and a forced pass
+        for (final String[] at : new String[][] {{"human", "END_OF_TURN"}, {"ai", "UPKEEP"}, {"ai", "COMBAT_BEGIN"}}) {
+            final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=" + at[0], "activephase=" + at[1],
+                    "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                    "aihand=Lightning Bolt", "ailibrary=Mountain;Mountain;Mountain;Mountain", "aibattlefield=Mountain");
+            scenario("d540-instant-install-" + at[1], board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+                final Game g = ai.getGame();
+                final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+                final forge.game.spellability.SpellAbility bolt = playOf(ai, "Lightning Bolt", (sa) -> true);
+                bolt.resetTargets();
+                bolt.getTargets().add(bears);
+                for (final boolean pass : new boolean[] {false, true}) {
+                    final String[] seen = new String[2];
+                    mtgtable.ai.SearchPolicy.probeForTest((copy, aiC) -> {
+                        final forge.game.phase.PhaseHandler ph = copy.getPhaseHandler();
+                        seen[0] = "turn " + ph.getTurn() + " " + (ph.getPhase() == null ? "no phase" : ph.getPhase().name()) + ", active " + (ph.isPlayerTurn(aiC) ? "the seat" : "the opponent")
+                                + ", priority " + (ph.getPriorityPlayer() == aiC ? "the seat" : String.valueOf(ph.getPriorityPlayer()));
+                    });
+                    mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                        final forge.game.phase.PhaseHandler ph = copy.getPhaseHandler();
+                        seen[1] = "turn " + ph.getTurn() + " " + (ph.getPhase() == null ? "no phase" : ph.getPhase().name()) + "; Bolt in " + zoneOf(aiC, "Lightning Bolt")
+                                + "; Bears " + (names(aiC.getWeakestOpponent().getCardsIn(ZoneType.Battlefield)).contains("Grizzly Bears")
+                                ? "alive" : "dead");
+                    });
+                    final CountSink sink = new CountSink();
+                    try {
+                        mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(pass ? null : bolt), 7,
+                                new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+                    } finally {
+                        mtgtable.ai.SearchPolicy.probeForTest(null);
+                        mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+                    }
+                    final String what = (pass ? "a forced pass" : "a forced Bolt") + " at " + at[1] + " (" + at[0] + "'s turn 5): after the install "
+                            + seen[0] + "; at the leaf " + seen[1] + "; " + sink.counts;
+                    check(seen[0] != null && seen[0].startsWith("turn 5 " + at[1]) && seen[0].endsWith("priority the seat"),
+                            "D540: the seat holds priority at the step after the install -- " + what);
+                    // after a forced pass in the seat's own turn Forge plays on and may Bolt the Bears itself later; at
+                    // the opponent's end step the pass is the seat's last word of the turn, so the Bolt must stay in hand
+                    final boolean lastWord = "END_OF_TURN".equals(at[1]);
+                    check(seen[1] != null && !seen[1].startsWith("turn 5 ")
+                                    && (pass ? !lastWord || seen[1].contains("Bolt in Hand") && seen[1].contains("Bears alive")
+                                    : seen[1].contains("Bolt in Graveyard") && seen[1].contains("Bears dead")),
+                            "D540: the candidate is played and the step proceeds to the end of the turn -- " + what);
+                }
+                check(bears.isInZone(ZoneType.Battlefield) && names(ai.getCardsIn(ZoneType.Hand)).contains("Lightning Bolt"),
+                        "D540: the real game is untouched at " + at[1]);
+            });
+        }
+        final List<String> eot = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=END_OF_TURN",
+                "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "aihand=Lightning Bolt", "ailibrary=Mountain;Mountain;Mountain;Mountain", "aibattlefield=Mountain");
+        scenario("d540-instant-search", eot, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,instant=1"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                    final Map<String, Integer> c = ctl.counts();
+                    final int w = c.getOrDefault("search.p.instant.windows", 0);
+                    check(w <= 1 && (w == 0 ? c.getOrDefault("search.rollouts", 0) == 0
+                                    : c.getOrDefault("search.rollouts", 0) >= 2 && c.getOrDefault("search.rolloutErrors", 0) == 0
+                                    && c.getOrDefault("search.p.instant.cands", 0) >= 2),
+                            "D540: at the opponent's end step instant=1 searches the window when Forge plays (" + (w == 1
+                                    ? "it did" : "Forge passed, so it did not") + "; pick " + pick + "; " + c + ")");
+                });
+        scenario("d540-instant-off", eot, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                    final Map<String, Integer> c = ctl.counts();
+                    check(c.getOrDefault("search.p.considered", 0) == 0 && c.getOrDefault("search.rollouts", 0) == 0,
+                            "D540: with instant off the opponent's end step is never searched (pick " + pick + "; " + c + ")");
+                });
+    }
+
+    /** D540: the zone of the seat's first card named {@code name}, by any zone it can be in here ("none" if it has none). */
+    private static String zoneOf(final Player p, final String name) {
+        for (final ZoneType z : List.of(ZoneType.Hand, ZoneType.Stack, ZoneType.Graveyard, ZoneType.Exile, ZoneType.Battlefield)) {
+            for (final Card c : p.getCardsIn(z)) {
+                if (name.equals(c.getName())) {
+                    return z.name();
+                }
+            }
+        }
+        return "none";
     }
 
     /**

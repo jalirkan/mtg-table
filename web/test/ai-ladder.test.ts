@@ -1252,6 +1252,50 @@ test('D537: the three horizon arms are search-v2 with only the horizon (and, for
   assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
 });
 
+test('D540: the three candidate arms are search-v3 (search-v2-no-b) with one key each, and the keys are off everywhere else', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v3raw = raw.players.find((p) => p.name === 'search-v2-no-b')!;
+  const v3 = by.get('search-v2-no-b')!;
+  const V3CFG = 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1';
+  assert.equal(v3.cfg, V3CFG, "search-v3's seat config (the live seat since D539)");
+  assert.equal(v3.hash, '59505e241363', 'search-v2-no-b keeps its hash');
+  // the hashes were computed for the lane by a re-implementation of configHash checked on three registered
+  // hashes (cdd55e02a89c, 59505e241363, 63c35e9f7d5b); this test is what holds them
+  const arms = [
+    ['search-v3-declined', 'declined', '795daea97aaa'],
+    ['search-v3-instant', 'instant', '25ee7e76b741'],
+    ['search-v3-lands', 'lands', 'e0b09eb7b014'],
+  ] as const;
+  for (const [name, key, hash] of arms) {
+    const x = by.get(name);
+    assert.ok(x?.cfg, `${name} is registered and playable`);
+    const xr = raw.players.find((y) => y.name === name)!;
+    assert.equal(xr.kind, v3raw.kind);
+    assert.deepEqual(xr.params, { ...v3raw.params, [key]: 'on' }, `${name}'s params are search-v2-no-b's with ${key}=on`);
+    const xrest: Record<string, unknown> = { ...x!.resolved };
+    delete xrest[key];
+    assert.deepEqual(xrest, v3.resolved, `every other resolved param of ${name} is search-v2-no-b's`);
+    assert.equal(x!.cfg, `${V3CFG},${key}=1`, `${name}'s seat config is search-v3's plus ${key}=1`);
+    assert.equal(x!.hash, hash, `${name}'s config hash (D540)`);
+    assert.equal(reg.filter((y) => y.hash === hash).length, 1, `one registered player has the hash ${hash}`);
+    assert.match(xr.note ?? '', /D540/);
+    assert.match(xr.note ?? '', /never the live seat/);
+  }
+  assert.equal(new Set(arms.map(([, , h]) => h)).size, 3);
+  // off, the keys are out of every config and every hash: a param left at 'off' resolves to the old config
+  const plain = resolveParams('search', {});
+  assert.deepEqual(resolveParams('search', { declined: 'off', instant: 'off', lands: 'off' }), plain);
+  assert.doesNotMatch(KINDS.search!.cfg(plain), /declined|instant|lands/);
+  assert.match(KINDS.search!.cfg(resolveParams('search', { lands: 'on', declined: 'on', instant: 'on' })), /,declined=1,instant=1,lands=1$/);
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /declined|instant|lands/, 'the live seat turns none of them on');
+  for (const k of ['declined', 'instant', 'lands']) assert.ok(java.includes(`case "${k}"`), `SearchConfig parses ${k}=`);
+  assert.equal(by.get('search-v1-anytime')!.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+  assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');

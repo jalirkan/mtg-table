@@ -143,6 +143,25 @@ import java.util.Locale;
  * the model does not cover keeps Forge's answer.  The timing counters
  * ({@code search.<kind>.ms} and {@code .us}) time its decisions as they time the
  * search's, so a match line compares the two.
+ *
+ * <p>D540's three widenings of what the priority search considers, each off by
+ * default in {@link #parse} and {@link #parseLive} and printed only when on, so
+ * every registered config text, every ladder hash and the live seat are
+ * unchanged unless the text names them:
+ * <ul>
+ * <li>{@code declined=1} -- a castable spell Forge's per-card judgment declines
+ *     for any reason (not only an untargeted {@code CantPlayAi}), aimed by
+ *     Forge's own targeting and dropped when it has no legal target, is a
+ *     candidate after today's, in the windows already searched and in the
+ *     own-main empty-stack windows where Forge passed with nothing else to
+ *     consider;</li>
+ * <li>{@code instant=1} -- outside the seat's own main phases, on an empty stack
+ *     and on either turn, a window where Forge's answer is a non-land, non-mana
+ *     play is searched: Forge's play against pass and the alternatives;</li>
+ * <li>{@code lands=1} -- where a land of another name than Forge's land is
+ *     legal, Forge's land against each other-named land (no pass, no holding),
+ *     instead of leaving the land drop to Forge.</li>
+ * </ul>
  */
 public final class SearchConfig {
 
@@ -212,6 +231,13 @@ public final class SearchConfig {
      * random stream is not moved by it.  Off by default: nothing else changes.
      */
     public final boolean observe;
+
+    /** D540: castable spells Forge declines, aimed by Forge's own targeting, are priority candidates too. */
+    public final boolean declined;
+    /** D540: the empty-stack windows outside the seat's own main phases where Forge plays are searched. */
+    public final boolean instant;
+    /** D540: Forge's land drop against each legal land of another name. */
+    public final boolean lands;
 
     /** D417's defaults. */
     public static final int MULL_MS = 6000;
@@ -293,6 +319,9 @@ public final class SearchConfig {
         this.targets = false;
         this.distillModel = null;
         this.observe = false;
+        this.declined = false;
+        this.instant = false;
+        this.lands = false;
     }
 
     /**
@@ -432,6 +461,55 @@ public final class SearchConfig {
         this.targets = targets;
         this.distillModel = distillModel;
         this.observe = observe;
+        this.declined = base.declined;
+        this.instant = base.instant;
+        this.lands = base.lands;
+    }
+
+    /** D540: a copy of {@code base} with the three candidate switches given; every other field is {@code base}'s. */
+    private SearchConfig(final SearchConfig base, final boolean declined, final boolean instant, final boolean lands) {
+        this.budgetMs = base.budgetMs;
+        this.maxCandidates = base.maxCandidates;
+        this.horizonTurns = base.horizonTurns;
+        this.minRounds = base.minRounds;
+        this.margin = base.margin;
+        this.maxRounds = base.maxRounds;
+        this.priority = base.priority;
+        this.attacks = base.attacks;
+        this.blocks = base.blocks;
+        this.seed = base.seed;
+        this.attackTurns = base.attackTurns;
+        this.lcb = base.lcb;
+        this.z = base.z;
+        this.untapped = base.untapped;
+        this.oracle = base.oracle;
+        this.anytime = base.anytime;
+        this.rankPrior = base.rankPrior;
+        this.generate = base.generate;
+        this.prior = base.prior;
+        this.evalModel = base.evalModel;
+        this.rollout = base.rollout;
+        this.leafModel = base.leafModel;
+        this.mull = base.mull;
+        this.mullMs = base.mullMs;
+        this.mullTurns = base.mullTurns;
+        this.targets = base.targets;
+        this.distillModel = base.distillModel;
+        this.observe = base.observe;
+        this.declined = declined;
+        this.instant = instant;
+        this.lands = lands;
+    }
+
+    /**
+     * D540: this config with what the priority search considers widened as given ({@code declined=1},
+     * {@code instant=1}, {@code lands=1}); all three off is the config as it was.
+     */
+    public SearchConfig withCandidates(final boolean declined, final boolean instant, final boolean lands) {
+        if (declined == this.declined && instant == this.instant && lands == this.lands) {
+            return this;
+        }
+        return new SearchConfig(this, declined, instant, lands);
     }
 
     /** D417: this config with the mulligan search and the target search switched as given. */
@@ -572,6 +650,9 @@ public final class SearchConfig {
         boolean targets = false;
         String distill = null;   // J126
         boolean observe = false;   // D450
+        boolean declined = false;   // D540
+        boolean instant = false;
+        boolean lands = false;
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -615,10 +696,13 @@ public final class SearchConfig {
                 case "targets": targets = bit("targets", p[1]); break;
                 case "distill": distill = p[1]; break;   // J126: the distilled policy's model file
                 case "observe": observe = bit("observe", p[1]); break;   // D450: candidates and rows, Forge's answer
+                case "declined": declined = bit("declined", p[1]); break;   // D540: declined casts, aimed
+                case "instant": instant = bit("instant", p[1]); break;   // D540: instant-speed windows Forge plays in
+                case "lands": lands = bit("lands", p[1]); break;   // D540: the land drop's other-named lands
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
                         + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets, distill,"
-                        + " observe)");
+                        + " observe, declined, instant, lands)");
                 }
             }
         }
@@ -634,7 +718,8 @@ public final class SearchConfig {
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
                 "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf)
-                .withDecisions(mull, mullMs, mullTurns, targets).withDistill(distill).withObserve(observe);
+                .withDecisions(mull, mullMs, mullTurns, targets).withDistill(distill).withObserve(observe)
+                .withCandidates(declined, instant, lands);
         // gen is read only under rank=prior (and validated there).
     }
 
@@ -691,6 +776,16 @@ public final class SearchConfig {
         }
         if (observe) {
             sb.append(",observe=1");   // D450
+        }
+        // D540's, likewise: only when on, so a config without them prints as before.
+        if (declined) {
+            sb.append(",declined=1");
+        }
+        if (instant) {
+            sb.append(",instant=1");
+        }
+        if (lands) {
+            sb.append(",lands=1");
         }
         return sb.toString();
     }
