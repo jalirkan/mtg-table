@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-12T05:16:40-05:00",
- "heartbeat": "2026-11-12T05:16:40-05:00",
+ "updated": "2026-11-12T05:19:57-05:00",
+ "heartbeat": "2026-11-12T05:19:57-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,11 +19,11 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.52,
-  "memUsedGb": 5.6,
+  "load1": 13.91,
+  "memUsedGb": 12.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4487,
-  "pressure": 3.43,
+  "swapUsedMb": 7031,
+  "pressure": 8.76,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -38,19 +38,19 @@
    "cpu": "heavy",
    "phase": "commands 1/4",
    "started": "2026-11-12T05:06:55-05:00",
-   "elapsed": 585,
+   "elapsed": 782,
    "done": 0,
    "total": 3600,
    "unit": "games",
-   "ratePerHour": null,
+   "ratePerHour": 0,
    "eta": null,
-   "workers": 7,
+   "workers": 6,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-12T05:06:55-05:00",
-   "memGb": 0.01,
+   "memGb": 8.13,
    "live": {
     "mde.played": 0,
     "mde.elo": 0,
@@ -84,14 +84,14 @@
     "v.lands.notPlayed": 0,
     "v.candidates": -1,
     "v.notRead": -1,
-    "arms.arms.declined.benchGames": 4,
-    "arms.arms.declined.benchWindows": 4,
-    "arms.arms.declined.errorsTimeouts": 0,
-    "arms.arms.declined.games": 8,
-    "arms.arms.declined.ladderGames": 4,
-    "arms.arms.declined.ladderWindows": 35,
-    "arms.arms.declined.pass": 1,
-    "arms.arms.declined.retry": 0
+    "elapsed_s": 729,
+    "j214_err": 0,
+    "j214_games": 0,
+    "mde.errors": 0,
+    "mde.hi": 0,
+    "mde.lo": 0,
+    "mde.score": 0,
+    "mde.timeouts": 0
    },
    "liveHeadline": [
     "mde.played",
@@ -129,7 +129,14 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
+   "pressureEvents": [
+    {
+     "at": "2026-11-12T05:19:57-05:00",
+     "kind": "drop",
+     "workers": 6,
+     "pressure": 8.8
+    }
+   ],
    "detail": "lab-J214-run1"
   }
  ],
