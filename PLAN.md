@@ -11502,7 +11502,7 @@ Its follow-up is the cube lab's 56 ([the list](#fu-cube-lab)).
 <a id="d539-live-seat-no-block"></a>
 ## The live seat stops searching blocks: search-v3 (2026-11-11, D539)
 
-**Status: written as text on the lane; built, tested and gated by the coordinator before the merge (D539's
+**Status: written as text on the lane; to be built, tested and gated by the coordinator before the merge (D539's
 *Verification*).** Branch `pc/live-seat-no-block` off main `31daf3ec`, written while J212 and J213 held the machine
 alone: no Java, build or test was run beside them. `docs/decisions/D539-live-seat-no-block.md` is the decision.
 

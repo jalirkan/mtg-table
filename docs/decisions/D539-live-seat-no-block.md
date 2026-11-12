@@ -47,11 +47,12 @@ written**; what the build, the self-tests and the gate showed is the *Verificati
    bare `./scripts/play.sh`, the match launcher's search AI, Play vs Forge and the opponent picker, D333's
    `--ai-search ms=N` budget included: a picked budget keeps `what=pa`); `RecordMatch --policy search` (D440: the
    watch bots' search player, and any recording run with that flag); and `CubeLab.liveSearchSeat`, which seats `census-play`'s
-   `--policy-a/-b search` pilots (D447). It takes effect when the engine restarts.
+   `--policy-a/-b search` pilots (D447); and `tools/llm-seat/run-match.mjs --ai-policy search`, whose earlier
+   results against "search" were against search-v2. It takes effect when the engine restarts.
 3. **What a player sees.** The AI answers a block declaration at Forge's own speed, with no thinking pause where
-   search-v2 thought about a second; its main-phase plays and attacks are searched exactly as before. It plays the
-   same strength as search-v2 within J211's interval (−7.4 to +3.1 Elo), and spends about 10% less thinking time a
-   game on this machine.
+   search-v2 thought about a second; its main-phase plays and attacks are searched exactly as before. Head to head
+   against search-v2 on the confirm set's 30 deck pairs it measured within J211's interval (−7.4 to +3.1 Elo), and
+   it spends about 10% less thinking time a game on this machine.
 4. **What does not change.** `SearchConfig.parse` and `defaults()` — `what=pab` and `anytime` off — so the bench,
    the cube lab's seat specs, the move atlas's seats, the label probe and every ladder player keep meaning what
    their games were played under. The ladder names and hashes: `search-v2-no-b` keeps `59505e241363` and is how
@@ -81,9 +82,12 @@ lane changes, under `bridge/src`, two string constants in `SearchConfig.java`, c
 - **No atlas seat goes through `parseLive`.** The atlas's units are seated in `tools/cubelab/CubeLab.java`, which
   this lane does not touch: the random seat by `ExploreMath`'s settings, the observing seat by
   `SearchConfig.parse("observe=1,cands=" + …)` (`CubeLab.java:486`), the plain seats by `SeatSpec.parse` →
-  `SearchConfig.parse` (`SeatSpec.java:52`). An atlas unit's pilots are `random` and `plain`
-  (`tools/cubelab/atlas.ts:432`, `:444`), never `search`, so `liveSearchSeat` (`CubeLab.java:703`) is never reached
-  from a unit. D538's label probe seats each ladder player by its seat config through `SeatSpec.parse`
+  `SearchConfig.parse` (`SeatSpec.java:52`). An atlas job carries no `policyA`/`policyB` key at all
+  (`baseJob`, `tools/cubelab/atlas.ts:406-408`; the `random` and `plain` at `:432` and `:444` are the rows file's
+  labels, not what the engine reads), and `CubeLab` reads the pilot from that key (`CubeLab.java:478`), so
+  `liveSearchSeat` (`CubeLab.java:703`) is never reached from a unit. The bench seats its specs through
+  `SearchConfig.parse` too (`tools/ai-bench/AiBench.java:188`), so the bench is unchanged, which is the other half
+  of the evidence D509 point 1 asks for. D538's label probe seats each ladder player by its seat config through `SeatSpec.parse`
   (`tools/cubelab/AtlasProbe.java:115`, `:383`).
 - **The seat-identity golden is untouched and is not expected to move.** Its search game is an explicit seat spec,
   `Default+search:ms=60000,cands=4,rounds=2,maxrounds=2,seed=1` (`tools/cubelab/seatidentity.ts:47`), through
@@ -91,12 +95,18 @@ lane changes, under `bridge/src`, two string constants in `SearchConfig.java`, c
 - **The evidence the coordinator runs:** gate step 12m (`cubelab.sh seat-identity`, every decision record of the
   four golden games identical), the decision self-test (`DecisionSelfTest`, which holds `parse("")` at `what=pab`
   with `anytime` off and the live seat at search-v2's every field but `blocks`, by reflection), and the full gate.
-  A derivation whose `seat_code` check diffs `bridge/src` will see this diff; this paragraph is its admission, as
-  D511's was for its `CubeLab.java` diff.
+  The next atlas night's derivation diffs `bridge/src` in its `seat_code` check and must admit exactly this lane's
+  five files there (`ai/SearchConfig.java`, `ai/SearchPolicy.java`, `ai/DecisionSelfTest.java`, `MtgTable.java`,
+  `RecordMatch.java`: two constants, comments, a start line's words and self-test checks) and nothing else under
+  the frozen paths, or that night is not posted under D509 point 1; this paragraph is the admission, as D511's was
+  for its `CubeLab.java` diff.
 
 One lab consequence that is not the atlas's: `census-play --policy-a/-b search` seats the live seat by definition
 (D447), so a census folder whose games straddle D539 holds search-v2 and search-v3 under one pilot name, `search`.
-Its rows do not say which; a reader splits such a folder by the games' dates, or does not pool across D539.
+Its rows do not say which, and `plan.json` binds the option as the same string, `search`, on both sides of this
+decision, so a resume or a larger `--pairs` would be admitted. The rule, since nothing in the tool enforces it: **a
+`census-play` folder begun before D539 with a `search` pilot is never resumed or extended**; a run after D539
+starts a folder of its own, and no reading pools the two.
 
 **Rejected.**
 
@@ -133,4 +143,5 @@ watch-runner and match-launcher self-tests, gate step 12m and the full gate's li
 
 **Follow-up.** The seat-queue row for `search-v2-no-b` (D509, `~/code/pc-results/study/seat-queue.md`, in
 pc-results, which this lane does not write) is marked landed by D539 at the merge. The cube lab's follow-up 54 is
-closed by this decision; it adds none.
+closed by this decision; it adds none: the census rule above is a rule of use, chosen over a
+version field in `plan.json` because no census run with a `search` pilot is running or queued (the last was J141).
