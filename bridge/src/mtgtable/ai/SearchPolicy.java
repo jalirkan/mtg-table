@@ -89,8 +89,10 @@ import mtgtable.eval.PositionEvaluator;
  * the position after each is applied once); {@code rollout=outlets|both}
  * (D310's outlet policy inside the copies, {@link RolloutController.Outlets}).
  * With all three off the search is D312's, rollout for rollout.  The live seat
- * ({@link SearchConfig#parseLive}) runs {@code anytime=1} by default since D412
- * ({@link SearchConfig#LIVE_VERSION}); the bench's parse keeps it off.
+ * ({@link SearchConfig#parseLive}) runs {@code anytime=1} by default since D412,
+ * and since D539 {@code what=pa} too: its block declarations are Forge's, unsearched
+ * ({@link #chooseBlock} returns at once; {@link SearchConfig#LIVE_VERSION}
+ * search-v3).  The bench's parse keeps both at their old defaults.
  *
  * <p>Threads and randomness: everything runs on the calling game thread
  * (Forge's own AI eval threads aside, as in any default decision); no hop, no

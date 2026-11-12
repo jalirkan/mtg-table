@@ -42,12 +42,14 @@
 #                        Cautious and Reckless were NOT measurably different
 #                        (docs/evidence/match-setup.md section P).  It is not a dial.
 #   --mirror             ignore match.aiDeck: the AI plays a copy of your deck
-#   (the AI)             THE DEFAULT SINCE D414 IS THE SEARCH AI, search-v2: Forge's
-#                        AI with the sacrifice-outlet policy and a determinized
-#                        look-ahead search at its main-phase plays, attacks and
-#                        blocks (D312-D314; about 1.5 s of thinking at each),
-#                        on D388's anytime loop (D412).  A bare run, --engine-only,
-#                        --lan, --funnel and --tunnel all start it.
+#   (the AI)             THE DEFAULT SINCE D414 IS THE SEARCH AI, search-v3 since
+#                        D539: Forge's AI with the sacrifice-outlet policy and a
+#                        determinized look-ahead search at its main-phase plays
+#                        and attacks (D312-D314; about 1.5 s of thinking at each),
+#                        on D388's anytime loop (D412); its blocks are Forge's own,
+#                        answered with no pause (D539; search-v2 searched them too:
+#                        `-- --ai-search what=pab` plays it).  A bare run,
+#                        --engine-only, --lan, --funnel and --tunnel all start it.
 #   --ai-plain           opt out: Forge's own AI, as before D414 (`--ai-policy plain`)
 #   --ai-search          the search AI by name -- what a bare run plays anyway, kept
 #                        so older command lines work; --ai-search-ms <n> sets its
@@ -66,7 +68,8 @@
 #   ./scripts/play.sh --seed 42             # a reproducible shuffle
 #   ./scripts/play.sh --ai-deck decks/morph-probe.dck --ai-profile Reckless
 #   ./scripts/play.sh --deck decks/pacho-shield.dck --mirror --ai-profile Cautious
-#   ./scripts/play.sh --ai-plain            # Forge's own AI instead of search-v2 (D414)
+#   ./scripts/play.sh --ai-plain            # Forge's own AI instead of search-v3 (D414, D539)
+#   ./scripts/play.sh -- --ai-search what=pab   # search-v2, the search AI before D539 (blocks searched too)
 #   ./scripts/play.sh --port 8652           # a second bridge beside a running one
 #   ./scripts/play.sh --engine-only --no-coach   # no coach helper (D292), so no match launcher either
 #   ./scripts/play.sh --engine-only --no-match   # the coach helper without /match (D303)
@@ -375,7 +378,7 @@ AUTO_REVIEW=1                    # D385: 0 = --no-auto-review, passed to the coa
 HUMAN_COLLECTED_AT_STOP=0
 HUMAN_LOOP_PID=""                # D414: the every-minute collector, while play.sh runs
 AI_SEARCH=0                      # D314: --ai-search / --ai-search-ms named
-AI_PLAIN=0                       # D414: --ai-plain, Forge's own AI instead of the default search-v2
+AI_PLAIN=0                       # D414: --ai-plain, Forge's own AI instead of the default search-v3 (D539)
 BUGS_SYNC=1                      # D411: send new bug reports (var/bugs/) to pc-results at exit
 BUGS_SYNCED_AT_STOP=0
 DRAFT_ROOM=0                     # D400: the draft room, in the coach helper, on its own port
@@ -597,7 +600,7 @@ passthrough_has() {
   return 1
 }
 
-# D414: the AI seat is search-v2 unless the caller says otherwise.  --ai-plain is
+# D414: the AI seat is the search AI (search-v3, D539) unless the caller says otherwise.  --ai-plain is
 # Forge's own AI, passed as `--ai-policy plain` so a restart (D303) and a wake (D308)
 # keep it; an --ai-policy / --ai-search of the caller's own (after --, or
 # --ai-search) is left alone.  Disagreeing flags are an error, not a silent winner.
@@ -609,18 +612,18 @@ if [ "$AI_PLAIN" = "1" ]; then
     exit 1
   fi
   PASSTHROUGH+=(--ai-policy plain)
-  AI_LINE="AI policy: plain (--ai-plain: Forge's own AI; the default is search-v2, D414)"
+  AI_LINE="AI policy: plain (--ai-plain: Forge's own AI; the default is search-v3, D414, D539)"
 elif passthrough_has --ai-policy --ai-search; then
   # --ai-search / --ai-search-ms, or the caller's own after --: say what was asked.
   if [ "$AI_SEARCH" = "1" ]; then
-    AI_LINE="AI policy: search (D312-D314: outlet policy + look-ahead search; search-v2, the anytime loop, D412)"
+    AI_LINE="AI policy: search (D312-D314: outlet policy + look-ahead search; search-v3, the anytime loop with blocks left to Forge, D412, D539)"
   else
     AI_LINE="AI policy: (the --ai-policy/--ai-search after --)"
   fi
 else
   PASSTHROUGH+=(--ai-policy search)
   AI_SEARCH=1
-  AI_LINE="AI policy: search-v2 (the default, D414: outlet policy + look-ahead search, the anytime loop; --ai-plain for Forge's own AI)"
+  AI_LINE="AI policy: search-v3 (the default, D414, D539: outlet policy + look-ahead search at main-phase plays and attacks, the anytime loop, blocks left to Forge; --ai-plain for Forge's own AI)"
 fi
 deck_name() {   # the .dck's own Name=, which is what the board will print
   local n

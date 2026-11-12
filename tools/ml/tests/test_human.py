@@ -216,6 +216,9 @@ class CollectTest(unittest.TestCase):
             "human-ws-2": {"policy": "search", "version": None, "budgetMs": 3000, "config": "ms=3000,cands=6"},
             "human-ws-3": {"policy": "outlets"},
             "human-ws-4": None,   # plain Forge, or a log older than M62
+            # D539 (M82): the live default's new name is carried as written, not dropped
+            "human-ws-5": {"policy": "search", "version": "search-v3", "budgetMs": 1500,
+                           "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1"},
         }
         for gid, ai in cfgs.items():
             ls = as_person(p, gid)
@@ -229,6 +232,8 @@ class CollectTest(unittest.TestCase):
         self.assertEqual(by["human-ws-2"]["aiSearch"], {"version": None, "budgetMs": 3000, "config": "ms=3000,cands=6"})
         self.assertIsNone(by["human-ws-3"]["aiSearch"])
         self.assertIsNone(by["human-ws-4"]["aiSearch"])
+        self.assertEqual(by["human-ws-5"]["aiSearch"], {"version": "search-v3", "budgetMs": 1500,
+                                                        "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1"})
         self.assertTrue(all(e["coach"] is None for e in by.values()))   # no ForgeCoach record: unknown
 
     def _coach_doc(self, games):

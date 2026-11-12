@@ -22,7 +22,7 @@
 // line, ai-bench's format); --seeds 1,2,5 or 1-10; --mirror; --context
 // (comma list of arms); --mode plan|decision (plan, D419; decision is D418's
 // one call per engine prompt); --model, --thinking, --oracle, --no-stops (seat.mjs);
-// --ai-profile (Default); --ai-policy plain|outlets|search (plain; search is the live seat's search-v2, D412); --port (8650); --run NAME; --health-timeout S (180);
+// --ai-profile (Default); --ai-policy plain|outlets|search (plain; search is the live seat's search-v3, D412, D539); --port (8650); --run NAME; --health-timeout S (180);
 // --game-timeout S (7200); --save-prompts (seat.mjs's); --dry-run.  Everything lands in var/llm-seat/<run>/
 // (seat.mjs's files, plus bridge/<gameId>.log and schedule.json); the bridge
 // writes its own frame log to var/games/<gameId>/frames.jsonl, the one to

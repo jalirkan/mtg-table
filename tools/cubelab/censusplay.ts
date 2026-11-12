@@ -18,8 +18,9 @@
 //
 // THE PILOTS.  --policy-a / --policy-b: `plain` (default) is Forge's own AI under the Default profile
 // through Bootstrap.createAiPlayer (D107); `search` is the live search seat, built as `RecordMatch
-// --policy search` builds it (the outlet policy on, SearchConfig.parseLive(null): search-v2 at the
-// 1.5 s budget).  A search seat's row carries its game's searched and changed decisions and its mean
+// --policy search` builds it (the outlet policy on, SearchConfig.parseLive(null): the live seat's
+// version at the 1.5 s budget -- search-v2 until D539, search-v3 since, its blocks left to Forge -- so a
+// census folder whose games straddle D539 holds two different `search` pilots under one name).  A search seat's row carries its game's searched and changed decisions and its mean
 // ms per decision (search.{p,a,b}.us, as the ladder's match file counts them), and its raw counters.
 //
 // REPLAY (--replay <games.jsonl>): exactly the games listed there -- the same game numbers, deck ids

@@ -44,7 +44,7 @@ absent means an older helper — treat it as running. `"engine_start": 1`
 `"aiSearchMs": {"min":500,"max":5000,"default":1500}`: `POST /match` then takes
 `aiPolicy` and `aiSearchMs` (below). No `aiPolicies` key: an older helper — offer
 no choice and send neither key. **Since D414 the default is the search AI**
-(search-v2): `play.sh` starts it unless `--ai-plain`, so a request with no
+(search-v3 since D539; search-v2 before): `play.sh` starts it unless `--ai-plain`, so a request with no
 `aiPolicy` plays it, and ForgeCoach's pickers start on it whenever `aiPolicies`
 lists `"search"` (plain Forge one tap away).
 
@@ -80,7 +80,7 @@ ordinary **Play vs Forge** calls when `engine` is `"idle"`, then it connects to
   setup, but against that AI — `"plain"`, `"outlets"` or `"search"`, exactly as
   `/match`'s `aiPolicy`. It replaces `--ai-policy` and `--ai-search` (a search
   budget too) and **stays the last setup's**, like a profile. Absent: the last
-  setup's AI, which a bare `play.sh` starts as search-v2 (D414);
+  setup's AI, which a bare `play.sh` starts as search-v3 (D414, D539);
 - anything else (not JSON, not an object, an unknown profile or policy, a seed
   that is negative, fractional, a string, `null` or past 2^53 − 1): **400** with
   `problems`, and nothing starts.

@@ -129,7 +129,7 @@ import mtgtable.ai.SearchConfig;
  *       AI, {@link Bootstrap#createAiPlayer}, exactly as before) or
  *       {@code search}: the live search seat, {@code MtgTable --ai-policy
  *       search}'s -- D310's outlet policy and {@link SearchConfig#parseLive}'s
- *       search-v2 in front of the seat's profile, through
+ *       search-v3 (D539; search-v2 until then) in front of the seat's profile, through
  *       {@link Bootstrap#createAiSeat} (D440, watching two bots: the cube lab's
  *       {@code watch}).  Like the profile, it belongs to the DECK.  It changes
  *       nothing on the wire: the handshake names the profile, as it always
@@ -167,7 +167,7 @@ public final class RecordMatch {
 
     /** Give up rather than hang forever if the engine wedges. */
     private static final long GAME_TIMEOUT_SEC = 600L;
-    /** D440: the extra time a game with a search seat may take (search-v2 spends ~1.5 s a decision). */
+    /** D440: the extra time a game with a search seat may take (the live search spends ~1.5 s a searched decision). */
     private static final long SEARCH_TIMEOUT_SEC = 1_800L;
 
     // ==================================================================

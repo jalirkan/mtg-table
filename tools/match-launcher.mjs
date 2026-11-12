@@ -40,7 +40,7 @@
 //                 from then on), so plain Play vs Forge can pick the opponent as /match's
 //                 picker does; running already: nothing restarts, and a warning when it plays
 //                 another policy.  /health carries "engine_start_policy": 1.  A wake with no
-//                 policy plays the last setup's, which play.sh starts as search-v2 (D414).
+//                 policy plays the last setup's, which play.sh starts as search-v3 (D414, D539).
 //   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","aiPolicy","games"}}

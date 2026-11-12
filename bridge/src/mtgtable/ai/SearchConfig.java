@@ -36,7 +36,8 @@ import java.util.Locale;
  * alternative must be than Forge's own, default 20), {@code maxrounds} (stop
  * early after this many complete rounds, default 12), and {@code what} (which
  * decisions: any of {@code p} priority in our main phase, {@code a} attacks,
- * {@code b} blocks; default {@code pab}).
+ * {@code b} blocks; default {@code pab} here, and {@code pa} in the live seat
+ * since D539, {@link #LIVE_DEFAULTS}).
  *
  * <p>D350–D351's switches, each off by default (today's search unchanged) so the
  * ladder can SPRT them one at a time:
@@ -117,7 +118,8 @@ import java.util.Locale;
  * </ul>
  *
  * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
- * {@link #parseLive}, so search-v2 is unchanged unless the text names them:
+ * {@link #parseLive}, so the live seat (search-v2 then, search-v3 since D539)
+ * is unchanged unless the text names them:
  * <ul>
  * <li>{@code mull=1} -- the opening hand: at {@code mulliganKeepHand} keep is
  *     rolled out against mulligan, and at the London mulligan's bottom choice
@@ -491,28 +493,36 @@ public final class SearchConfig {
     }
 
     /**
-     * The live seat's search version (D412): what {@code MtgTable --ai-policy
-     * search} plays with no {@code --ai-search} keys.  {@code search-v1} was
-     * {@link #parse}'s defaults (D312's loop); {@code search-v2} is search-v1
-     * with {@code anytime=1}, adopted on J102's pre-registered rule.  On the AI
-     * ladder this config is the player {@code search-v1-anytime} (D388), whose
-     * name and hash stay as they are (a ladder name is permanent).
+     * The live seat's search version (D412, D539): what {@code MtgTable
+     * --ai-policy search} plays with no {@code --ai-search} keys.
+     * {@code search-v1} was {@link #parse}'s defaults (D312's loop);
+     * {@code search-v2} is search-v1 with {@code anytime=1}, adopted on J102's
+     * pre-registered rule (D412) and the live seat until D539; {@code search-v3}
+     * is search-v2 with {@code what=pa} -- priority plays and attacks searched,
+     * block declarations answered by Forge with no search -- adopted on J211's
+     * pre-registered rule and the owner's yes (D539).  On the AI ladder
+     * search-v2's config is the player {@code search-v1-anytime} (D388) and
+     * search-v3's is {@code search-v2-no-b} (D535); both names and hashes stay
+     * as they are (a ladder name is permanent).
      */
-    public static final String LIVE_VERSION = "search-v2";
+    public static final String LIVE_VERSION = "search-v3";
 
     /**
-     * The live seat's defaults on top of {@link #parse}'s (D412), prepended so a
-     * key the caller names wins: {@code --ai-search anytime=0} is search-v1's
-     * loop again.  {@link #parse} itself keeps every default as it was, because
-     * the bench, the cube lab and every ladder player's seat config are parsed
-     * by it and must keep meaning what they meant when their games were played.
+     * The live seat's defaults on top of {@link #parse}'s (D412, D539),
+     * prepended so a key the caller names wins: {@code --ai-search what=pab} is
+     * search-v2's loop again, and {@code --ai-search anytime=0,what=pab}
+     * search-v1's.  {@link #parse} itself keeps every default as it was,
+     * {@code what=pab} included, because the bench, the cube lab, the move
+     * atlas and every ladder player's seat config are parsed by it and must
+     * keep meaning what they meant when their games were played.
      */
-    public static final String LIVE_DEFAULTS = "anytime=1";
+    public static final String LIVE_DEFAULTS = "what=pa,anytime=1";
 
     /**
      * The game's AI seat's parse ({@code MtgTable --ai-search}, D314): as
-     * {@link #parse} over {@link #LIVE_DEFAULTS} (D412: the live seat runs
-     * {@link #LIVE_VERSION}, the anytime loop, unless the text says otherwise),
+     * {@link #parse} over {@link #LIVE_DEFAULTS} (D412, D539: the live seat runs
+     * {@link #LIVE_VERSION}, the anytime loop with no block search, unless the
+     * text says otherwise),
      * and the bench-only {@code oracle} is refused -- a seat that plays a
      * person never sees their hidden cards (D312, D350) -- and so are D523's
      * measurement-only {@code rollout=random} and {@code random-self}, and
