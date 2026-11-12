@@ -1,0 +1,86 @@
+==== J213 pilot3 started 2026-11-11T23:31:20-05:00 in unit lab-J213-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+{"key": "J186/s01/d9"}
+{"key": "J186/s01/d12"}
+{"key": "J186/s01/d13"}
+{"key": "J186/s01/d14"}
+{"key": "J186/s01/d15"}
+{"key": "J186/s01/d16"}
+{"key": "J186/s01/d17"}
+label-probe: forge-default (3ed453ffef1c), 3 worker(s) -> var/j213-pilot/smoke.jsonl; logs under /home/justin-a/code/lab/mtg-table/var/label-probe/smoke-forge-default
+label-probe: 7 rows of forge-default: ok 7
+label-probe: policy-outlet (e350d94649a4), 3 worker(s) -> var/j213-pilot/smoke.jsonl; logs under /home/justin-a/code/lab/mtg-table/var/label-probe/smoke-policy-outlet
+label-probe: 7 rows of policy-outlet: ok 7
+label-probe: search-v1-anytime (cdd55e02a89c), 3 worker(s) -> var/j213-pilot/smoke.jsonl; logs under /home/justin-a/code/lab/mtg-table/var/label-probe/smoke-search-v1-anytime
+label-probe: 14 rows of search-v1-anytime: ok 14
+label-probe: search-v2-rrandom4 (646d59a008f6), 3 worker(s) -> var/j213-pilot/smoke.jsonl; logs under /home/justin-a/code/lab/mtg-table/var/label-probe/smoke-search-v2-rrandom4
+label-probe: 7 rows of search-v2-rrandom4: ok 7
+{"audit": {"badOption": 0, "badRepeat": 0, "badSearched": 0, "duplicates": 0, "overTries": 0, "seedMismatch": 0, "unkeyed": 0, "unknownKey": 0, "unknownStatus": 0}, "auditBad": 0, "auditFirst": {}, "fd": {"ambiguous": 0, "askedNotFalse": 0, "bad": 0, "error": 0, "expected": 7, "extra": 0, "hashOk": 1, "mismatch": 0, "nonZero": 0, "offAtlas": 0, "ok": 7, "replayMsMean": 2186.6, "rows": 7, "searchMsMax": 0, "searchMsMean": 0, "searched": 0, "seats": 1, "unsupported": 0}, "hashes": {"forge-default": ["3ed453ffef1c"], "policy-outlet": ["e350d94649a4"], "search-v1-anytime": ["cdd55e02a89c"], "search-v2-rrandom4": ["646d59a008f6"]}, "keys": 7, "po": {"ambiguous": 0, "askedNotFalse": 0, "bad": 0, "error": 0, "expected": 7, "extra": 0, "hashOk": 1, "mismatch": 0, "nonZero": 0, "offAtlas": 0, "ok": 7, "replayMsMean": 2260.0, "rows": 7, "searchMsMax": 0, "searchMsMean": 0, "searched": 0, "seats": 1, "unsupported": 0}, "rr4": {"ambiguous": 0, "askedNotFalse": 7, "bad": 0, "error": 0, "expected": 7, "extra": 0, "hashOk": 1, "mismatch": 0, "nonZero": 0, "offAtlas": 0, "ok": 7, "replayMsMean": 3139.0, "rows": 7, "searchMsMax": 1535, "searchMsMean": 993.7, "searched": 7, "seats": 1, "unsupported": 0}, "seedChecked": 1, "v1": {"ambiguous": 0, "askedNotFalse": 14, "bad": 0, "error": 0, "expected": 14, "extra": 0, "hashOk": 1, "mismatch": 0, "nonZero": 4, "offAtlas": 0, "ok": 14, "replayMsMean": 2373.9, "rows": 14, "searchMsMax": 1527, "searchMsMean": 879.5, "searched": 14, "seats": 1, "unsupported": 0}, "written": 1}
+labels: 515 labelled decisions over 77 spines; bootstrap 200 by spine, seed 538; off-atlas is a miss
+
+search-v1-anytime (cdd55e02a89c): 6 of 515 answered (6 probed); not answered: 0 mismatch, 0 unsupported, 0 ambiguous, 0 error; 0 off-atlas; 2.00 repeats a decision; searched 100.0% of answers; repeats agree on 100.0%; 0 mixed; 0 other identity
+                       n   picks the label              picks option 0              
+  all                  6   1.0000 [1.0000, 1.0000]      0.6667 [0.6667, 0.6667]     
+  p                    3   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  a                    3   1.0000 [1.0000, 1.0000]      0.3333 [0.3333, 0.3333]     
+  b                    0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  label!=forge         2   1.0000 [1.0000, 1.0000]      0.0000 [0.0000, 0.0000]     
+  label=forge          4   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  source=round2        0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  source!=round2       6   1.0000 [1.0000, 1.0000]      0.6667 [0.6667, 0.6667]     
+  departures: 2.0 picks that are not option 0 at 2 decisions; the label at 1.0000 [1.0000, 1.0000] of them
+
+forge-default (3ed453ffef1c): 6 of 515 answered (6 probed); not answered: 0 mismatch, 0 unsupported, 0 ambiguous, 0 error; 0 off-atlas; 1.00 repeats a decision; searched 0.0% of answers; repeats agree on 100.0%; 0 mixed; 0 other identity
+                       n   picks the label              picks option 0              
+  all                  6   0.6667 [0.6667, 0.6667]      1.0000 [1.0000, 1.0000]     
+  p                    3   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  a                    3   0.3333 [0.3333, 0.3333]      1.0000 [1.0000, 1.0000]     
+  b                    0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  label!=forge         2   0.0000 [0.0000, 0.0000]      1.0000 [1.0000, 1.0000]     
+  label=forge          4   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  source=round2        0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  source!=round2       6   0.6667 [0.6667, 0.6667]      1.0000 [1.0000, 1.0000]     
+  departures: 0.0 picks that are not option 0 at 0 decisions; the label at   n/a [  n/a,   n/a] of them
+
+policy-outlet (e350d94649a4): 6 of 515 answered (6 probed); not answered: 0 mismatch, 0 unsupported, 0 ambiguous, 0 error; 0 off-atlas; 1.00 repeats a decision; searched 0.0% of answers; repeats agree on 100.0%; 0 mixed; 0 other identity
+                       n   picks the label              picks option 0              
+  all                  6   0.6667 [0.6667, 0.6667]      1.0000 [1.0000, 1.0000]     
+  p                    3   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  a                    3   0.3333 [0.3333, 0.3333]      1.0000 [1.0000, 1.0000]     
+  b                    0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  label!=forge         2   0.0000 [0.0000, 0.0000]      1.0000 [1.0000, 1.0000]     
+  label=forge          4   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  source=round2        0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  source!=round2       6   0.6667 [0.6667, 0.6667]      1.0000 [1.0000, 1.0000]     
+  departures: 0.0 picks that are not option 0 at 0 decisions; the label at   n/a [  n/a,   n/a] of them
+
+search-v2-rrandom4 (646d59a008f6): 6 of 515 answered (6 probed); not answered: 0 mismatch, 0 unsupported, 0 ambiguous, 0 error; 0 off-atlas; 1.00 repeats a decision; searched 100.0% of answers; repeats agree on 100.0%; 0 mixed; 0 other identity
+                       n   picks the label              picks option 0              
+  all                  6   0.6667 [0.6667, 0.6667]      1.0000 [1.0000, 1.0000]     
+  p                    3   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  a                    3   0.3333 [0.3333, 0.3333]      1.0000 [1.0000, 1.0000]     
+  b                    0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  label!=forge         2   0.0000 [0.0000, 0.0000]      1.0000 [1.0000, 1.0000]     
+  label=forge          4   1.0000 [1.0000, 1.0000]      1.0000 [1.0000, 1.0000]     
+  source=round2        0     n/a [  n/a,   n/a]           n/a [  n/a,   n/a]        
+  source!=round2       6   0.6667 [0.6667, 0.6667]      1.0000 [1.0000, 1.0000]     
+  departures: 0.0 picks that are not option 0 at 0 decisions; the label at   n/a [  n/a,   n/a] of them
+
+pairs: agreement with the label, A - B, over the decisions both answered
+  search-v1-anytime - forge-default: n 6, +0.3333 [+0.3333, +0.3333]
+      p                n    3, +0.0000 [+0.0000, +0.0000]
+      a                n    3, +0.6667 [+0.6667, +0.6667]
+      b                n    0,   n/a [  n/a,   n/a]
+      label!=forge     n    2, +1.0000 [+1.0000, +1.0000]
+      label=forge      n    4, +0.0000 [+0.0000, +0.0000]
+      source=round2    n    0,   n/a [  n/a,   n/a]
+      source!=round2   n    6, +0.3333 [+0.3333, +0.3333]
+  search-v1-anytime - search-v2-rrandom4: n 6, +0.3333 [+0.3333, +0.3333]
+      p                n    3, +0.0000 [+0.0000, +0.0000]
+      a                n    3, +0.6667 [+0.6667, +0.6667]
+      b                n    0,   n/a [  n/a,   n/a]
+      label!=forge     n    2, +1.0000 [+1.0000, +1.0000]
+      label=forge      n    4, +0.0000 [+0.0000, +0.0000]
+      source=round2    n    0,   n/a [  n/a,   n/a]
+      source!=round2   n    6, +0.3333 [+0.3333, +0.3333]
+{"rc": 0, "players": 4, "labelled": 515, "pairs": 2, "fdAnswered": 6, "v1Answered": 6}
+{"allHours": 2.558, "askMs": 442.3333333333335, "decisions": 605, "forgeReplayMs": 2186.5714285714284, "hours": {"forge-default": 0.066, "policy-outlet": 0.066, "search-v1-anytime": 0.237, "search-v2-a1": 0.237, "search-v2-ms750-r6": 0.217, "search-v2-no-b": 0.237, "search-v2-rmix4them-m40": 0.237, "search-v2-rrandom": 0.237, "search-v2-rrandom4": 0.237, "search-v2-rrandom4-m40": 0.237, "search-v2-t1": 0.237, "search-v2-t1-x3": 0.316}, "keptHours": 2.558, "ok": 1, "parallel": 5.6000000000000005, "predropped": [], "predroppedCount": 0, "ruleHours": 0.841, "search15ReplayMs": 2628.904761904762, "written": 1}
