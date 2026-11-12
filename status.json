@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-12T03:56:59-05:00",
- "heartbeat": "2026-11-12T03:56:59-05:00",
+ "updated": "2026-11-12T04:01:35-05:00",
+ "heartbeat": "2026-11-12T04:01:35-05:00",
  "paused": false,
  "state": "idle",
  "alerts": [
@@ -19,11 +19,11 @@
  "idleSince": "2026-11-12T02:34:11-05:00",
  "idleReason": "queue empty",
  "host": {
-  "load1": 3.71,
-  "memUsedGb": 6.1,
+  "load1": 2.11,
+  "memUsedGb": 5.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4634,
-  "pressure": 2.39,
+  "swapUsedMb": 4572,
+  "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 0,
