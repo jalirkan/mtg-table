@@ -1,0 +1,7 @@
+==== J215 pilot4 started 2026-11-12T12:36:44-05:00 in unit lab-J215-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+ok   both keys 1 window a game, B clean (a D540 counter at 0 is clean): exposed, clean, both kinds
+ok   B with search.p.instant.windows 1 in one game: not clean
+ok   A with search.p.lands.windows 1 in one game: A not lands-clean
+ok   declined 2 in 8 (exactly 0.25) is exposed, instant 1 in 8 is not, so the pair is not
+ok   A with no attack search: kindsOk 0
+{"ok":1,"cases":5,"passed":5}
