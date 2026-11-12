@@ -10,7 +10,7 @@ showed is the *Verification* paragraph, filled in after. The three hashes were c
 of the ladder's `configHash` (`tools/ai-ladder/registry.ts`), checked on three registered hashes (`cdd55e02a89c`,
 `59505e241363`, `63c35e9f7d5b`); the registry test holds them.*
 
-**Status: registered; unbuilt; unplayed. J214 plays it.**
+**Status: registered; built and self-tested on the lane (*Verification*); the full gate and the merge pending; unplayed. J214 plays it.**
 
 **2026-11-11**
 
@@ -157,7 +157,12 @@ of the ladder's `configHash` (`tools/ai-ladder/registry.ts`), checked on three r
    passing, toward keeping Forge's play; a NOT SHOWN `instant` reading is therefore weaker evidence than the other
    two arms', and a SHOWN one is not inflated by it. The ai-bench self-test (`searchCandidatesScenarios`) installs a
    forced Bolt and a forced pass on a copy at the opponent's end step, the seat's upkeep and its beginning of combat,
-   and its messages say what the copy showed after the install and at the leaf.
+   and its messages say what the copy showed after the install and at the leaf. On the pinned jar it showed, at all
+   three steps, the seat holding priority at that step after the install, the forced Bolt resolving (the Bears dead,
+   the Bolt in the graveyard) and the copy reaching the next turn's untap; after a forced pass at the opponent's end
+   step the Bolt stayed in hand and the turn ended; after a forced pass in the seat's own upkeep or beginning of
+   combat Forge cast the Bolt later in the turn itself, as expected. (The opponent's extra priority after a pass is
+   read from the source; the leaf does not show it.)
 6. **J214: three fixed 1,200-game matches** (D398: 600 mirrored pairs, no stopping rule) on the confirm set,
    `alone: yes`, in this order: `search-v3-declined` (`795daea97aaa`), `search-v3-instant` (`25ee7e76b741`),
    `search-v3-lands` (`e0b09eb7b014`), each A against B = `search-v2-no-b` (`59505e241363`, search-v3, the live seat
@@ -298,8 +303,9 @@ three.
   does not is a failure to fix, not a pass), the ladder test and the hashes.
 - **The retry guard** has no self-test of its own: no board here makes a widened pick fail to cast. The pilot's
   `search.p.<key>.retry` a game is its measure (point 11).
-- **The costs** (point 12): ms a decision for the new candidates and windows is interpolated from the recording,
-  never measured; the pilot measures it.
+- **The costs** (point 12): interpolated from the recording when written; the lane's pilot (*Verification*) put
+  each arm at 1.18 to 1.29 times search-v3's search time on its 4 ladder games, and a land window at the full 1.5 s
+  budget, more than point 12 assumed; J214's own pilot and matches measure it.
 - **That `mapSa` puts an aimed declined spell's targets on the copy** for every kind of target; the self-test holds
   one (Giant Growth on the seat's own Bears).
 - **That Forge's forced-trigger targeting behaves on the real game inside `chooseSpellAbilityToPlay`** as it does on
@@ -316,10 +322,45 @@ three.
   `atlas.json` does not say.
 - One opponent and one deck set: the confirm set's 30 deck pairs, as every search number since D398.
 
-**Verification (filled in by the coordinator after the build and gate):**
+**Verification (the lane, 2026-11-12, after J213 ended; on `bf9fe5f17`, D539's merge, with this lane on top):**
 
-*(placeholder — the build, `DecisionSelfTest`'s count and failures, the ai-bench self-test's D540 lines, the ladder
-test with the three hashes, gate step 12m, the atlas self-test and the full gate's line go here)*
+- `./tools/check-forge.sh`: the pinned jar, `3c0a7c38…8e5dd9`. `./bridge/build.sh` built at the first attempt: the
+  lint and its self-test (33 rules, 79 firing cases), javac, every build self-test; **decision self-test 472 checks, 0
+  failures** (443 before this lane, D539's Verification, plus `searchCandidates`' 29).
+- `./tools/cubelab.sh seat-identity`: **all 4 games are the golden's** (forge, search, explore, plain), so the keys-off
+  path plays as before.
+- `./tools/ai-bench.sh --selftest`: **352 checks, 0 failures.** Two of D540's scenarios failed at the first run and
+  were fixed in the test, not in the search: (1) the install at the seat's own beginning of combat threw a
+  `NullPointerException` (`Combat.initConstraints`) because `GameState` sets the step without the `Combat` object a
+  real game holds there; the scenario now gives the game one, as the attack scenarios do; (2) the first instant
+  board (Think Twice in hand at the opponent's end step) was `CantPlayAi` for Forge, so the board did not hold the
+  answer the arm needs, and the scenario said so; it is now Scavenging Ooze with green open and creatures in the
+  opponent's graveyard, the commonest empty-stack end-step play Forge made in J212's recording (67 times in 720
+  games). Every D540 scenario now shows its board first (Forge declines Giant Growth, `CantPlayAi`; Forge activates
+  the Ooze at the end step; Forge plays a land with two land names in hand) and then the arm firing
+  (`search.p.declined.windows` 1 with the Counterspell dropped, `search.p.instant.windows` 1 with 2 candidates,
+  `search.p.lands.windows` 1 with 2 candidates), and each key-off scenario counts nothing of D540's.
+- `node --test web/test/ai-ladder.test.ts` 55 of 55, `web/test/claude-md.test.ts` 5 of 5, `node tools/decisions.mjs
+  check` OK (next D541). `./tools/ai-ladder.sh list` resolves the three players at the hashes the Python
+  re-implementation gave: `search-v3-declined` 795daea97aaa, `search-v3-instant` 25ee7e76b741, `search-v3-lands`
+  e0b09eb7b014, each seat config search-v3's plus its key.
+- **The arm gate (point 11), on the lane:** per arm a 4-game ladder match against `search-v2-no-b` (`--host
+  j214-pilot`, one batch pair, 4 workers) and a 4-game recorded run against Forge Default (the confirm set's first
+  pair, seed 214000001, 4 workers):
+
+  | arm | windows, ladder / recorded (a game) | errors + timeouts | retry | B's D540 counters | searched outside the arm's window | A / B search s (ladder) |
+  |---|---|---|---|---|---|---|
+  | `declined` | 29 / 5 (7.25 / 1.25) | 0 | 0 | none | none (all 59 recorded in own main) | 50.4 / 42.6 (×1.18) |
+  | `instant` | 12 / 17 (3.0 / 4.25) | 0 | 0 | none | none on a stack (17 instant-speed, 55 own main) | 63.0 / 49.8 (×1.26) |
+  | `lands` | 10 / 11 (2.5 / 2.75) | 0 | 0 | none | none (11 land windows, 40 own main) | 53.6 / 41.7 (×1.29) |
+
+  All three pass. `declined` aimed 40 spells and dropped 64 with no legal aim over the 8 games, and changed Forge's
+  answer to an aimed spell 6 times; `instant` changed 8 of its 29 windows; `lands` 3 of 21. Both sides searched
+  priority and attacks and no block in every ladder pilot. A land window took the whole 1.5 s budget (all 11 recorded,
+  1,514 ms on average), and the recorded runs' ms by candidate count ran about 1 s at 2 candidates (4 workers) against
+  J212's 598 ms (7 workers on other decks), so point 12's seconds are low: scaled by the pilot's ratios to J211's
+  19.3 s, the arms are about 22.8, 24.4 and 24.8 s a game, about 2.3, 2.4 and 2.4 h a match by point 12's fit.
+- Not run on the lane: the full gate (the coordinator's, at the merge) and the atlas self-test.
 
 **Follow-up.** J214 plays the three matches at this lane's merge; its `report.md` carries each arm's reading, its
 exposure and its cost, and `summary.md` (the PC session) words them. A candidate's confirmation is its own job

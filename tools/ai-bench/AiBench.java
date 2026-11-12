@@ -1542,7 +1542,7 @@ public final class AiBench {
      * the Bears) is played, and the step then proceeds to the end of the turn; the forced
      * pass leaves the Bolt in hand and the turn ends too.  Each check says what it saw, so a
      * failure is a description of the engine's behaviour, not a guess.  Then, on a board where
-     * Forge's own answer at the opponent's end step is first asserted to be a play (Think Twice),
+     * Forge's own answer at the opponent's end step is first asserted to be a play (Scavenging Ooze's),
      * the search with the key on searches that window, and the key-off search never does.  Every
      * arm's scenario first asserts the board gives Forge the answer the arm needs, then requires
      * the arm to FIRE (a declined spell aimed and searched, an instant-speed window searched, a
@@ -1676,6 +1676,11 @@ public final class AiBench {
                     "aihand=Lightning Bolt", "ailibrary=Mountain;Mountain;Mountain;Mountain", "aibattlefield=Mountain");
             scenario("d540-instant-install-" + at[1], board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
                 final Game g = ai.getGame();
+                if ("COMBAT_BEGIN".equals(at[1])) {
+                    // a game that reached its beginning of combat holds a Combat (PhaseHandler makes it there);
+                    // GameState sets the step without it, and the step after would find none
+                    g.getPhaseHandler().setCombat(new forge.game.combat.Combat(ai));
+                }
                 final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
                 final forge.game.spellability.SpellAbility bolt = playOf(ai, "Lightning Bolt", (sa) -> true);
                 bolt.resetTargets();
@@ -1717,20 +1722,25 @@ public final class AiBench {
                         "D540: the real game is untouched at " + at[1]);
             });
         }
-        // a plain draw instant in hand at the opponent's end step: Forge's DrawAi holds a draw until main 2 or later
-        // (checkPhaseRestrictions at the forge-2.0.14 tag), so it is expected to cast it here
+        // Scavenging Ooze with green open and creatures in the opponent's graveyard at the opponent's end step: the
+        // commonest play Forge made at an empty-stack end step in J212's recording (67 times in 720 games). (Think
+        // Twice, the first board, was CantPlayAi there at the first build.)
         final List<String> eot = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=END_OF_TURN",
                 "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
-                "aihand=Think Twice", "ailibrary=Island;Island;Island;Island", "aibattlefield=Island;Island");
+                "humangraveyard=Hill Giant;Grizzly Bears", "ailibrary=Forest;Forest;Forest;Forest",
+                "aibattlefield=Scavenging Ooze;Forest;Forest");
         scenario("d540-instant-forge", eot, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            ai.getGame().getPhaseHandler().setPriority(ai);   // the seat is asked when the opponent has passed it priority
             final List<forge.game.spellability.SpellAbility> pick = ((PolicyControllerAi) ai.getController()).chooseSpellAbilityToPlay();
             check(pick != null && pick.size() == 1 && !pick.get(0).isLandAbility() && !pick.get(0).isManaAbility()
-                            && "Think Twice".equals(pick.get(0).getHostCard().getName()),
-                    "D540: the board: Forge's own answer at the opponent's end step is a play, Think Twice (got " + pick + ")");
+                            && "Scavenging Ooze".equals(pick.get(0).getHostCard().getName()),
+                    "D540: the board: Forge's own answer at the opponent's end step is a play, Scavenging Ooze's activation (got "
+                            + pick + ")");
         });
         scenario("d540-instant-search", eot, PolicyLobbyPlayerAi.Outlets.OFF,
                 SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,instant=1"), (ai, pol) -> {
                     final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    ai.getGame().getPhaseHandler().setPriority(ai);
                     final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
                     final Map<String, Integer> c = ctl.counts();
                     final int w = c.getOrDefault("search.p.instant.windows", 0);
@@ -1742,6 +1752,7 @@ public final class AiBench {
         scenario("d540-instant-off", eot, PolicyLobbyPlayerAi.Outlets.OFF,
                 SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p"), (ai, pol) -> {
                     final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    ai.getGame().getPhaseHandler().setPriority(ai);
                     final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
                     final Map<String, Integer> c = ctl.counts();
                     check(c.getOrDefault("search.p.considered", 0) == 0 && c.getOrDefault("search.rollouts", 0) == 0,
