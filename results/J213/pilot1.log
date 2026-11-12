@@ -1,0 +1,286 @@
+==== J213 pilot1 started 2026-11-11T23:19:22-05:00 in unit lab-J213-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+1
+lint-bridge-selftest OK: 33 rules, 79 firing cases (each fired its own rule and no other), 93 checks
+bridge lint OK (97 file(s) under bridge/src, 4 under tools/; 33 rules)
+compiling 97 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+/home/justin-a/code/lab/mtg-table/bridge/src/mtgtable/ai/LenientGameCopier.java:531: warning: [deprecation] copyCopiableCharacteristics(Card,SpellAbility,SpellAbility) in CardCopyService has been deprecated
+                    new CardCopyService(o).copyCopiableCharacteristics(out, null, null);
+                                          ^
+1 warning
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 270 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 290 frame(s) lost the race and were dropped
+OverRaceSelfTest: 3958 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:42442): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:42444): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:42456 (1 watching)
+WS CONNECT /127.0.0.1:42470 (connection #1)
+WS REFUSED /127.0.0.1:42472: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:42478 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:42478 (1 watching)
+WS DISCONNECT /127.0.0.1:42470 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:42482 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:42482 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:42498 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:46862 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:46862: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 33 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:50986: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:51000: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:51010: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:51018: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:51042: no valid pairing token
+WS SITE REFUSED /127.0.0.1:51162: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51176: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51180: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51190: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51196: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51210: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51218: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51228: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51230: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51240: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:51256: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:51266: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:51270: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:51276: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:51290: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:51294 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:51294 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:51306 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:51306 (0 watching)
+WS CONNECT /127.0.0.1:51318 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:51318 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:51330): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:51346): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:51358 (1 watching)
+WS CONNECT /127.0.0.1:36830 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:36830 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:36846 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:36846 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:37031 (/127.0.0.1:36850): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:46410: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:53890: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:53892: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:53898: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:53902: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:53912 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:53912 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:53924): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:36929 (/127.0.0.1:53928): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:44482: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:44486: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:44490: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:44504: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:44520: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:44528: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:44534: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:44542: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:44552: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:44568: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:44572: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:44584: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:44590: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:44596: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:46608: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46616: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46630: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:46662)
+TABLE SEAT 1 upgrade from /127.0.0.1:46672
+WS CONNECT /127.0.0.1:46672 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:46674
+WS SEAT 1 TAKEN OVER by /127.0.0.1:46674 (the older connection /127.0.0.1:46672 is closed 4002)
+WS CONNECT /127.0.0.1:46674 (connection #2)
+WS DISCONNECT /127.0.0.1:46674 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:46690
+WS CONNECT /127.0.0.1:46690 (connection #1)
+WS DISCONNECT /127.0.0.1:46690 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:46706: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46710: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46712: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46714: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46718: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46720: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46722: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46738: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46746: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46762: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:46782
+WS CONNECT /127.0.0.1:46782 (connection #2)
+WS DISCONNECT /127.0.0.1:46782 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+WS CONNECT /127.0.0.1:43206 (connection #1)
+WS DISCONNECT /127.0.0.1:43206 -- cancelling 0 pending ask(s)
+WS CONNECT /127.0.0.1:43222 (connection #2)
+WS DISCONNECT /127.0.0.1:43222 -- cancelling 0 pending ask(s)
+StalledGameSelfTest: 156 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 7.2 us + predict 3.1 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 132 check(s), 0 failure(s)
+grade utf8 probe: UTF-8 stdout under LC_ALL=C
+decision selftest: 434 check(s), 0 failure(s)
+distill selftest: 38 check(s), 0 failure(s)
+build OK
+{'ok': 1, 'checks': 434, 'failures': 0}
+.................................
+----------------------------------------------------------------------
+Ran 33 tests in 1.320s
+
+OK
+{'ok': 1, 'ran': 33}
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 2 worker(s)
+  [A 2/2] 854 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 3 worker(s)
+  [B 1/4] d17-random-0: 4/4 branch game(s); 898 branch games/h
+  [B 2/4] d17-forge-0: 4/4 branch game(s); 1696 branch games/h
+  [B 3/4] d0-forge-0: 4/4 branch game(s); 1529 branch games/h
+  [B 4/4] d0-random-0: 4/4 branch game(s); 1251 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (558 rows, 38 frame logs, 8 leak check(s))
+atlas phase A: 16 rollout(s) from the opening, both seats random; 0 done, 16 to play on 3 worker(s)
+  [A 16/16] 1433 games/h
+atlas: var/cubelab/atlas-selftest/g5/atlas.json and atlas.md; phase A 16 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (1274 rows, 32 frame logs, 0 leak check(s))
+atlas phase A: 6 rollout(s) from the opening, both seats random; 0 done, 6 to play on 3 worker(s)
+  [A 6/6] 1066 games/h
+atlas: var/cubelab/atlas-selftest/g6/atlas.json and atlas.md; phase A 6 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (408 rows, 12 frame logs, 0 leak check(s))
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (558 rows, 38 frame logs, 8 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 2: d2 (p, turn 5, 3 options), d31 (a, turn 25, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 4 (option 0 never stops; the Forge map on the options still running); the futility stop at 4 (D489: option 0 best or within 0; 0.5 of those played on as controls); checkpoints 2/4/6
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 3 worker(s)
+worker 2: unparked (maxWorkers 3)
+  [B 1/2] d31-random-0: 12/12 branch game(s); 2490 branch games/h
+  [B 2/3] d2-random-0: 6/6 branch game(s); 2383 branch games/h
+  [B 3/4] d31-random-2: 12/12 branch game(s); 3222 branch games/h
+  [B 4/6] d31-forge-0: 12/12 branch game(s); 4034 branch games/h
+  [B 5/6] d31-random-4: 12/12 branch game(s); 4375 branch games/h
+  [B 6/6] d2-random-2: 6/6 branch game(s); 4351 branch games/h
+  [B 7/8] d2-forge-0: 6/6 branch game(s); 3997 branch games/h
+  [B 8/8] d2-random-4: 6/6 branch game(s); 3696 branch games/h
+atlas: the checks on 2 workers took 4 s
+atlas: var/cubelab/atlas-selftest/cuts/atlas.json and atlas.md; phase A 0 game(s), phase B 72 branch game(s) at 2 decision(s); checks: clean (1750 rows, 146 frame logs, 4 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 1: d18 (p, turn 17, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 2 (option 0 never stops; the Forge map on the options still running); the futility stop at 2 (D489: option 0 best or within 0; 0.5 of those played on as controls); checkpoints 2/4
+atlas phase B: 1 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+worker 1: unparked (maxWorkers 2)
+  [B 1/1] d18-random-0: 6/6 branch game(s); 848 branch games/h
+  [B 2/2] d18-random-2: 6/6 branch game(s); 900 branch games/h
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/cuts-noforge/atlas.json and atlas.md; phase A 0 game(s), phase B 12 branch game(s) at 1 decision(s); checks: clean (578 rows, 26 frame logs, 1 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 2: d2 (p, turn 5, 3 options), d31 (a, turn 25, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 4 (option 0 never stops; the Forge map on the options still running); the futility stop at 4 (D489: option 0 best or within 0; 0 of those played on as controls); checkpoints 2/4/6
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 3 worker(s)
+worker 2: unparked (maxWorkers 3)
+  [B 1/2] d31-random-0: 12/12 branch game(s); 2562 branch games/h
+  [B 2/3] d2-random-0: 6/6 branch game(s); 2393 branch games/h
+  [B 3/4] d31-random-2: 12/12 branch game(s); 3122 branch games/h
+  [B 4/4] d2-random-2: 6/6 branch game(s); 2649 branch games/h
+  [B 5/6] d2-forge-0: 6/6 branch game(s); 2670 branch games/h
+  [B 6/6] d2-random-4: 6/6 branch game(s); 2492 branch games/h
+atlas: the checks on 2 workers took 4 s
+atlas: var/cubelab/atlas-selftest/cuts-futile/atlas.json and atlas.md; phase A 0 game(s), phase B 48 branch game(s) at 2 decision(s); checks: clean (1595 rows, 98 frame logs, 3 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (35 turns, winner A) lists 62 decision(s) of seat A; branching at 1: d30 (p, turn 19, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; checkpoints 1
+atlas phase B: 1 unit(s) to play (0 done), chunks of 1 branches, on 1 worker(s)
+  [B 1/1] d30-random-0: 3/3 branch game(s); 472 branch games/h
+atlas: var/cubelab/atlas-selftest/replay/atlas.json and atlas.md; phase A 0 game(s), phase B 3 branch game(s) at 1 decision(s); checks: clean (235 rows, 8 frame logs, 0 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (35 turns, winner A) lists 62 decision(s) of seat A; branching at 1: d30 (p, turn 19, 3 options)
+atlas phase B: the cut design (D480): --only (D524): d30 at options 0,2, list sha256 d9e846a5c99d; checkpoints 0
+atlas phase B: 1 unit(s) to play (0 done), chunks of 2 branches, on 1 worker(s)
+  [B 1/1] d30-forge-0: 4/4 branch game(s); 91 branch games/h
+atlas: var/cubelab/atlas-selftest/only/atlas.json and atlas.md; phase A 0 game(s), phase B 4 branch game(s) at 1 decision(s); checks: clean (306 rows, 10 frame logs, 1 leak check(s))
+  atlas warning: d30 option 2 `cast:5` (Fog): 1 of 2 branch game(s) were capped (forge 1 of 2): 1 x ended at the turn cap
+atlas phase B: the baseline (35 turns, winner A) lists 62 decision(s) of seat A; branching at 1: d30 (p, turn 19, 3 options)
+atlas phase B: the cut design (D480): --only (D524): d30 at options 0,2, list sha256 d9e846a5c99d; checkpoints 0
+atlas phase B: 1 unit(s) to play (0 done), chunks of 2 branches, on 1 worker(s)
+  [B 1/1] d30-forge-0: 2/2 branch game(s); 86 branch games/h
+atlas: var/cubelab/atlas-selftest/only-perturb/atlas.json and atlas.md; phase A 0 game(s), phase B 2 branch game(s) at 1 decision(s); checks: clean (91 rows, 4 frame logs, 1 leak check(s))
+  atlas warning: 1 of 1 no-leak check(s) moved on the first redealt replay but are not a leak: the fork digests agreed and the base's and the redeal's outcomes overlap on the retest, a branch Forge does not replay exactly from its seed (D529): atlas:d30:forge:o0:b0 (5 base / 5 redeal replays, 1 / 2 distinct outcomes, 1 shared)
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas: --only: d30: the baseline listed ["cast:27","pass","cast:5"], the list expected ["cast:27","pass","cast:5-not-listed"]
+atlas: --only: the baseline's listing does not match the list at 1 decision(s); no unit played (exit 4)
+atlas-selftest: OK (cuts cuts: 2 in full, 0 screened, 0 option(s) stopped, 0 futile (1 control(s), 0 branch games saved); cuts-noforge: 1 in full, 0 screened, 0 option(s) stopped, 0 futile (0 control(s), 0 branch games saved); cuts-futile: 1 in full, 0 screened, 0 option(s) stopped, 1 futile (0 control(s), 24 branch games saved); replay d30 (turn 19) replayed, 3 branch(es); only d30 options 0,2: 4 Forge row(s), replayed; the forced no-leak retest 5 / 5 replays, 1 / 1 distinct, same; the perturbed one 5 / 5 replays, 1 shared, nondeterministic; a wrong token exit 4; 16 forks, 8 no-leak checks, 38 frame logs, 558 rows; G3 12, G5 refused 0 / left out 0; pay cap 0; copies held 1; the tax pair's G5 refused 2 / left out 2; the Crypt Rats pair's G6 drew X 12 / left out 89 / paid at 0 0)
+seat-identity: forge: the same game (B in 15 turns, 57 lines, digest 78f3a94998355ea8; golden B in 15, 57 lines, 78f3a94998355ea8)
+seat-identity: search: the same game (A in 13 turns, 92 lines, digest c68c2a849b7b0d54; golden A in 13, 92 lines, c68c2a849b7b0d54)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 82d6d18c57bbd861; golden A in 18, 193 lines, 82d6d18c57bbd861)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+✔ solve: a small linear system (1.048345ms)
+✔ Bradley-Terry recovers known Elo differences with the anchor fixed at 1500 (4.429266ms)
+✔ an unbeaten player gets a finite rating, a player with no games is unrated at the prior (0.203025ms)
+✔ bootstrap over mirror blocks: intervals cover the truth and are in the Hessian's range (20.553894ms)
+✔ SPRT bounds are the Wald bounds (0.162137ms)
+✔ SPRT: a clearly stronger A is accepted (H1), a weaker one rejected (H0) (10.258352ms)
+✔ SPRT: at the H0 boundary (A = B), H1 is accepted about as rarely as alpha (593.709738ms)
+✔ SPRT: the game limit gives inconclusive; too few pairs never decide (0.257928ms)
+✔ SPRT (D373): defaults are 100 pairs and a 0.05 floor; the old 8 / 0.01 stay reachable when asked for (0.627529ms)
+✔ SPRT (D373): H0 reads "not shown >= elo1 better", never "no gain" (0.292654ms)
+✔ pairScores: two games of a block are one observation; draws drop out (0.092856ms)
+✔ grid and sample (0.229674ms)
+✔ successive halving finds the strongest of eight synthetic configs, with the same deals for all (1.719496ms)
+✔ league promotion: SPRT H1 AND non-inferior against forge-default (0.126659ms)
+✔ the Forge non-inferiority test: stated margin 30 Elo, alpha 5%, power 90% (57.30242ms)
+✔ scheduler: a new player first, against forge-default (0.433711ms)
+✔ scheduler: the anchor share, then the most informative pair (0.21679ms)
+✔ deal slots: fixed by the block number; hosts get different bases (0.133853ms)
+✔ the committed registry: anchors, hashes, an unmerged kind is unavailable, not a crash (23.27141ms)
+✔ search kind: params map onto the bench's +search syntax; defaults fill the hash (0.46482ms)
+✔ search kind, D350–D351: the new switches stay out of the hash and the seat config at their defaults (15.910884ms)
+✔ search kind, D388–D390: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys (15.706928ms)
+✔ D412: the live seat is search-v2 = search-v1 + anytime=1, which the ladder already rates as search-v1-anytime (15.851391ms)
+✔ addPlayer never overwrites (0.298224ms)
+✔ results: ai-bench lines become ladder lines; dedup across files; torn lines skipped; mirror blocks (1.837418ms)
+✔ ladder.json schema 1 and the HTML page (2.025956ms)
+✔ dev / confirm deck sets: each cube's drafts alternate by seed; the split is a function of the drafts (0.167146ms)
+✔ experiment log: a start with no end is abandoned; ends join their starts (0.149283ms)
+✔ search-eval (D354): the search with leaf=eval:<model>, pinned to the model file by its content hash (0.70244ms)
+✔ search-distill (J126): search-v2's candidates scored by the distilled model, pinned by its content hash (0.754108ms)
+✔ J126: the match tally times each side's decisions (search.<kind>.us), per kind and over p + a + b (0.493184ms)
+✔ J128 (D437): search-v2-evalleaf is search-v2 (search-v1-anytime) plus leaf=eval:<evaluator v2> and nothing else (16.305441ms)
+✔ J128 (D437): the match tally counts the evaluator's leaves and their mean cost (search.leaf.eval, .evalNs) (0.347598ms)
+✔ D468: the match tally counts rollouts the step clock ended (search.stepTimeouts and the prior's), 0 when none (0.225948ms)
+✔ D470: the match tally counts rollouts whose forced answer was unavailable (search.unavailable and the prior's), 0 when none (0.212783ms)
+✔ match (D398): the pair-score interval, in Elo too; no interval under 2 pairs (0.254352ms)
+✔ match (D398): the interval covers the truth about 95% of the time on mirrored synthetic pairs (6.398755ms)
+✔ match (D398): search counters from ai-bench lines -- searched, changed, fallbacks by reason, a game-clustered budget rate (0.484728ms)
+✔ the registry (D398): search-v1-reckless is search-v1 on Reckless.ai and nothing else (15.453709ms)
+✔ D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-anytime) plus their switches and nothing else (15.141808ms)
+✔ D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled (15.231197ms)
+✔ D517: search-v2-routlets and -ranked are search-v2 (search-v1-anytime) plus one knob; -ms750-r6 and -ms375-r3 scale its budget and round cap down (15.337859ms)
+✔ D523: search-v2-rrandom and -rrandom-self are search-v2 (search-v1-anytime) plus rollout=random / random-self (13.994315ms)
+✔ D525: search-v2-rrandom3 and -rrandom3-held are search-v2 (search-v1-anytime) plus rollout=random3 / random3-held (15.86098ms)
+✔ D527: search-v2-rrandom4 is search-v2 (search-v1-anytime) plus rollout=random4, and -m40 is it plus margin=40 (15.926273ms)
+✔ D528: search-v2-rrandom4-m60 is search-v2-rrandom4 plus margin=60, and its baseline policy-outlet is search-v2 with the search off (15.205589ms)
+✔ D530: search-v2-rrandom4-lcb-m60 and -lcb-m40 are search-v2-rrandom4-m60 and -m40 plus D350's override=lcb at z 1, and nothing else (15.194548ms)
+✔ D531: search-v2-rrandom4them-lcb-m40 is search-v2-rrandom4-lcb-m40 with rollout=random4-them, and nothing else (15.108394ms)
+✔ D532: search-v2-rrandom4them-m40 and search-v2-rrandom4them are random4-them on the margin rule at 40 and at search-v2's own 20, and nothing else (15.160093ms)
+✔ D533: search-v2-rmix4them-m40 and search-v2-rmix4them are D532's two arms with rollout=mix4-them, and differ from each other in the margin alone (15.5282ms)
+✔ D535: the six kind arms are search-v2 with what= alone changed, and no second name carries a corner's hash (15.019527ms)
+✔ D537: the three horizon arms are search-v2 with only the horizon (and, for t1-x3, the clock) changed (15.385409ms)
+✔ D417: the match tally counts each decision kind, and searched/changed stay p + a + b (0.361164ms)
+ℹ tests 53
+ℹ suites 0
+ℹ pass 53
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1099.43757
