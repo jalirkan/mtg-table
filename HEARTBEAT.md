@@ -2,18 +2,20 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-12T11:45:36-05:00
+- time: 2026-11-12T11:45:51-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
+- state: idle
 - ALERT: J212 started with 6 of 7 workers at 2026-11-11T15:21:44-05:00, as many as fit (MemAvailable 24 GB, 3.07 GB a worker); raised toward 7 as memory frees
-- running: J214 commands 4/4, 3592/3600 games, 523.4/h, ETA 2026-11-12T11:46:31-05:00, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 3.47; memory 5.9/30.5 GB, swap 4918 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 3.24; memory 5.9/30.5 GB, swap 4917 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J213 done at 2026-11-12T02:34:10-05:00: j213_done 19360 · v.tracks 0 · v.doesNotTrack 1 · v.inconclusive 0 · v.void 0 · v.notRead 0 · v.refused 0 · v.wave2 0 · v.p1.mean 0.019 · v.p1.lo -0.021 · v.p1.hi 0.06 · v.p1Unselected.mean 0.002 · v.p2.mean -0.066 · v.p2.lo -0.111 · v.p2.hi -0.021 · v.p3.mean -0.063 · v.p3.lo -0.107 · v.p3.hi -0.018 · v.droppedCount 0 · rc.errors 0 · rc.errShareMax 0
+- last finished: J214 done at 2026-11-12T11:45:50-05:00: mde.played 1200 · mde.elo 5.8 · mde.eloLo -4.6 · mde.eloHi 16.2 · min.played 1200 · min.elo 10.4 · min.eloLo -0.7 · min.eloHi 21.5 · mla.played 1200 · mla.elo 1.2 · mla.eloLo -9.6 · mla.eloHi 11.9 · v.declined.shown 0 · v.declined.smallGain 0 · v.declined.inconclusive1200 1 · v.declined.notShown 0 · v.declined.notRead 0 · v.declined.notPlayed 0 · v.instant.shown 0 · v.instant.smallGain 0 · v.instant.inconclusive1200 1 · v.instant.notShown 0 · v.instant.notRead 0 · v.instant.notPlayed 0 · v.lands.shown 0 · v.lands.smallGain 0 · v.lands.inconclusive1200 0 · v.lands.notShown 1 · v.lands.notRead 0 · v.lands.notPlayed 0 · v.declined.windowsPerGame 3.025 · v.instant.windowsPerGame 1.839 · v.lands.windowsPerGame 3.498 · v.candidates 0 · v.notRead 0
 
 ## Messages
+
+- FOLLOW-UP READY [J214@2026-11-12T11:45:50-05:00] (the runner, for the cloud session): J214 is done; write and post the template morning-read. It decides: D540 points 8 and 9, from each arm's own match line and its batch counters alone. Each match against search-v2-no-b reads exactly one of D519's four readings at 1,200 games: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 1,200 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15); a match complete in every other part (B's batch counters showing no search.p.declined., search.p.instant. or search.p.lands. counter above 0 among them) whose key fired in fewer than 0.25 search.p.<key>.windows a game played (300 at 1,200 games) is NOT READ, gets no reading, its rate is reported, and the arm is not played again without a new decision. A match incomplete for any other reason (cut short, or a B showing any such counter above 0, among them, whatever its rate) gets neither a reading nor NOT READ and is reposted alone under a new job id after its cause is found; an arm the pilot's arm gate (D540 point 11) kept out is NOT PLAYED. A SHOWN or SMALL GAIN arm is a candidate for one 4,800-game confirmation against the live seat on deals no match has played, as its own job under its own decision, before any live-seat question goes to the owner; INCONCLUSIVE AT 1,200 is information; a NOT SHOWN arm is not played again. Nothing is adopted from 1,200 games and this job never changes the live seat (D509): SearchConfig.LIVE_DEFAULTS stays what=pa,anytime=1. D540 point 13 says, as consequences and not rules, what the three readings together point at. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J213@2026-11-12T02:34:10-05:00] (the runner, for the cloud session): J213 is done; write and post the template morning-read. It decides: D538 point 9, from rule.word of the one read of point 7 alone. AGREEMENT TRACKS ELO: wave 2 is judged (the 392 decisions, about 6.5 million tokens), the set grows to about 850 labels, and a new arm's agreement is read before its ladder night beside its Elo, as a screen, never adopting or dropping an arm. AGREEMENT DOES NOT TRACK ELO: wave 2 is not bought; the labels stay as data. INCONCLUSIVE: wave 2 is bought once only when P1's point is above 0 on all 515 labels and on the 409 nobody selected and P2's or P3's point is above 0 (rule.wave2, the tool's own answer), and the same rule is read once more on every label, finally; otherwise not. VOID: a mapping fault, fixed, and the night replayed under a new job id; not a finding. NOT READ (a stop, or the tool's refusal): no reading until the cause is explained in writing. No seat, budget, wire or protocol changes here, and nothing is bought by this job: the PC session and the owner act on the word. Ledger: LEDGER.md. Delete this line once posted.
 

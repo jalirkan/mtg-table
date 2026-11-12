@@ -1,0 +1,48 @@
+{
+ "written": 1,
+ "play": [
+  "declined",
+  "instant",
+  "lands"
+ ],
+ "reasons": {},
+ "arms": {
+  "declined": {
+   "ladderGames": 4,
+   "benchGames": 4,
+   "games": 8,
+   "ladderWindows": 35,
+   "benchWindows": 4,
+   "windows": 39,
+   "errorsTimeouts": 0,
+   "retry": 0,
+   "retryPerGame": 0,
+   "pass": 1
+  },
+  "instant": {
+   "ladderGames": 4,
+   "benchGames": 4,
+   "games": 8,
+   "ladderWindows": 4,
+   "benchWindows": 15,
+   "windows": 19,
+   "errorsTimeouts": 0,
+   "retry": 0,
+   "retryPerGame": 0,
+   "pass": 1
+  },
+  "lands": {
+   "ladderGames": 4,
+   "benchGames": 4,
+   "games": 8,
+   "ladderWindows": 10,
+   "benchWindows": 13,
+   "windows": 23,
+   "errorsTimeouts": 0,
+   "retry": 0,
+   "retryPerGame": 0,
+   "pass": 1
+  }
+ },
+ "playCount": 3
+}

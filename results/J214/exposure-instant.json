@@ -1,0 +1,37 @@
+{
+ "key": "instant",
+ "run": "20261112T122358-1063310",
+ "matchPlayed": 1200,
+ "lines": 1200,
+ "games": 1200,
+ "a": {
+  "search.a.considered": 6167,
+  "search.p.considered": 21382,
+  "search.p.instant.cands": 4735,
+  "search.p.instant.windows": 2207,
+  "search.p.skipLand": 8654,
+  "search.p.instant.changed": 224
+ },
+ "b": {
+  "search.a.considered": 6176,
+  "search.p.considered": 18986,
+  "search.p.skipLand": 8603
+ },
+ "windows": 2207,
+ "cands": 4735,
+ "changed": 224,
+ "retry": 0,
+ "listed": 0,
+ "noTarget": 0,
+ "fired": 1,
+ "exposed": 1,
+ "bClean": 1,
+ "bD540": 0,
+ "kindsOk": 1,
+ "windowsPerGame": 1.839,
+ "candsPerWindow": 2.15,
+ "changedPerGame": 0.187,
+ "retryPerGame": 0,
+ "listedPerGame": 0,
+ "noTargetPerGame": 0
+}

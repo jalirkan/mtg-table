@@ -1,0 +1,39 @@
+{
+ "key": "declined",
+ "run": "20261112T101637-3019203",
+ "matchPlayed": 1200,
+ "lines": 1200,
+ "games": 1200,
+ "a": {
+  "search.a.considered": 6177,
+  "search.p.considered": 20168,
+  "search.p.declined.cands": 4222,
+  "search.p.declined.listed": 4318,
+  "search.p.declined.windows": 3630,
+  "search.p.skipLand": 8613,
+  "search.p.declined.noTarget": 5378,
+  "search.p.declined.changed": 402
+ },
+ "b": {
+  "search.a.considered": 6082,
+  "search.p.considered": 19108,
+  "search.p.skipLand": 8645
+ },
+ "windows": 3630,
+ "cands": 4222,
+ "changed": 402,
+ "retry": 0,
+ "listed": 4318,
+ "noTarget": 5378,
+ "fired": 1,
+ "exposed": 1,
+ "bClean": 1,
+ "bD540": 0,
+ "kindsOk": 1,
+ "windowsPerGame": 3.025,
+ "candsPerWindow": 1.16,
+ "changedPerGame": 0.335,
+ "retryPerGame": 0,
+ "listedPerGame": 3.598,
+ "noTargetPerGame": 4.482
+}

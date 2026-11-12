@@ -1,0 +1,162 @@
+{
+ "written": 1,
+ "files": 8,
+ "searchLogs": 4,
+ "otherLogs": 4,
+ "bad": 0,
+ "games": 4,
+ "overs": 4,
+ "bytes": 538337,
+ "decisions": 471,
+ "forcedPriority": 381,
+ "windows": {
+  "landSkip": 28,
+  "landSkipOtherLand": 21,
+  "landSkipPlay": 22,
+  "ownMainNoSearch": {
+   "n": 29,
+   "withPlay": 29
+  },
+  "ownMainStack": {
+   "n": 16,
+   "withPlay": 16
+  },
+  "ownOther": {
+   "n": 147,
+   "withPlay": 147
+  },
+  "oppTurn": {
+   "n": 175,
+   "withPlay": 175
+  },
+  "outsideOwnMain": 0,
+  "onStack": 0,
+  "noState": 0
+ },
+ "kinds": {
+  "p": {
+   "searched": 51,
+   "candidates": {
+    "2": 34,
+    "3": 10,
+    "4": 7
+   },
+   "candidatesMean": 2.471,
+   "legalMean": 3.392,
+   "legalOverConsidered": 33,
+   "roundsMean": 8.373,
+   "shortShare": 0,
+   "msMean": 710.3,
+   "horizon": {
+    "0": 51
+   },
+   "overrode": 6,
+   "fallback": {}
+  },
+  "a": {
+   "searched": 18,
+   "candidates": {
+    "2": 6,
+    "3": 1,
+    "4": 7,
+    "5": 2,
+    "6+": 2
+   },
+   "candidatesMean": 3.611,
+   "legalMean": 5.111,
+   "legalOverConsidered": 5,
+   "roundsMean": 5.389,
+   "shortShare": 0,
+   "msMean": 750.6,
+   "horizon": {
+    "0": 18
+   },
+   "overrode": 2,
+   "fallback": {}
+  },
+  "b": {
+   "searched": 0,
+   "candidates": {},
+   "candidatesMean": null,
+   "legalMean": null,
+   "legalOverConsidered": 0,
+   "roundsMean": null,
+   "shortShare": null,
+   "msMean": null,
+   "horizon": {},
+   "overrode": 0,
+   "fallback": {}
+  }
+ },
+ "classes": {
+  "land": {
+   "n": 0,
+   "candidates": {},
+   "candidatesMean": null,
+   "msMean": null,
+   "overrode": 0
+  },
+  "ownMain": {
+   "n": 51,
+   "candidates": {
+    "2": 34,
+    "3": 10,
+    "4": 7
+   },
+   "candidatesMean": 2.471,
+   "msMean": 710.3,
+   "overrode": 6
+  },
+  "instant": {
+   "n": 0,
+   "candidates": {},
+   "candidatesMean": null,
+   "msMean": null,
+   "overrode": 0
+  }
+ },
+ "msByCands": {
+  "2": {
+   "n": 34,
+   "msMean": 580.4
+  },
+  "3": {
+   "n": 10,
+   "msMean": 929
+  },
+  "4": {
+   "n": 7,
+   "msMean": 1028.7
+  }
+ },
+ "bench": {
+  "lines": 4,
+  "errors": 0,
+  "timeouts": 0,
+  "counts": {
+   "search.p.declined.listed": 4,
+   "search.p.declined.noTarget": 23,
+   "search.p.declined.cands": 4,
+   "search.p.declined.changed": 2,
+   "search.p.declined.windows": 4
+  }
+ },
+ "pSearched": 51,
+ "aSearched": 18,
+ "bSearched": 0,
+ "landSearched": 0,
+ "ownMainSearched": 51,
+ "instantSearched": 0,
+ "outsideOwnMain": 0,
+ "onStack": 0,
+ "noState": 0,
+ "benchGames": 4,
+ "benchErrors": 0,
+ "benchTimeouts": 0,
+ "declinedWindows": 4,
+ "instantWindows": 0,
+ "landsWindows": 0,
+ "declinedRetry": 0,
+ "instantRetry": 0,
+ "landsRetry": 0
+}

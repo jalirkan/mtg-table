@@ -1,0 +1,37 @@
+{
+ "key": "lands",
+ "run": "20261112T143251-3403686",
+ "matchPlayed": 1200,
+ "lines": 1200,
+ "games": 1200,
+ "a": {
+  "search.a.considered": 6160,
+  "search.p.considered": 23207,
+  "search.p.lands.cands": 9184,
+  "search.p.lands.windows": 4198,
+  "search.p.skipLand": 4416,
+  "search.p.lands.changed": 343
+ },
+ "b": {
+  "search.a.considered": 6077,
+  "search.p.considered": 18801,
+  "search.p.skipLand": 8590
+ },
+ "windows": 4198,
+ "cands": 9184,
+ "changed": 343,
+ "retry": 0,
+ "listed": 0,
+ "noTarget": 0,
+ "fired": 1,
+ "exposed": 1,
+ "bClean": 1,
+ "bD540": 0,
+ "kindsOk": 1,
+ "windowsPerGame": 3.498,
+ "candsPerWindow": 2.19,
+ "changedPerGame": 0.286,
+ "retryPerGame": 0,
+ "listedPerGame": 0,
+ "noTargetPerGame": 0
+}
