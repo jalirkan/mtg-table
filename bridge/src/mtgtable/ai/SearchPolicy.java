@@ -780,7 +780,7 @@ public final class SearchPolicy {
         return false;
     }
 
-    /** D540: a land play's choice key, its card's name and the face it is played as (a two-faced land offers both). */
+    /** D540: a land play's choice key, its card's name and the face this ability plays (a card's first land ability only). */
     private static String landFace(final SpellAbility la) {
         return la.getHostCard().getName() + "|" + la.getCardStateName();
     }

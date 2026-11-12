@@ -133,13 +133,19 @@ of the ladder's `configHash` (`tools/ai-ladder/registry.ts`), checked on three r
    that is not a land ability and not a mana ability. The window is searched as a main-phase one is: Forge's play,
    pass and the alternatives, rolled out to the end of that turn. The listing's engine calls there (`alternatives`,
    its `canPlaySa` calls) run inside `Decisions.quiet`: B searches nothing in those windows and draws nothing from the
-   real game's random stream there, so the arm may not either. Today's main-phase calls are not wrapped, so the
-   keys-off path is unchanged. Counters: `search.p.instant.windows`, `.cands`, `.changed`, `.retry`. The stack windows
+   real game's random stream there, so the arm may not either. `quiet` holds the random stream and nothing else: a
+   `canPlaySa` call there can still write Forge's AI memory, in a window where B makes no such call, so the arm's
+   later Forge answers can differ from B's for that reason as well as for its picks (the compiled lane's review,
+   2026-11-12; not measured). Today's main-phase calls are not wrapped, so the keys-off path is unchanged. Counters: `search.p.instant.windows`, `.cands`, `.changed`, `.retry`. The stack windows
    wait (Rejected).
 4. **`lands=1`: the land drop.** Where Forge's answer is one land and a land of another name is legal
    (`Decisions.landPlays`, D466's one listing, read inside `Decisions.quiet`), Forge's land is rolled out against the
-   first land of each other name and face (a land's name with the face it is played as, `getCardStateName`, so a
-   two-faced land offers both faces), up to `cands`; no pass, no holding the land. With no other name it is Forge's drop, unsearched, as before.
+   first land ability of each other land card, one for each name and face (a land's name with the face that ability
+   plays, `getCardStateName`), up to `cands`; no pass, no holding the land. **A two-faced land is offered by its first
+   land ability only**, never by its other face (corrected 2026-11-12 on the compiled lane's review: this point said
+   such a land offers both faces, and the code takes `las.get(0)` of each card; the arm is left as built, because a
+   back face played through the copy install is untested here and the confirm set's decks hold few such lands).
+   With no other name it is Forge's drop, unsearched, as before.
    Counters: `search.p.lands.windows`, `.cands`, `.changed`, `.retry`; such a window also counts
    `search.p.considered`, and its override `search.p.changed.toOther`.
 5. **What the install does at an instant-speed step, read and tested.** A priority candidate is installed with
@@ -205,7 +211,11 @@ of the ladder's `configHash` (`tools/ai-ladder/registry.ts`), checked on three r
 10. **Beside each reading, as description only.** Each side's searched decisions by kind and ms a searched decision;
     search seconds a game; the arm's exposure, a game: its windows, its candidates a window, and its changes (and for
     `declined`, the aimed spells listed and dropped); priority overrides by direction a priority decision; the land
-    windows left to Forge a game.
+    windows left to Forge a game; and **`search.p.<key>.retry` a game**. A retry is a widened pick that did not
+    happen, and with `declined` it is likely a card left behind: the arm lists spells Forge refused as
+    `CostNotAcceptable` too, a payment the seat then refuses leaves the card in the stack zone (D466), and the
+    ladder's seat has no `putBack` (the explorer's random seat alone does). Each one counts against the arm in its
+    own match and is not corrected for.
 11. **The pilot, before the matches** (the *unverified* list below, measured): the build, the decision self-test
     and the ai-bench self-test with D540's scenarios passing; the three players at their hashes and seat configs;
     a 4-game ladder match per arm against `search-v2-no-b` in pilot folders under another host (both sides search
@@ -297,10 +307,16 @@ three.
 
 **What is unverified.**
 
-- **Everything in this lane is uncompiled and untested** (J213 held the machine): the three keys, the search's
-  branches, the retry guard, `DecisionSelfTest.searchCandidates` (29 checks), the ai-bench scenarios (each of which
-  first asserts that its board gives Forge the answer the arm needs, then requires the arm to fire: a board that
-  does not is a failure to fix, not a pass), the ladder test and the hashes.
+- *(Was: everything in this lane is uncompiled and untested. No longer: the lane was built and self-tested on
+  2026-11-12, Verification below. What stays unverified is what follows.)*
+- **A declined spell the search aims and does not pick keeps the targets the aim wrote.** They are checked for
+  staleness before they are trusted again (point 2) and never restored to what they were, as the explorer's
+  `restoreChoices` does (D485); what Forge's own later look at that spell does with them is unmeasured.
+- **`partValid` does not refuse a divided or cross-constrained target part** (divided damage, "another target"),
+  which the explorer's staleness test does: an aimed spell of that kind is trusted on its count, its candidates and
+  `canTarget` alone.
+- **A refused payment on a widened pick strands the card** (point 10): no board here produces one, and the pilot
+  saw no retry in 24 games.
 - **The retry guard** has no self-test of its own: no board here makes a widened pick fail to cast. The pilot's
   `search.p.<key>.retry` a game is its measure (point 11).
 - **The costs** (point 12): interpolated from the recording when written; the lane's pilot (*Verification*) put
@@ -360,7 +376,17 @@ three.
   1,514 ms on average), and the recorded runs' ms by candidate count ran about 1 s at 2 candidates (4 workers) against
   J212's 598 ms (7 workers on other decks), so point 12's seconds are low: scaled by the pilot's ratios to J211's
   19.3 s, the arms are about 22.8, 24.4 and 24.8 s a game, about 2.3, 2.4 and 2.4 h a match by point 12's fit.
-- Not run on the lane: the full gate (the coordinator's, at the merge) and the atlas self-test.
+- Not run on the lane: the full gate (the coordinator's, at the merge; its line is in the merge commit's message)
+  and the atlas self-test.
+- **The compiled lane's independent review (2026-11-12): merge after fixes.** It found the keys-off path identical,
+  the two sides' budgets fair, the thread use sound, the self-test boards honest and the pilot's numbers as
+  written. Its findings, each settled in text, no line of the search changed: point 4 claimed a two-faced land
+  offers both faces and the code offers a card's first land ability (point 4 and the method's comment corrected);
+  a refused payment on a widened pick strands the card (point 10 now reports the retries and says what they are);
+  the targets an aim leaves on an unpicked spell are never restored, and `partValid` skips the explorer's divided-part
+  refusal (both in *What is unverified*); the instant arm's listing can write Forge's AI memory where B lists
+  nothing (point 3); and the J214 draft contradicted point 8 in two places and did not cover a match cut short and
+  under-exposed at once (the job as posted follows point 8).
 
 **Follow-up.** J214 plays the three matches at this lane's merge; its `report.md` carries each arm's reading, its
 exposure and its cost, and `summary.md` (the PC session) words them. A candidate's confirmation is its own job

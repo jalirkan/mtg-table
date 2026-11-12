@@ -11545,8 +11545,8 @@ It closes the cube lab's 54 ([the list](#fu-cube-lab)) and adds no follow-up.
 <a id="d540-search-candidates"></a>
 ## What the search considers: declined casts, instant-speed windows and the land drop (2026-11-11, D540)
 
-**Status: built and self-tested on the lane (D540's *Verification*); the full gate and the merge pending; unplayed:
-J214 plays it.** Branch `pc/search-candidates` off `pc/live-seat-no-block` `57283de35`,
+**Status: built, self-tested and reviewed on the lane (D540's *Verification*); merged with the full gate's line in
+the merge commit's message; unplayed: J214 plays it.** Branch `pc/search-candidates` off `pc/live-seat-no-block` `57283de35`,
 written while J213 held the machine alone: no Java, build or test was run beside it.
 `docs/decisions/D540-search-candidates.md` is the decision.
 
