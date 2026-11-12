@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-12T05:07:20-05:00",
- "heartbeat": "2026-11-12T05:07:20-05:00",
+ "updated": "2026-11-12T05:08:15-05:00",
+ "heartbeat": "2026-11-12T05:08:15-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,8 +19,8 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.96,
-  "memUsedGb": 6.2,
+  "load1": 3.74,
+  "memUsedGb": 6,
   "memTotalGb": 30.5,
   "swapUsedMb": 4490,
   "pressure": 0,
@@ -36,9 +36,9 @@
    "id": "J214",
    "title": "What the search considers (D540): three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) of search-v3 with one widening of its priority search against search-v2-no-b (search-v3, the live seat since D539), each in a ladder folder of its own under --host j214 on blocks 416,900,000-416,900,149 -- search-v3-declined (castable spells Forge declines, aimed by Forge's own targeting), search-v3-instant (the empty-stack instant-speed windows where Forge plays, either turn), search-v3-lands (Forge's land drop against each other-named land) -- each read by D519's four readings at 1,200 games with D537's completeness rule and D540's exposure condition, pre-registered in D540. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "pilot 1/7",
+   "phase": "pilot 2/7",
    "started": "2026-11-12T05:06:55-05:00",
-   "elapsed": 25,
+   "elapsed": 80,
    "done": 0,
    "total": 3600,
    "unit": "games",
@@ -84,14 +84,14 @@
     "v.lands.notPlayed": 0,
     "v.candidates": -1,
     "v.notRead": -1,
-    "elapsed_s": 0,
-    "j214_err": 0,
-    "j214_games": 0,
-    "mde.errors": 0,
-    "mde.hi": 0,
-    "mde.lo": 0,
-    "mde.score": 0,
-    "mde.timeouts": 0
+    "arms.playCount": 0,
+    "arms.written": 0,
+    "ast.ok": 0,
+    "dst.checks": 472,
+    "dst.failures": 0,
+    "dst.ok": 1,
+    "elapsed_s": 70,
+    "est.cases": 0
    },
    "liveHeadline": [
     "mde.played",
@@ -130,7 +130,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J214-pilot1"
+   "detail": "lab-J214-pilot2"
   }
  ],
  "queue": [],
