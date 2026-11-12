@@ -1,7 +1,7 @@
 running
 runner: forgecoach-runner 5876b554
 started: 2026-11-11T23:18:57-05:00
-phase: pilot 2/3
+phase: pilot 3/3
 mtg-table: 31daf3e
 workers: 3
 peak_worker_rss_gb: 1.14

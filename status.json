@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-11T23:31:07-05:00",
- "heartbeat": "2026-11-11T23:31:07-05:00",
+ "updated": "2026-11-11T23:31:21-05:00",
+ "heartbeat": "2026-11-11T23:31:21-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,8 +19,8 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.29,
-  "memUsedGb": 7.1,
+  "load1": 6.19,
+  "memUsedGb": 6.5,
   "memTotalGb": 30.5,
   "swapUsedMb": 4115,
   "pressure": 0,
@@ -36,9 +36,9 @@
    "id": "J213",
    "title": "The label probe (D538, no play change): at the 605 judged move-atlas decisions (515 with a label two blind judges agreed on), which option each of twelve ladder players picks there -- forge-default and policy-outlet once, search-v1-anytime, search-v2-rrandom, search-v2-rrandom4 and seven more search players three times each, --seed 538, one fresh rows file a player -- then D538's one pre-registered read, agreement.py --rule d538 over the five rule seats' rows, whose rule.word is the verdict: AGREEMENT TRACKS ELO, AGREEMENT DOES NOT TRACK ELO or INCONCLUSIVE (VOID or NOT READ when point 6's stops fire, NOT READ (refused) when the tool refuses the rows); point 8's other reads beside it, deciding nothing. This job changes no seat and buys nothing",
    "cpu": "heavy",
-   "phase": "pilot 2/3",
+   "phase": "pilot 3/3",
    "started": "2026-11-11T23:18:57-05:00",
-   "elapsed": 729,
+   "elapsed": 744,
    "done": 0,
    "total": 19360,
    "unit": "replays",
@@ -109,7 +109,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J213-pilot2"
+   "detail": "lab-J213-pilot3"
   }
  ],
  "queue": [],
