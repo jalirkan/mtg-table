@@ -1,0 +1,41 @@
+==== J212 run5 started 2026-11-11T22:07:38-05:00 in unit lab-J212-run5, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+ai-bench: run j212-rec, 7 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j212-rec
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J212.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+ai-bench: shard 3 starts in slot 3
+ai-bench: shard 4 starts in slot 4
+ai-bench: shard 5 starts in slot 4
+ai-bench: shard 6 starts in slot 3
+== Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1 vs Default
+  games 720: A 437, B 283, draws 0 (timeouts 0, engine errors 0)
+  A win rate 60.7% of 720 decisive  (95% Wilson CI 57.1-64.2%)
+  focus deck (first of each pair) win rate 53.8% of 720  (95% CI 50.1-57.4%)
+  game time mean 21.6 s, median 18.6 s, max 166.5 s; turns mean 18.2; AI eval timeouts 15 (0.02/game)
+  A vs the known 50%: 60.7% over 360 deal(s) (360 mirrored, both sides played), 95% CI 57.7-63.7%, p = 0.000 (+75 Elo, CI +54 to +98)
+  RemAIDeck cards left in hand at game end: A 91, B 233
+  A counters:     {activate.Goblin Bombardment=129, activate.Priest of Forgotten Gods=4, activate.Woe Strider=22, cast.Blood Artist=2, cast.Cauldron Familiar=13, cast.Deadly Dispute=26, cast.Goblin Bombardment=31, cast.Grim Haruspex=9, cast.Priest of Forgotten Gods=7, cast.Woe Strider=20, forge.outletActivation=6, opportunity.CAST_OUTLET=29, opportunity.COMBAT=36, opportunity.FODDER=12, opportunity.LETHAL=88, opportunity.THREATENED=16, policy.CAST_OUTLET=29, policy.COMBAT=36, policy.FODDER=12, policy.LETHAL=88, policy.THREATENED=16, search.a.changed=558, search.a.considered=3977, search.a.ms=3160976, search.a.us=3162975850, search.anytime.noAlternatives=2, search.anytime.pruned=4260, search.anytime.retired=20073, search.anytime.short=373, search.b.changed=166, search.b.considered=1161, search.b.ms=879809, search.b.us=880381134, search.candidateUnmappable=13, search.copyUs=974888299, search.exileLinksLost=945, search.fallback.budget=73, search.fallback.unmappable=25, search.oppFaceDownDecisions=58, search.p.changed=2324, search.p.changed.fromPass=927, search.p.changed.toOther=825, search.p.changed.toPass=572, search.p.considered=11939, search.p.ms=9616886, search.p.skipLand=5384, search.p.us=9622870008, search.playUs=12098975480, search.rollouts=284598, search.rounds=109672, search.standInCards=14206, search.standInDecisions=11382}
+  B counters:     {activate.Priest of Forgotten Gods=7, activate.Woe Strider=7, cast.Blood Artist=2, cast.Cauldron Familiar=10, cast.Deadly Dispute=16, cast.Grim Haruspex=11, cast.Priest of Forgotten Gods=8, cast.Woe Strider=19, forge.outletActivation=11}
+  focus counters: {activate.Goblin Bombardment=122, activate.Woe Strider=15, cast.Cauldron Familiar=9, cast.Deadly Dispute=42, cast.Goblin Bombardment=26, cast.Grim Haruspex=12, cast.Woe Strider=23, forge.outletActivation=11, opportunity.CAST_OUTLET=25, opportunity.COMBAT=26, opportunity.FODDER=4, opportunity.LETHAL=88, opportunity.THREATENED=11, policy.CAST_OUTLET=25, policy.COMBAT=26, policy.FODDER=4, policy.LETHAL=88, policy.THREATENED=11, search.a.changed=277, search.a.considered=1925, search.a.ms=1521892, search.a.us=1522863364, search.anytime.noAlternatives=2, search.anytime.pruned=2028, search.anytime.retired=9901, search.anytime.short=160, search.b.changed=69, search.b.considered=534, search.b.ms=395648, search.b.us=395908820, search.candidateUnmappable=6, search.copyUs=474805701, search.exileLinksLost=359, search.fallback.budget=23, search.fallback.unmappable=3, search.oppFaceDownDecisions=21, search.p.changed=1127, search.p.changed.fromPass=474, search.p.changed.toOther=394, search.p.changed.toPass=259, search.p.considered=5789, search.p.ms=4665573, search.p.skipLand=2694, search.p.us=4668493518, search.playUs=5845024265, search.rollouts=138239, search.rounds=53169, search.standInCards=6851, search.standInDecisions=5557}
+{"written":1,"games":720,"files":1440,"bad":0,"pSearched":11939,"aSearched":3977,"bSearched":1161,"rc":0}
+
+## The recording (D537 point 10): search-v2 against Forge Default, its own decision records (information only)
+
+ai-bench exit 0; 1440 logs, 720 of the search seat (games), 720 of Forge's, 0 unreadable; 720 game ends; 77 KiB a log; 80908 priority, attack and block records of the search seat; 82071 forced priority passes (counted, never recorded).
+
+| kind | searched | candidates a decision (1..6+) | mean | legal options a decision | legal > considered | rollouts a candidate: Forge / alternatives / all | complete rounds | fewer than 2 | ms | horizon | overrode | fallbacks | sigma_d n | sigma_d p10 / p25 / median / p75 / p90 | mean | zero | nonzero median / p90 | over 1,000 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| p | 11939 | 0 / 5983 / 3422 / 1620 / 591 / 323 | 2.815 | 4.197 | 8043 (29 listings a shortlist) | 7.279 / 5.462 / 6.108 | 7.129 | 0.031 | 805.5 | {"0":11939} | 2324 | {"unmappable":25,"budget":66} | 20560 | 0 / 0 / 0 / 17.3 / 76.2 | 337 | 14459 | 54 / 148.4 | 135 |
+| a | 3977 | 0 / 1390 / 246 / 699 / 603 / 1039 | 3.913 | 10.318 | 1920 (292 listings a shortlist) | 4.761 / 3.578 / 3.88 | 4.614 | 0.041 | 794.8 | {"0":3977} | 558 | {"budget":4} | 10560 | 0 / 0 / 0 / 0 / 48 | 681 | 8525 | 52 / 225.3 | 143 |
+| b | 1161 | 0 / 484 / 187 / 167 / 101 / 222 | 3.475 | 10.164 | 742 (153 listings a shortlist) | 5.454 / 4.397 / 4.701 | 5.343 | 0.017 | 757.8 | {"0":1161} | 166 | {"budget":3} | 2724 | 0 / 0 / 0 / 24.9 / 97.9 | 1141.9 | 1825 | 61.1 / 261.9 | 69 |
+
+Priority windows the search did not search (recorded windows only: a window with one legal answer is a forced pass, counted above and never recorded):
+- its own main phase, empty stack, Forge played a land (skipped by the search): 5384; with another land among the legal options 3506 (65.1%), with a castable non-mana play 4057 (75.4%), with either 5212 (96.8%);
+- its own main phase, empty stack, no land and no search (the outlet policy, or no alternative Forge's per-card AI accepts): 4122 (with a legal non-mana play 3931, 95.4%);
+- its own main phase with a non-empty stack: 4970 (with a legal non-mana play 4970, 100.0%);
+- its own turn outside the main phases: 26377 (with a legal non-mana play 26377, 100.0%);
+- the opponent's turn: 22962 (with a legal non-mana play 22962, 100.0%);
+- searched priority decisions outside its own main phase with an empty stack (expected 0): 0.
+
+Not in the records, so not reported: the paired-round count itself (sigma_d takes n, Forge's answer being rolled first in every round; a round where Forge's own rollout threw is not marked), per-round leaves, rollouts by kind. sigma_d is in leaf points; a rollout that ends the game scores +-(100,000 - 100 x turn), which is what the over-1,000 column counts.

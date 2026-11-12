@@ -1,0 +1,166 @@
+{
+ "written": 1,
+ "files": 1440,
+ "searchLogs": 720,
+ "otherLogs": 720,
+ "bad": 0,
+ "games": 720,
+ "overs": 720,
+ "bytes": 112890314,
+ "kbPerSearchLog": 77,
+ "decisions": 80908,
+ "forcedPriority": 82071,
+ "windows": {
+  "landSkip": 5384,
+  "landSkipOtherLand": 3506,
+  "landSkipPlay": 4057,
+  "landSkipEither": 5212,
+  "ownMainNoSearch": {
+   "n": 4122,
+   "withPlay": 3931
+  },
+  "ownMainStack": {
+   "n": 4970,
+   "withPlay": 4970
+  },
+  "ownOther": {
+   "n": 26377,
+   "withPlay": 26377
+  },
+  "oppTurn": {
+   "n": 22962,
+   "withPlay": 22962
+  },
+  "searchedOffMain": 0
+ },
+ "kinds": {
+  "p": {
+   "searched": 11939,
+   "candidates": {
+    "2": 5983,
+    "3": 3422,
+    "4": 1620,
+    "5": 591,
+    "6+": 323
+   },
+   "candidatesMean": 2.815,
+   "legalMean": 4.197,
+   "legalOverConsidered": 8043,
+   "incompleteListings": 29,
+   "roundsMean": 7.129,
+   "shortShare": 0.031,
+   "playoutsMean": 17.191,
+   "msMean": 805.5,
+   "horizon": {
+    "0": 11939
+   },
+   "overrode": 2324,
+   "fallback": {
+    "unmappable": 25,
+    "budget": 66
+   },
+   "nForgeMean": 7.279,
+   "nAltMean": 5.462,
+   "nMean": 6.108,
+   "sigmaN": 20560,
+   "sigmaMean": 337,
+   "sigmaP10": 0,
+   "sigmaP25": 0,
+   "sigmaMedian": 0,
+   "sigmaP75": 17.3,
+   "sigmaP90": 76.2,
+   "sigmaZero": 14459,
+   "sigmaNonzeroMedian": 54,
+   "sigmaNonzeroP90": 148.4,
+   "sigmaOver1000": 135
+  },
+  "a": {
+   "searched": 3977,
+   "candidates": {
+    "2": 1390,
+    "3": 246,
+    "4": 699,
+    "5": 603,
+    "6+": 1039
+   },
+   "candidatesMean": 3.913,
+   "legalMean": 10.318,
+   "legalOverConsidered": 1920,
+   "incompleteListings": 292,
+   "roundsMean": 4.614,
+   "shortShare": 0.041,
+   "playoutsMean": 15.185,
+   "msMean": 794.8,
+   "horizon": {
+    "0": 3977
+   },
+   "overrode": 558,
+   "fallback": {
+    "budget": 4
+   },
+   "nForgeMean": 4.761,
+   "nAltMean": 3.578,
+   "nMean": 3.88,
+   "sigmaN": 10560,
+   "sigmaMean": 681,
+   "sigmaP10": 0,
+   "sigmaP25": 0,
+   "sigmaMedian": 0,
+   "sigmaP75": 0,
+   "sigmaP90": 48,
+   "sigmaZero": 8525,
+   "sigmaNonzeroMedian": 52,
+   "sigmaNonzeroP90": 225.3,
+   "sigmaOver1000": 143
+  },
+  "b": {
+   "searched": 1161,
+   "candidates": {
+    "2": 484,
+    "3": 187,
+    "4": 167,
+    "5": 101,
+    "6+": 222
+   },
+   "candidatesMean": 3.475,
+   "legalMean": 10.164,
+   "legalOverConsidered": 742,
+   "incompleteListings": 153,
+   "roundsMean": 5.343,
+   "shortShare": 0.017,
+   "playoutsMean": 16.334,
+   "msMean": 757.8,
+   "horizon": {
+    "0": 1161
+   },
+   "overrode": 166,
+   "fallback": {
+    "budget": 3
+   },
+   "nForgeMean": 5.454,
+   "nAltMean": 4.397,
+   "nMean": 4.701,
+   "sigmaN": 2724,
+   "sigmaMean": 1141.9,
+   "sigmaP10": 0,
+   "sigmaP25": 0,
+   "sigmaMedian": 0,
+   "sigmaP75": 24.9,
+   "sigmaP90": 97.9,
+   "sigmaZero": 1825,
+   "sigmaNonzeroMedian": 61.1,
+   "sigmaNonzeroP90": 261.9,
+   "sigmaOver1000": 69
+  }
+ },
+ "pSearched": 11939,
+ "aSearched": 3977,
+ "bSearched": 1161,
+ "pH0": 11939,
+ "pH1": 0,
+ "aH0": 3977,
+ "aH1": 0,
+ "bH0": 1161,
+ "bH1": 0,
+ "hOther": 0
+}
