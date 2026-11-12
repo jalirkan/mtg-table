@@ -1296,6 +1296,37 @@ test('D540: the three candidate arms are search-v3 (search-v2-no-b) with one key
   assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
 });
 
+test('D541: search-v3-declined-instant is search-v3-declined with instant=on and nothing else, at its own hash', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const V3CFG = 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1';
+  const decRaw = raw.players.find((p) => p.name === 'search-v3-declined')!;
+  const v3raw = raw.players.find((p) => p.name === 'search-v2-no-b')!;
+  const xr = raw.players.find((p) => p.name === 'search-v3-declined-instant')!;
+  const x = by.get('search-v3-declined-instant');
+  assert.ok(x?.cfg, 'search-v3-declined-instant is registered and playable');
+  assert.equal(xr.kind, v3raw.kind);
+  // the hash was read from the ladder itself (ai-ladder.sh list on the lane), not re-implemented; this test holds it
+  assert.deepEqual(xr.params, { ...decRaw.params, instant: 'on' }, "its params are search-v3-declined's with instant=on");
+  assert.deepEqual(xr.params, { ...v3raw.params, declined: 'on', instant: 'on' }, "and search-v2-no-b's with the two keys on");
+  const rest: Record<string, unknown> = { ...x!.resolved };
+  delete rest.declined;
+  delete rest.instant;
+  assert.deepEqual(rest, by.get('search-v2-no-b')!.resolved, "every other resolved param is search-v2-no-b's");
+  assert.ok(!('lands' in xr.params) && x!.resolved.lands !== 'on', 'lands stays off (J214 read it NOT SHOWN)');
+  assert.equal(x!.cfg, `${V3CFG},declined=1,instant=1`, "its seat config is search-v3's plus declined=1,instant=1");
+  assert.equal(x!.hash, 'af6771947a25', "search-v3-declined-instant's config hash (D541)");
+  assert.equal(reg.filter((y) => y.hash === 'af6771947a25').length, 1, 'one registered player has the hash af6771947a25');
+  assert.match(xr.note ?? '', /D541/);
+  assert.match(xr.note ?? '', /never the live seat/);
+  // the players it is built from keep their hashes
+  assert.equal(by.get('search-v2-no-b')!.hash, '59505e241363');
+  assert.equal(by.get('search-v3-declined')!.hash, '795daea97aaa');
+  assert.equal(by.get('search-v3-instant')!.hash, '25ee7e76b741');
+  assert.equal(by.get('search-v3-lands')!.hash, 'e0b09eb7b014');
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
