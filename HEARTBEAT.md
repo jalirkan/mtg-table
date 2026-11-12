@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-12T04:38:10-05:00
+- time: 2026-11-12T04:42:47-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: idle
 - ALERT: J212 started with 6 of 7 workers at 2026-11-11T15:21:44-05:00, as many as fit (MemAvailable 24 GB, 3.07 GB a worker); raised toward 7 as memory frees
 - running: nothing
 - cores: 0 of 14 in use (the running jobs' widths; 16 threads)
-- load: 2.11; memory 5.7/30.5 GB, swap 4514 MB, pressure 0% (lab budget 23.4 GB)
+- load: 2.13; memory 5.5/30.5 GB, swap 4512 MB, pressure 0.01% (lab budget 23.4 GB)
 - queue: empty
 - waiting: J214 (the job file has errors: public_decides: "Whether the search AI is stronger when it also looks at spells Forge rejects, at instant speed, or at which land to play" may hold only letters, digits, spaces and , : ; ( ) + % ~ # & - (80 at most))
 - last finished: J213 done at 2026-11-12T02:34:10-05:00: j213_done 19360 · v.tracks 0 · v.doesNotTrack 1 · v.inconclusive 0 · v.void 0 · v.notRead 0 · v.refused 0 · v.wave2 0 · v.p1.mean 0.019 · v.p1.lo -0.021 · v.p1.hi 0.06 · v.p1Unselected.mean 0.002 · v.p2.mean -0.066 · v.p2.lo -0.111 · v.p2.hi -0.021 · v.p3.mean -0.063 · v.p3.lo -0.107 · v.p3.hi -0.018 · v.droppedCount 0 · rc.errors 0 · rc.errShareMax 0
