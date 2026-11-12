@@ -149,6 +149,7 @@ public final class DecisionSelfTest {
         knobAndCurveArms();
         horizonArms();
         liveSeatNoBlock();
+        searchCandidates();
         rolloutRandom();
         rolloutRandomV3();
         rolloutRandomV4();
@@ -842,6 +843,57 @@ public final class DecisionSelfTest {
         check(bench.priority && bench.attacks && bench.blocks && !bench.anytime
                         && SearchConfig.defaults().toString().endsWith(",what=pab"),
                 "D539: parse()'s defaults still search all three kinds (every ladder, bench and lab seat unchanged)");
+    }
+
+    /**
+     * D540: the three widenings of what the priority search considers, {@code declined=1},
+     * {@code instant=1} and {@code lands=1}, each a key of its own on the live seat's config
+     * (search-v3, the ladder's search-v2-no-b): each arm differs from search-v3 in its one
+     * field (by reflection, as {@link #horizonArms} does), prints search-v3's text plus the key,
+     * round-trips, and is off in {@link SearchConfig#parse}'s defaults, in
+     * {@link SearchConfig#LIVE_DEFAULTS} and in the live parse, so no registered config, no
+     * ladder hash and not the live seat moves.  The behaviour is the ai-bench selftest's
+     * (engine): {@code AiBench.searchCandidatesScenarios}.
+     */
+    private static void searchCandidates() {
+        final String v3Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1";
+        final SearchConfig v3 = SearchConfig.parse(v3Text);
+        check(v3.toString().equals(SearchConfig.parseLive("").toString()), "D540: the arms' base is the live seat, search-v3: " + v3);
+        check(!v3.declined && !v3.instant && !v3.lands, "D540: search-v3 widens nothing");
+        // each key is the name of the one field it sets
+        for (final String k : List.of("declined", "instant", "lands")) {
+            final SearchConfig arm = SearchConfig.parse(v3Text + "," + k + "=1");
+            check(arm.toString().equals(v3.toString() + "," + k + "=1"), "D540: " + k + "=1 prints search-v3's text plus the key: " + arm);
+            check(SearchConfig.parse(arm.toString()).toString().equals(arm.toString()), "D540: " + k + "=1 round-trips");
+            check(SearchConfig.parse(k + "=1," + v3Text).toString().equals(arm.toString()), "D540: " + k + "=1: key order does not matter");
+            check(SearchConfig.parse(v3Text + "," + k + "=0").toString().equals(v3.toString()), "D540: " + k + "=0 is search-v3");
+            configOnly("D540: " + k + "=1 against search-v3", v3, arm, List.of(k));
+            boolean threw = false;
+            try {
+                SearchConfig.parse(v3Text + "," + k + "=2");
+            } catch (final IllegalArgumentException e) {
+                threw = true;
+            }
+            check(threw, "D540: " + k + "= takes 0 or 1");
+            check(!SearchConfig.LIVE_DEFAULTS.contains(k), "D540: the live defaults do not name " + k);
+        }
+        final SearchConfig d = SearchConfig.parse(v3Text + ",declined=1");
+        final SearchConfig i = SearchConfig.parse(v3Text + ",instant=1");
+        final SearchConfig l = SearchConfig.parse(v3Text + ",lands=1");
+        check(d.declined && !d.instant && !d.lands && !i.declined && i.instant && !i.lands && !l.declined && !l.instant && l.lands,
+                "D540: each key turns on its own switch and no other");
+        final SearchConfig all = SearchConfig.parse(v3Text + ",lands=1,declined=1,instant=1");
+        check(all.toString().equals(v3.toString() + ",declined=1,instant=1,lands=1"), "D540: the three print in one order: " + all);
+        configOnly("D540: all three against search-v3", v3, all, List.of("declined", "instant", "lands"));
+        // a switch survives the other copies (leaf, mulligan and target switches, distill, observe), whichever comes first
+        final SearchConfig mixed = SearchConfig.parse(v3Text + ",declined=1,targets=1,mull=1,observe=1");
+        check(mixed.declined && mixed.targets && mixed.mull && mixed.observe, "D540: declined=1 survives the other switches' copies");
+        final SearchConfig live = SearchConfig.parseLive("");
+        final SearchConfig bench = SearchConfig.parse("");
+        check(!live.declined && !live.instant && !live.lands && !bench.declined && !bench.instant && !bench.lands,
+                "D540: off in parse()'s defaults and in the live parse");
+        check(SearchConfig.parseLive("lands=1").lands && SearchConfig.parseLive("lands=1").toString().equals(live.toString() + ",lands=1"),
+                "D540: a live seat may name a key (no measurement-only refusal): " + SearchConfig.parseLive("lands=1"));
     }
 
     /**

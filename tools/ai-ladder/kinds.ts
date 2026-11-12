@@ -119,6 +119,10 @@ export const KINDS: Record<string, Kind> = {
       mullMs: { type: 'int', min: 50, max: 60000, default: 6000, omitAtDefault: true, doc: "D417: the opening-hand search's own budget per decision (ms; mull=on only)" },
       mullTurns: { type: 'int', min: 1, max: 8, default: 3, omitAtDefault: true, doc: 'D417: the opening-hand rollouts play until each seat has had this many turns (mull=on only)' },
       targets: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D417: search the targets of the seat's own priority play: Forge's targets against up to cands-1 others, one part at a time" },
+      // D540: what the priority search considers, three widenings, each off by default and out of the hash while off.
+      declined: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: castable spells Forge's per-card AI declines for any reason, aimed by Forge's own targeting (dropped with no legal target), are priority candidates after today's -- in the windows already searched and in the own-main empty-stack windows where Forge passed with nothing else to consider" },
+      instant: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: outside the seat's own main phases, on an empty stack and either turn, a window where Forge plays a non-land, non-mana play is searched: Forge's play against pass and the alternatives" },
+      lands: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: where a land of another name than Forge's is legal, Forge's land drop against each other-named land (no pass, no holding the land)" },
     },
     // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
     // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
@@ -141,6 +145,10 @@ export const KINDS: Record<string, Kind> = {
         if (p.mullTurns !== undefined) kv.push(`mullturns=${p.mullTurns}`);
       }
       if (p.targets === 'on') kv.push('targets=1');
+      // D540: in SearchConfig.toString's order, each only when on.
+      if (p.declined === 'on') kv.push('declined=1');
+      if (p.instant === 'on') kv.push('instant=1');
+      if (p.lands === 'on') kv.push('lands=1');
       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
     },
     available: (repo) => {

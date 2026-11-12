@@ -17,7 +17,7 @@ commit.
 **The index below lists 399 items still open across 44 follow-up lists** — 367
 open, 20 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D539 (2026-11-11) closed the cube lab's 54 (J211 read HOLDS and the owner said yes: the live seat is search-v3, [its entry](#d539-live-seat-no-block)); D538 (2026-11-11) added the cube lab's 56 (the judged labels and the label probe, [its entry](#d538-label-probe)); D537 (2026-11-11) added the cube lab's 55 (the search's horizon, [its entry](#d537-search-horizon)); D536 (2026-11-11) closed the cube lab's 53 (J210 read) and added its 54 (the no-block seat's head-to-head, [its entry](#d536-no-block-seat)); D535 (2026-11-10) added the cube lab's 53 (the search by decision kind, [its entry](#d535-search-kinds)); D534 (2026-11-10) closed the cube lab's 42, 44, 46, 47, 49, 50, 51 and 52 (the random-rollout track, [its entry](#d534-track-closes)) and added none; D533 (2026-11-10) added the cube lab's 52 (random-v9, [its entry](#d533-random-v9)); D532 (2026-11-10) added the cube lab's 51 (random-v8, [its entry](#d532-random-v8)); D531 (2026-11-10) added the cube lab's 50 (random-v7, [its entry](#d531-random-v7)); D530 (2026-11-10) added the cube lab's 49 (random-v6, [its entry](#d530-random-v6)); D529 (2026-11-09) added the cube lab's 48 (the atlas's no-leak check after J203, [its entry](#d529-atlas-leak-recheck)); D528 (2026-11-09) added the cube lab's 47 (random-v5 and the seat under the search, [its entry](#d528-random-v5)); D527 (2026-11-09) added the cube lab's 46 (random-v4, [its entry](#d527-random-v4)); D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
+said 371 across 42, three rows and one list behind its table) — D540 (2026-11-11) added the cube lab's 57 (what the search considers, three keys, [its entry](#d540-search-candidates)); D539 (2026-11-11) closed the cube lab's 54 (J211 read HOLDS and the owner said yes: the live seat is search-v3, [its entry](#d539-live-seat-no-block)); D538 (2026-11-11) added the cube lab's 56 (the judged labels and the label probe, [its entry](#d538-label-probe)); D537 (2026-11-11) added the cube lab's 55 (the search's horizon, [its entry](#d537-search-horizon)); D536 (2026-11-11) closed the cube lab's 53 (J210 read) and added its 54 (the no-block seat's head-to-head, [its entry](#d536-no-block-seat)); D535 (2026-11-10) added the cube lab's 53 (the search by decision kind, [its entry](#d535-search-kinds)); D534 (2026-11-10) closed the cube lab's 42, 44, 46, 47, 49, 50, 51 and 52 (the random-rollout track, [its entry](#d534-track-closes)) and added none; D533 (2026-11-10) added the cube lab's 52 (random-v9, [its entry](#d533-random-v9)); D532 (2026-11-10) added the cube lab's 51 (random-v8, [its entry](#d532-random-v8)); D531 (2026-11-10) added the cube lab's 50 (random-v7, [its entry](#d531-random-v7)); D530 (2026-11-10) added the cube lab's 49 (random-v6, [its entry](#d530-random-v6)); D529 (2026-11-09) added the cube lab's 48 (the atlas's no-leak check after J203, [its entry](#d529-atlas-leak-recheck)); D528 (2026-11-09) added the cube lab's 47 (random-v5 and the seat under the search, [its entry](#d528-random-v5)); D527 (2026-11-09) added the cube lab's 46 (random-v4, [its entry](#d527-random-v4)); D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
 (2026-11-07) added the cube lab's 39; D517
 (2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
@@ -473,6 +473,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 54 | closed | D536's head-to-head for the one faster-seat candidate J210 named, no new code: `search-v2-no-b` (`59505e241363`, `what=pa`) against `search-v1-anytime` (`cdd55e02a89c`), one fixed 4,800-game match on the confirm set, in a ladder folder of its own under `--host j211`, so on blocks 931,900,000–931,900,599, deals no match has played (the host's own first 150 blocks are the deals the candidate was chosen on); J198's rule, written before any game: NO-BLOCK SEAT HOLDS when the interval's lower end is above −10 Elo, FAILS when its upper end is below, INCONCLUSIVE AT 4,800 otherwise, D519's reading and each side's search seconds a game beside it; the arm searches about 8% less a game (20.9 s against 22.7 s), which is not the faster seat the owner asked for; a HOLDS is a seat-queue row and the owner's one word (D509), nothing here changes the seat; unplayed: J211, about 9 h, `alone: yes`. **Read**: J211 read it 2026-11-11: `search-v2-no-b` −2.2 Elo [−7.4, +3.1] over 4,800 games, NO-BLOCK SEAT HOLDS, indistinguishable, 19.3 against 21.6 search seconds a game (10% less); the owner said yes. **Closed** (D539, 2026-11-11): the live seat is search-v3, search-v2 with `what=pa` (`LIVE_DEFAULTS` `what=pa,anytime=1`), which the ladder rates as `search-v2-no-b`; `--ai-search what=pab` plays search-v2 | `docs/decisions/D536-no-block-seat.md`, `docs/decisions/D539-live-seat-no-block.md` |
 | [Cube lab](#fu-cube-lab) | 55 | open | D537's search horizon, config only (a DecisionSelfTest case, no play change): three arms of search-v2 with only the horizon (and for one the clock) changed, `search-v2-t1` (`63c35e9f7d5b`, `turns=1,aturns=0`: priority and block rollouts to the end of the next turn, attacks as now), `search-v2-a1` (`3cf65e94df28`, `aturns=1`: attack rollouts see the crack-back) and `search-v2-t1-x3` (`ce99b41f9898`, `t1` at `ms=4500`, the round cap still 12); `aturns=0` is written because an unset `aturns` follows `turns`; unplayed: J212, three fixed 1,200-game matches against `search-v1-anytime` on the confirm set, each in a ladder folder of its own on blocks 114,900,000–114,900,149, read by D519's four readings at 1,200 written before any game (SHOWN, SMALL GAIN, INCONCLUSIVE AT 1,200, NOT SHOWN), a SHOWN or SMALL GAIN arm a candidate for one 4,800-game confirmation on fresh deals under its own decision, nothing adopted and the live seat unchanged (D509); then, information only, 720 recorded games of search-v2 against Forge Default summarised for σ_d, candidates and the windows the search never looks at; about 11 h, `alone: yes` | `docs/decisions/D537-search-horizon.md` |
 | [Cube lab](#fu-cube-lab) | 56 | open | D538's judged labels and label probe: 605 atlas decisions read by two blind judges, 515 with an agreed label (289 Forge's move, 226 another), `fixtures/atlas/judged/labels-judged-v1.jsonl`; wave 1 cost 5,293,643 tokens for 320 decisions, wave 2 (392, about 6.5 million) is not bought; `tools/label-probe.sh` replays a spine to a recorded decision as an atlas branch unit does and asks a ladder player for its move there (`LabelProbe.java`, `cubelab/AtlasProbe.java`, a refactor of `PolicyControllerAi.choose` and two `SearchPolicy` loops that gate step 12m must pass unchanged), `tools/atlas/agreement.py` reads the rows; the rule written before any probe row, `--rule d538`: stops VOID and NOT READ, then AGREEMENT TRACKS ELO when the live search agrees with the labels more than `forge-default` (interval above 0, and its point above 0 on the 409 labels nobody selected) and more than `search-v2-rrandom` and `search-v2-rrandom4` (both points above 0, one interval above 0), DOES NOT TRACK when any of the three intervals is below 0, INCONCLUSIVE otherwise; unplayed: J213, the 605 decisions under twelve players, about 5 h, `alone: yes`; TRACKS buys wave 2 and makes agreement a screen printed beside an arm's Elo, never a reason to adopt one; nothing adopted and the live seat unchanged (D509) | `docs/decisions/D538-label-probe.md` |
+| [Cube lab](#fu-cube-lab) | 57 | open | D540's three widenings of what the priority search considers, each a `SearchConfig` key off by default (no registered config, ladder hash or live seat moves): `declined=1` castable spells Forge's per-card AI declines for any reason, aimed by Forge's own targeting and dropped with no legal target (`search-v3-declined`, `795daea97aaa`), `instant=1` the empty-stack windows outside the seat's own main phases where Forge plays (`search-v3-instant`, `25ee7e76b741`), `lands=1` Forge's land drop against each other-named land (`search-v3-lands`, `e0b09eb7b014`); five `bridge/src` files, the D509 argument and the `seat_code` admission in the decision; built and self-tested on the lane (decision self-test 472, ai-bench self-test 352, seat-identity unchanged, each arm through its pilot gate), the full gate and the merge pending; unplayed: J214, three fixed 1,200-game matches against `search-v2-no-b` (the live seat, search-v3) on the confirm set under `--host j214`, blocks 416,900,000–416,900,149, D519's four readings at 1,200 with D537's completeness rule and a minimum exposure (an arm whose key fired in fewer than 0.25 windows a game, 300 at 1,200, is NOT READ and not played again without a new decision); a SHOWN or SMALL GAIN arm earns one 4,800-game confirmation on fresh deals before any live-seat question; about 7.5 h, `alone: yes` | `docs/decisions/D540-search-candidates.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10738,6 +10739,23 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    froze: gate step 12m and `atlas-selftest` pass with no `--write`, or the lane does not merge. **Open:** J213 at
    the merge's pin, about 5 h, `alone: yes`, and its read.
 
+57. **D540 widens what the priority search considers: three keys, one arm each, 1,200 games against the live seat.**
+   (2026-11-11, D540.) J212's recording of search-v2 counted the priority windows it never searches (5,384 land
+   drops, 4,122 own-main windows Forge passed with nothing else to consider, 1,430 empty-stack instant-speed windows
+   where Forge played) and the legal options it never considers (8,145 of 11,939 searched decisions had one: 10,696
+   activations, 2,151 sorcery-speed casts, 2,955 instants); its overrides land on casts (13.1% of offered casts
+   picked, 5.1% of activations). `declined=1` adds castable spells Forge declines for any reason, aimed by Forge's
+   own targeting (the coach grader's two steps), dropped and counted with no legal target; `instant=1` searches the
+   empty-stack windows outside the seat's own main phases where Forge plays a non-land, non-mana play; `lands=1`
+   rolls Forge's land out against each other-named land. Each key is off by default and printed only when on; the
+   install at an instant-speed step was read from Forge's source and is held by a self-test that says what it saw.
+   Each arm is one fixed 1,200-game match against `search-v2-no-b` on the confirm set under `--host j214` (blocks
+   416,900,000–416,900,149), read by D519's four readings at 1,200 with D537's completeness rule, NOT READ when its
+   key fired in fewer than 0.25 windows a game; SHOWN and SMALL GAIN earn a 4,800-game confirmation before any live-seat question.
+   Nothing adopted, the live seat unchanged (D509). Built and self-tested on the lane (decision self-test 472,
+   ai-bench self-test 352, seat-identity unchanged; each arm passed its pilot gate). **Open:** the full gate and the
+   merge, then J214 at the merge's pin, about 7.5 h, `alone: yes`, and its read.
+
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
 lane, in `~/code/pc-results/study/seat-queue.md`, and lands with the others as one population boundary, under a
@@ -11043,6 +11061,10 @@ D312–D314. Roadmap step 2 of D311 (and step 3, combat, with it).
 2. **Instant-speed decisions are still Forge's** (responses on the stack, the
    opponent's turn); the outlet policy covers sacrifice responses. A search at
    "they cast removal / they attack" priorities is the next candidate.
+   **Taken up by D540** (2026-11-11): `instant=1` searches the empty-stack windows
+   outside the seat's own main phases where Forge plays, on either turn; the
+   stack windows wait for a self-test of the install on a non-empty stack
+   ([its entry](#d540-search-candidates)).
 3. **The leaf is hand weights** — roadmap step 4: a learned evaluator from
    D305's dataset, fed by the bench's games.
 4. **Rollouts are Forge's Default AI on both sides**, so the search ranks lines
@@ -11519,6 +11541,27 @@ written while J212 and J213 held the machine alone. `docs/decisions/D539-live-se
   not touched; gate step 12m and the decision self-test are the evidence.
 
 It closes the cube lab's 54 ([the list](#fu-cube-lab)) and adds no follow-up.
+
+<a id="d540-search-candidates"></a>
+## What the search considers: declined casts, instant-speed windows and the land drop (2026-11-11, D540)
+
+**Status: built, self-tested and reviewed on the lane (D540's *Verification*); merged with the full gate's line in
+the merge commit's message; unplayed: J214 plays it.** Branch `pc/search-candidates` off `pc/live-seat-no-block` `57283de35`,
+written while J213 held the machine alone: no Java, build or test was run beside it.
+`docs/decisions/D540-search-candidates.md` is the decision.
+
+- **The question**: whether search-v3 is stronger when it considers more, after J212 closed the horizon at this
+  clock and D537 point 8 pointed here; the windows and options it never looks at are counted from J212's recording.
+- **The keys**: `declined=1` (castable spells Forge declines, aimed by Forge's own targeting), `instant=1` (the
+  empty-stack instant-speed windows where Forge plays, either turn), `lands=1` (Forge's land drop against each
+  other-named land); each off by default, so every registered config, ladder hash and the live seat are unchanged.
+- **The arms**: `search-v3-declined`, `search-v3-instant`, `search-v3-lands`, each search-v3 (`search-v2-no-b`) plus
+  one key, each one fixed 1,200-game match against `search-v2-no-b` on blocks 416,900,000–416,900,149 (`--host
+  j214`), read by D519's four readings; an arm whose key fired in fewer than 0.25 windows a game is NOT READ.
+- **The atlas's seat (D509)**: unchanged with the keys off; the decision names the five `bridge/src` files the next
+  atlas night's `seat_code` check must admit.
+
+Its follow-up is the cube lab's 57 ([the list](#fu-cube-lab)).
 
 ## Deferred — out of scope for M0–M7
 

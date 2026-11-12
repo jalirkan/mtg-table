@@ -1502,7 +1502,9 @@ public final class Explorer {
             @Override
             public void event(final String text) { }
         };
-        for (final SpellAbility sa : SearchPolicy.alternatives(ai, aic, forgeSa, quiet)) {
+        // D540: never widened (null: declined=1's aimed plays are the search's alone), so the atlas seat's listing
+        // is the one D509 froze
+        for (final SpellAbility sa : SearchPolicy.alternatives(ai, aic, forgeSa, quiet, null)) {
             final List<SpellAbility> one = new ArrayList<>(1);
             one.add(sa);
             out.putIfAbsent(Decisions.saToken(sa), one);

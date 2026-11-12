@@ -475,9 +475,10 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 }
             }
         }
-        if (search != null && steerSa == null && search.wantsPriority(player)) {
+        if (search != null && steerSa == null && search.wantsPriority(player, forge)) {
             // The outlet policy's rules stay in front (D311 roadmap 5): the search
-            // only reconsiders a priority none of them claimed.
+            // only reconsiders a priority none of them claimed.  D540: Forge's answer is
+            // handed in for instant=1's windows; with the key off the test is the old one.
             final List<SpellAbility> r = search.config().observe
                     ? Decisions.quiet(() -> search.choosePriority(player, getAi(), forge))   // D450
                     : search.choosePriority(player, getAi(), forge);

@@ -210,7 +210,7 @@ policy (when on), and only then the search, at three decisions:
 
 | decision | when | candidates (Forge's own answer is always candidate 0) |
 |---|---|---|
-| (p) priority | our turn, main 1 or 2, empty stack, Forge's answer is not a land drop | pass; every other spell or non-mana ability Forge's own per-card judgment (`AiController.canPlaySa`) accepts and the AI can pay for — RemAIDeck cards included, which Forge's chooser hides; untargeted spells it declines, if affordable |
+| (p) priority | our turn, main 1 or 2, empty stack, Forge's answer is not a land drop (D540's `instant=1` and `lands=1` widen the window, `declined=1` the candidates: below) | pass; every other spell or non-mana ability Forge's own per-card judgment (`AiController.canPlaySa`) accepts and the AI can pay for — RemAIDeck cards included, which Forge's chooser hides; untargeted spells it declines, if affordable |
 | (a) attacks | our declare-attackers step, after Forge declared | no attack; everything that can attack; Forge's minus each attacker; Forge's plus each creature it held back — each checked with `CombatUtil.validateAttackers` |
 | (b) blocks | their declare-blockers step, after Forge blocked | no block; Forge's minus each blocker; Forge's plus each legal extra block — each checked with `CombatUtil.validateBlocks` |
 
@@ -296,6 +296,28 @@ with exactly one target, Forge's target against the other legal, visible ones
 own rule. Forge's AI picks those targets inside `canPlaySa`, before the answer
 is returned; `chooseTargetsFor` and `chooseSingleEntityForEffect` come mid-
 resolution, where a copy (no stack) cannot start, and stay Forge's.
+
+**Three widenings of the priority search, off by default (D540).** `declined=1`
+adds every castable spell Forge's `canPlaySa` declines for any reason (D312 took
+only untargeted `CantPlayAi` spells), aimed after every `canPlaySa` judgment of
+the window — the targets `canPlaySa` left if each is still legal (D485's
+staleness test), else Forge's forced-trigger choice
+(`doTriggerNoCostWithSubs(..., true)`, the coach grader's `Grader.aim`) — and
+dropped when it has no legal target; the widened plays come after today's, so
+today's candidates are the head of the list, and an own-main window Forge passed
+with nothing else to consider is searched when such a spell exists. `instant=1`
+searches the priority windows outside the seat's own main phases, on an empty
+stack and either turn, where Forge's answer is a play that is not a land and not
+a mana ability, as the main-phase windows are: the install is the same
+`setPriority` + `onStackResolved`, which on Forge's source hands the seat priority
+at that step with itself as the first to have it (so after a forced pass in the
+opponent's turn the opponent gets one more priority in the copy than in the real
+game; D540 says so). `lands=1` searches a land drop where a land of another name
+is legal: Forge's land against the first land of each other name and face in
+`Decisions.landPlays`, no pass. A widened pick that did not happen when the seat
+is asked again in the same step turns that key off for the rest of the step
+(`search.p.<key>.retry`). Play exploration's listing (D358, D509's frozen
+atlas seat) never takes the widening.
 
 **Measured** (`docs/evidence/search-ai.md`): 56.5% against Default's 47.0% on
 the same 200 cube deals, 37 deals gained and 18 lost (p = 0.015); copier errors
