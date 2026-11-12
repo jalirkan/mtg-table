@@ -1,0 +1,5 @@
+==== J213 run6 started 2026-11-12T00:31:08-05:00 in unit lab-J213-run6, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J213: ./tools/label-probe.sh --decisions fixtures/atlas/judged/labels-judged-v1.jsonl --player search-v2-rrandom4-m40 --data /home/justin-a/code/lab/data --repeats 3 --seed 538 --workers 6 --game-timeout 180 --out var/j213/rows-search-v2-rrandom4-m40.jsonl
+label-probe: search-v2-rrandom4-m40 (968c9003c616), 6 worker(s) -> var/j213/rows-search-v2-rrandom4-m40.jsonl; logs under /home/justin-a/code/lab/mtg-table/var/label-probe/rows-search-v2-rrandom4-m40-search-v2-rrandom4-m40
+label-probe: 1815 rows of search-v2-rrandom4-m40: mismatch 9, off-atlas 4, ok 1802
+J213: search-v2-rrandom4-m40: {"error": 0, "expected": 1815, "extra": 0, "missing": 0, "rows": 1815, "statuses": {"mismatch": 9, "off-atlas": 4, "ok": 1802}, "unsettled": 0}
