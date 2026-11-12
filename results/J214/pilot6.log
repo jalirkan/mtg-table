@@ -1,0 +1,46 @@
+==== J214 pilot6 started 2026-11-12T05:09:12-05:00 in unit lab-J214-pilot6, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v3-declined vs search-v2-no-b on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v3-declined vs search-v2-no-b (match:j214-pilot:20261112T100914-2842085, seed 679900000, 1 pair(s))
+  done   w0 search-v3-declined 2-2 search-v2-no-b (0 draws) in 81 s
+  4 decisive games (2 pairs): search-v3-declined scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v3-declined scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v2-no-b
+search-v3-declined: 77 decisions searched in 4 games, 13 changed Forge's answer (16.9%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v3-declined by kind: p 12/62, a 1/15
+search-v3-declined time per decision: 530.483 ms (p+a+b); by kind p 543.631, a 476.138
+search-v2-no-b: 63 decisions searched in 4 games, 8 changed Forge's answer (12.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-no-b by kind: p 8/48, a 0/15
+search-v2-no-b time per decision: 537.038 ms (p+a+b); by kind p 563.693, a 451.743
+{"key":"declined","run":"20261112T100914-2842085","matchPlayed":4,"lines":4,"games":4,"a":{"search.a.considered":15,"search.p.considered":62,"search.p.declined.cands":45,"search.p.declined.listed":47,"search.p.declined.windows":35,"search.p.skipLand":27,"search.p.declined.changed":3,"search.p.declined.noTarget":34},"b":{"search.a.considered":15,"search.p.considered":48,"search.p.skipLand":28},"windows":35,"cands":45,"changed":3,"retry":0,"listed":47,"noTarget":34,"fired":1,"exposed":1,"bClean":1,"bD540":0,"kindsOk":1,"windowsPerGame":8.75,"candsPerWindow":1.29,"changedPerGame":0.75,"retryPerGame":0,"listedPerGame":11.75,"noTargetPerGame":8.5}
+{"written":1,"k":"declined","namesOk":1,"hashesOk":1,"cfgOk":1,"played":4,"errorsTimeouts":0,"aP":62,"aA":15,"aB":0,"bP":48,"bA":15,"bB":0,"aMs":530.483,"bMs":537.038,"aSecPerGame":10.212,"bSecPerGame":8.458}
+match search-v3-instant vs search-v2-no-b on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v3-instant vs search-v2-no-b (match:j214-pilot:20261112T101035-2879122, seed 679900000, 1 pair(s))
+  done   w0 search-v3-instant 2-2 search-v2-no-b (0 draws) in 105 s
+  4 decisive games (2 pairs): search-v3-instant scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v3-instant scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v2-no-b
+search-v3-instant: 77 decisions searched in 4 games, 15 changed Forge's answer (19.5%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v3-instant by kind: p 12/59, a 3/18
+search-v3-instant time per decision: 674.519 ms (p+a+b); by kind p 697.16, a 600.305
+search-v2-no-b: 71 decisions searched in 4 games, 12 changed Forge's answer (16.9%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-no-b by kind: p 10/53, a 2/18
+search-v2-no-b time per decision: 642.536 ms (p+a+b); by kind p 648.803, a 624.081
+{"key":"instant","run":"20261112T101035-2879122","matchPlayed":4,"lines":4,"games":4,"a":{"search.a.considered":18,"search.p.considered":59,"search.p.instant.cands":9,"search.p.instant.windows":4,"search.p.skipLand":30},"b":{"search.a.considered":18,"search.p.considered":53,"search.p.skipLand":30},"windows":4,"cands":9,"changed":0,"retry":0,"listed":0,"noTarget":0,"fired":1,"exposed":1,"bClean":1,"bD540":0,"kindsOk":1,"windowsPerGame":1,"candsPerWindow":2.25,"changedPerGame":0,"retryPerGame":0,"listedPerGame":0,"noTargetPerGame":0}
+{"written":1,"k":"instant","namesOk":1,"hashesOk":1,"cfgOk":1,"played":4,"errorsTimeouts":0,"aP":59,"aA":18,"aB":0,"bP":53,"bA":18,"bB":0,"aMs":674.519,"bMs":642.536,"aSecPerGame":12.984,"bSecPerGame":11.405}
+match search-v3-lands vs search-v2-no-b on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v3-lands vs search-v2-no-b (match:j214-pilot:20261112T101220-2919448, seed 679900000, 1 pair(s))
+  done   w0 search-v3-lands 3-1 search-v2-no-b (0 draws) in 109 s
+  4 decisive games (2 pairs): search-v3-lands scores 75.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v3-lands scores 75.0% [95% 26.0%, 100.0%] = +191 Elo [-182, Infinity] against search-v2-no-b
+search-v3-lands: 88 decisions searched in 4 games, 15 changed Forge's answer (17.0%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v3-lands by kind: p 15/68, a 0/20
+search-v3-lands time per decision: 668.355 ms (p+a+b); by kind p 715.191, a 509.114
+search-v2-no-b: 75 decisions searched in 4 games, 15 changed Forge's answer (20.0%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-no-b by kind: p 11/57, a 4/18
+search-v2-no-b time per decision: 573.551 ms (p+a+b); by kind p 592.428, a 513.776
+{"key":"lands","run":"20261112T101220-2919448","matchPlayed":4,"lines":4,"games":4,"a":{"search.a.considered":20,"search.p.considered":68,"search.p.skipLand":21,"search.p.lands.cands":21,"search.p.lands.windows":10,"search.p.lands.changed":1},"b":{"search.a.considered":18,"search.p.considered":57,"search.p.skipLand":30},"windows":10,"cands":21,"changed":1,"retry":0,"listed":0,"noTarget":0,"fired":1,"exposed":1,"bClean":1,"bD540":0,"kindsOk":1,"windowsPerGame":2.5,"candsPerWindow":2.1,"changedPerGame":0.25,"retryPerGame":0,"listedPerGame":0,"noTargetPerGame":0}
+{"written":1,"k":"lands","namesOk":1,"hashesOk":1,"cfgOk":1,"played":4,"errorsTimeouts":0,"aP":68,"aA":20,"aB":0,"bP":57,"bA":18,"bB":0,"aMs":668.355,"bMs":573.551,"aSecPerGame":14.704,"bSecPerGame":10.754}
