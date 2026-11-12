@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-12T01:01:15-05:00
+- time: 2026-11-12T01:03:36-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J212 started with 6 of 7 workers at 2026-11-11T15:21:44-05:00, as many as fit (MemAvailable 24 GB, 3.07 GB a worker); raised toward 7 as memory frees
-- running: J213 commands 7/13, 10099/19360 replays, 6953.8/h, ETA 2026-11-12T02:21:09-05:00, 6 worker(s), 7 core(s)
+- running: J213 commands 8/13, 10279/19360 replays, 6912.6/h, ETA 2026-11-12T02:22:25-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 9.45; memory 11/30.5 GB, swap 6645 MB, pressure 0.4% (lab budget 23.4 GB)
+- load: 8.4; memory 5.4/30.5 GB, swap 4979 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J212 done at 2026-11-11T23:18:57-05:00: mt1.played 1200 · mt1.elo -1.7 · mt1.eloLo -14.6 · mt1.eloHi 11.2 · ma1.played 1200 · ma1.elo 5.2 · ma1.eloLo -5.7 · ma1.eloHi 16.2 · mx3.played 1200 · mx3.elo 9.8 · mx3.eloLo -1.7 · mx3.eloHi 21.4 · v.t1.shown 0 · v.t1.smallGain 0 · v.t1.inconclusive1200 0 · v.t1.notShown 1 · v.a1.shown 0 · v.a1.smallGain 0 · v.a1.inconclusive1200 1 · v.a1.notShown 0 · v.x3.shown 0 · v.x3.smallGain 0 · v.x3.inconclusive1200 1 · v.x3.notShown 0 · v.candidates 0 · v.perRolloutOnly 0 · v.horizonClosedPB 0 · v.horizonClosedA 0 · rec.games 720 · rec.pSearched 11939
