@@ -1,0 +1,645 @@
+{
+ "dropped": 0,
+ "droppedRule": 0,
+ "errShareMax": 0.0,
+ "errors": 0,
+ "extra": 0,
+ "fdRows": 605,
+ "played": 12,
+ "players": {
+  "forge-default": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 605,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 605,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-11T23:37:07-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 605,
+      "unsettled": 0,
+      "wallS": 288.5,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": null,
+    "hash": "3ed453ffef1c",
+    "player": "forge-default",
+    "repeats": 1,
+    "tally": {
+     "error": 0,
+     "expected": 605,
+     "extra": 0,
+     "missing": 0,
+     "rows": 605,
+     "statuses": {
+      "ok": 605
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "ok": 605
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "policy-outlet": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 605,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 605,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T00:30:58-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 605,
+      "unsettled": 0,
+      "wallS": 288.6,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": null,
+    "hash": "e350d94649a4",
+    "player": "policy-outlet",
+    "repeats": 1,
+    "tally": {
+     "error": 0,
+     "expected": 605,
+     "extra": 0,
+     "missing": 0,
+     "rows": 605,
+     "statuses": {
+      "mismatch": 1,
+      "ok": 604
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 1,
+    "ok": 604
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v1-anytime": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-11T23:53:12-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 959.6,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": null,
+    "hash": "cdd55e02a89c",
+    "player": "search-v1-anytime",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 6,
+      "ok": 1809
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 6,
+    "ok": 1809
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-a1": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T02:09:06-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 998.3,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": {
+     "at": "2026-11-12T01:52:28-0500",
+     "capS": 28800,
+     "elapsedS": 8409,
+     "parallel": 5.693960880680832,
+     "projectedS": 1002,
+     "remaining": 1815,
+     "replayS": 3.1426452577725303
+    },
+    "hash": "3cf65e94df28",
+    "player": "search-v2-a1",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 11,
+      "ok": 1804
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 11,
+    "ok": 1804
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-ms750-r6": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T01:17:58-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 862.5,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": {
+     "at": "2026-11-12T01:03:36-0500",
+     "capS": 28800,
+     "elapsedS": 5477,
+     "parallel": 5.6876261921824005,
+     "projectedS": 889,
+     "remaining": 1815,
+     "replayS": 2.786255482093664
+    },
+    "hash": "ef6def992355",
+    "player": "search-v2-ms750-r6",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 8,
+      "ok": 1807
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 8,
+    "ok": 1807
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-no-b": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T01:34:11-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 964.5,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": {
+     "at": "2026-11-12T01:18:06-0500",
+     "capS": 28800,
+     "elapsedS": 6348,
+     "parallel": 5.690522836178293,
+     "projectedS": 990,
+     "remaining": 1815,
+     "replayS": 3.103998567493113
+    },
+    "hash": "59505e241363",
+    "player": "search-v2-no-b",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 7,
+      "ok": 1808
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 7,
+    "ok": 1808
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-rmix4them-m40": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T01:03:31-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 967.3,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": {
+     "at": "2026-11-12T00:47:23-0500",
+     "capS": 28800,
+     "elapsedS": 4505,
+     "parallel": 5.670959497047928,
+     "projectedS": 995,
+     "remaining": 1815,
+     "replayS": 3.1076939393939393
+    },
+    "hash": "fcf472f384b7",
+    "player": "search-v2-rmix4them-m40",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 6,
+      "ok": 1809
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 6,
+    "ok": 1809
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-rrandom": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T00:09:37-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 975.7,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": null,
+    "hash": "fb8ae32c014d",
+    "player": "search-v2-rrandom",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 7,
+      "off-atlas": 5,
+      "ok": 1803
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 7,
+    "off-atlas": 5,
+    "ok": 1803
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-rrandom4": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T00:25:59-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 977.2,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": null,
+    "hash": "646d59a008f6",
+    "player": "search-v2-rrandom4",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 7,
+      "off-atlas": 4,
+      "ok": 1804
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 7,
+    "off-atlas": 4,
+    "ok": 1804
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-rrandom4-m40": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T00:47:23-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 974.5,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": {
+     "at": "2026-11-12T00:31:08-0500",
+     "capS": 28800,
+     "elapsedS": 3530,
+     "parallel": 5.633716195472816,
+     "projectedS": 1000,
+     "remaining": 1815,
+     "replayS": 3.1040449954086315
+    },
+    "hash": "968c9003c616",
+    "player": "search-v2-rrandom4-m40",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 9,
+      "off-atlas": 4,
+      "ok": 1802
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 9,
+    "off-atlas": 4,
+    "ok": 1802
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-t1": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T01:52:26-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 1061.4,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": {
+     "at": "2026-11-12T01:34:45-0500",
+     "capS": 28800,
+     "elapsedS": 7347,
+     "parallel": 5.6788189347976745,
+     "projectedS": 991,
+     "remaining": 1815,
+     "replayS": 3.100669329660239
+    },
+    "hash": "63c35e9f7d5b",
+    "player": "search-v2-t1",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 7,
+      "ok": 1808
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 7,
+    "ok": 1808
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  },
+  "search-v2-t1-x3": {
+   "errShare": 0.0,
+   "error": 0,
+   "expected": 1815,
+   "extra": 0,
+   "full": 1,
+   "missing": 0,
+   "rows": 1815,
+   "run": {
+    "attempts": [
+     {
+      "at": "2026-11-12T02:33:54-0500",
+      "error": 0,
+      "missing": 0,
+      "rc": 0,
+      "rows": 1815,
+      "unsettled": 0,
+      "wallS": 1464.5,
+      "workers": 6
+     }
+    ],
+    "dropped": 0,
+    "guard": {
+     "at": "2026-11-12T02:09:30-0500",
+     "capS": 28800,
+     "elapsedS": 9431,
+     "parallel": 5.691442327786258,
+     "projectedS": 1438,
+     "remaining": 1815,
+     "replayS": 4.510277479338844
+    },
+    "hash": "ce99b41f9898",
+    "player": "search-v2-t1-x3",
+    "repeats": 3,
+    "tally": {
+     "error": 0,
+     "expected": 1815,
+     "extra": 0,
+     "missing": 0,
+     "rows": 1815,
+     "statuses": {
+      "mismatch": 7,
+      "ok": 1808
+     },
+     "unsettled": 0
+    }
+   },
+   "seats": 1,
+   "statuses": {
+    "mismatch": 7,
+    "ok": 1808
+   },
+   "unsettled": 0,
+   "wrongHash": 0
+  }
+ },
+ "poRows": 605,
+ "rr4Rows": 1815,
+ "rrRows": 1815,
+ "ruleFull": 5,
+ "seatsMax": 1,
+ "secondaryFull": 1,
+ "unsupported": 0,
+ "v1Rows": 1815,
+ "written": 1,
+ "wrongHash": 0
+}

@@ -1,0 +1,76 @@
+{
+ "at": "2026-11-12T02:33:57-0500",
+ "audit": {
+  "badOption": 0,
+  "badRepeat": 0,
+  "badSearched": 0,
+  "duplicates": 0,
+  "overTries": 0,
+  "seedMismatch": 0,
+  "unkeyed": 0,
+  "unknownKey": 0,
+  "unknownStatus": 0
+ },
+ "auditBad": 0,
+ "auditKeys": 605,
+ "cells": {
+  "fd": 605,
+  "po": 605,
+  "rr": 1815,
+  "rr4": 1815,
+  "v1": 1815
+ },
+ "doesNotTrack": 1,
+ "dropped": [],
+ "droppedCount": 0,
+ "droppedWhy": {},
+ "inconclusive": 0,
+ "known": 1,
+ "labelled": 515,
+ "liveSeatChanged": 0,
+ "look": 1,
+ "notRead": 0,
+ "p1": {
+  "hi": 0.060378645775865235,
+  "lo": -0.020752776271426222,
+  "mean": 0.019417475728155338,
+  "n": 515
+ },
+ "p1Unselected": {
+  "hi": 0.03997219866498881,
+  "lo": -0.03309148217943772,
+  "mean": 0.002444987775061123,
+  "n": 409
+ },
+ "p2": {
+  "hi": -0.020830098343685276,
+  "lo": -0.11090515420363328,
+  "mean": -0.06601941747572816,
+  "n": 515
+ },
+ "p3": {
+  "hi": -0.018036072144288574,
+  "lo": -0.1072130422956616,
+  "mean": -0.0634304207119741,
+  "n": 515
+ },
+ "predropped": [],
+ "readRc": 0,
+ "refused": 0,
+ "seedChecked": 1,
+ "shaOk": 1,
+ "stopLines": [],
+ "stops": 0,
+ "tracks": 0,
+ "void": 0,
+ "wave2": 0,
+ "why": [
+  "P1 +0.0194 [-0.0208, +0.0604]",
+  "P1 on source!=round2 +0.0024 [-0.0331, +0.0400] (n 409)",
+  "P2 -0.0660 [-0.1109, -0.0208]",
+  "P3 -0.0634 [-0.1072, -0.0180]"
+ ],
+ "word": "AGREEMENT DOES NOT TRACK ELO",
+ "words": 1,
+ "written": 1
+}

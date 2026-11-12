@@ -2,18 +2,20 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-12T02:33:56-05:00
+- time: 2026-11-12T02:34:11-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
+- state: idle
 - ALERT: J212 started with 6 of 7 workers at 2026-11-11T15:21:44-05:00, as many as fit (MemAvailable 24 GB, 3.07 GB a worker); raised toward 7 as memory frees
-- running: J213 commands 13/13, 19343/19360 replays, 4373.7/h, ETA 2026-11-12T02:34:10-05:00, 6 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 7.38; memory 6/30.5 GB, swap 4730 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 6.62; memory 5.9/30.5 GB, swap 4714 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J212 done at 2026-11-11T23:18:57-05:00: mt1.played 1200 · mt1.elo -1.7 · mt1.eloLo -14.6 · mt1.eloHi 11.2 · ma1.played 1200 · ma1.elo 5.2 · ma1.eloLo -5.7 · ma1.eloHi 16.2 · mx3.played 1200 · mx3.elo 9.8 · mx3.eloLo -1.7 · mx3.eloHi 21.4 · v.t1.shown 0 · v.t1.smallGain 0 · v.t1.inconclusive1200 0 · v.t1.notShown 1 · v.a1.shown 0 · v.a1.smallGain 0 · v.a1.inconclusive1200 1 · v.a1.notShown 0 · v.x3.shown 0 · v.x3.smallGain 0 · v.x3.inconclusive1200 1 · v.x3.notShown 0 · v.candidates 0 · v.perRolloutOnly 0 · v.horizonClosedPB 0 · v.horizonClosedA 0 · rec.games 720 · rec.pSearched 11939
+- last finished: J213 done at 2026-11-12T02:34:10-05:00: j213_done 19360 · v.tracks 0 · v.doesNotTrack 1 · v.inconclusive 0 · v.void 0 · v.notRead 0 · v.refused 0 · v.wave2 0 · v.p1.mean 0.019 · v.p1.lo -0.021 · v.p1.hi 0.06 · v.p1Unselected.mean 0.002 · v.p2.mean -0.066 · v.p2.lo -0.111 · v.p2.hi -0.021 · v.p3.mean -0.063 · v.p3.lo -0.107 · v.p3.hi -0.018 · v.droppedCount 0 · rc.errors 0 · rc.errShareMax 0
 
 ## Messages
+
+- FOLLOW-UP READY [J213@2026-11-12T02:34:10-05:00] (the runner, for the cloud session): J213 is done; write and post the template morning-read. It decides: D538 point 9, from rule.word of the one read of point 7 alone. AGREEMENT TRACKS ELO: wave 2 is judged (the 392 decisions, about 6.5 million tokens), the set grows to about 850 labels, and a new arm's agreement is read before its ladder night beside its Elo, as a screen, never adopting or dropping an arm. AGREEMENT DOES NOT TRACK ELO: wave 2 is not bought; the labels stay as data. INCONCLUSIVE: wave 2 is bought once only when P1's point is above 0 on all 515 labels and on the 409 nobody selected and P2's or P3's point is above 0 (rule.wave2, the tool's own answer), and the same rule is read once more on every label, finally; otherwise not. VOID: a mapping fault, fixed, and the night replayed under a new job id; not a finding. NOT READ (a stop, or the tool's refusal): no reading until the cause is explained in writing. No seat, budget, wire or protocol changes here, and nothing is bought by this job: the PC session and the owner act on the word. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J212@2026-11-11T23:18:57-05:00] (the runner, for the cloud session): J212 is done; write and post the template morning-read. It decides: D537 points 6 and 7, from each arm's own match line alone. Each match against search-v1-anytime reads exactly one of D519's four readings at 1,200 games: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 1,200 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15). A SHOWN or SMALL GAIN arm is a candidate for one 4,800-game confirmation against search-v1-anytime on deals no match has played, as its own job under its own decision; INCONCLUSIVE AT 1,200 is information; a NOT SHOWN arm is not played again. Nothing is adopted from 1,200 games and this job never changes the live seat (D509): SearchConfig.LIVE_DEFAULTS stays anytime=1 at turns=0. D537 point 8 says, as consequences and not rules, what the three readings together point at (the horizon pays at search-v2's clock; pays per rollout but not per second; pays for attacks; or is closed for Forge rollouts at this leaf). The recording step decides nothing. Ledger: LEDGER.md. Delete this line once posted.
 

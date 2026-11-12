@@ -1,0 +1,28 @@
+{
+ "allHours": 2.558,
+ "askMs": 442.3333333333335,
+ "decisions": 605,
+ "forgeReplayMs": 2186.5714285714284,
+ "hours": {
+  "forge-default": 0.066,
+  "policy-outlet": 0.066,
+  "search-v1-anytime": 0.237,
+  "search-v2-a1": 0.237,
+  "search-v2-ms750-r6": 0.217,
+  "search-v2-no-b": 0.237,
+  "search-v2-rmix4them-m40": 0.237,
+  "search-v2-rrandom": 0.237,
+  "search-v2-rrandom4": 0.237,
+  "search-v2-rrandom4-m40": 0.237,
+  "search-v2-t1": 0.237,
+  "search-v2-t1-x3": 0.316
+ },
+ "keptHours": 2.558,
+ "ok": 1,
+ "parallel": 5.6000000000000005,
+ "predropped": [],
+ "predroppedCount": 0,
+ "ruleHours": 0.841,
+ "search15ReplayMs": 2628.904761904762,
+ "written": 1
+}
