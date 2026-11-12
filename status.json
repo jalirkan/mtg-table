@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-12T12:36:28-05:00",
- "heartbeat": "2026-11-12T12:36:28-05:00",
+ "updated": "2026-11-12T12:36:45-05:00",
+ "heartbeat": "2026-11-12T12:36:45-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,11 +19,11 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.06,
+  "load1": 3.53,
   "memUsedGb": 5.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 4706,
-  "pressure": 0.08,
+  "pressure": 0.01,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 3,
@@ -36,9 +36,9 @@
    "id": "J215",
    "title": "D540's two positive keys together (D541): one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v3-declined-instant (search-v3 with declined=1 and instant=1, a new player, af6771947a25) against search-v2-no-b (search-v3, the live seat since D539), in a ladder folder of its own under --host j215 on deal blocks no job has played, 519,900,000-519,900,599, read by D519's four readings at 4,800 games as D541 writes them for this match (SHOWN, SMALL GAIN, INCONCLUSIVE AT 4,800, NOT SHOWN), with D540's completeness parts and exposure condition for both keys. Never pooled with J214. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "pilot 3/7",
+   "phase": "pilot 4/7",
    "started": "2026-11-12T12:34:50-05:00",
-   "elapsed": 98,
+   "elapsed": 115,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -126,7 +126,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J215-pilot3"
+   "detail": "lab-J215-pilot4"
   }
  ],
  "queue": [],
