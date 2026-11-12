@@ -1,0 +1,16 @@
+==== J215 pilot6 started 2026-11-12T12:37:19-05:00 in unit lab-J215-pilot6, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v3-declined-instant vs search-v2-no-b on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j215-pilot:20261112T173720-2856746, seed 912900000, 1 pair(s))
+  done   w0 search-v3-declined-instant 3-1 search-v2-no-b (0 draws) in 214 s
+  4 decisive games (2 pairs): search-v3-declined-instant scores 75.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v3-declined-instant scores 75.0% [95% 26.0%, 100.0%] = +191 Elo [-182, Infinity] against search-v2-no-b
+search-v3-declined-instant: 131 decisions searched in 4 games, 24 changed Forge's answer (18.3%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v3-declined-instant by kind: p 23/105, a 1/26
+search-v3-declined-instant time per decision: 865.515 ms (p+a+b); by kind p 879.606, a 808.609
+search-v2-no-b: 100 decisions searched in 4 games, 17 changed Forge's answer (17.0%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-no-b by kind: p 14/77, a 3/23
+search-v2-no-b time per decision: 900.14 ms (p+a+b); by kind p 917.387, a 842.402
+{"run":"20261112T173720-2856746","matchPlayed":4,"lines":4,"games":4,"a":{"search.a.considered":26,"search.p.considered":105,"search.p.declined.cands":27,"search.p.declined.listed":27,"search.p.declined.windows":27,"search.p.instant.cands":27,"search.p.instant.changed":1,"search.p.instant.windows":13,"search.p.skipLand":35,"search.p.declined.changed":1,"search.p.declined.noTarget":21},"b":{"search.a.considered":23,"search.p.considered":77,"search.p.skipLand":32},"declinedWindows":27,"declinedCands":27,"declinedChanged":1,"declinedRetry":0,"declinedFired":1,"declinedExposed":1,"declinedWindowsPerGame":6.75,"declinedCandsPerWindow":1,"declinedChangedPerGame":0.25,"declinedRetryPerGame":0,"instantWindows":13,"instantCands":27,"instantChanged":1,"instantRetry":0,"instantFired":1,"instantExposed":1,"instantWindowsPerGame":3.25,"instantCandsPerWindow":2.08,"instantChangedPerGame":0.25,"instantRetryPerGame":0,"declinedListed":27,"declinedNoTarget":21,"declinedListedPerGame":6.75,"declinedNoTargetPerGame":5.25,"exposed":1,"bD540":0,"bClean":1,"aLands":0,"aLandsClean":1,"kindsOk":1}
+{"written":1,"namesOk":1,"hashesOk":1,"cfgOk":1,"played":4,"errorsTimeouts":0,"aP":105,"aA":26,"aB":0,"bP":77,"bA":23,"bB":0,"aMs":865.515,"bMs":900.14,"aSecPerGame":28.346,"bSecPerGame":22.504}
