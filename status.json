@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-11T23:18:57-05:00",
- "heartbeat": "2026-11-11T23:18:57-05:00",
+ "updated": "2026-11-11T23:19:22-05:00",
+ "heartbeat": "2026-11-11T23:19:22-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,14 +19,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.43,
+  "load1": 5.12,
   "memUsedGb": 6.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4380,
+  "swapUsedMb": 4341,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 3,
   "coresTotal": 14
  },
  "running": [
@@ -36,21 +36,21 @@
    "id": "J213",
    "title": "The label probe (D538, no play change): at the 605 judged move-atlas decisions (515 with a label two blind judges agreed on), which option each of twelve ladder players picks there -- forge-default and policy-outlet once, search-v1-anytime, search-v2-rrandom, search-v2-rrandom4 and seven more search players three times each, --seed 538, one fresh rows file a player -- then D538's one pre-registered read, agreement.py --rule d538 over the five rule seats' rows, whose rule.word is the verdict: AGREEMENT TRACKS ELO, AGREEMENT DOES NOT TRACK ELO or INCONCLUSIVE (VOID or NOT READ when point 6's stops fire, NOT READ (refused) when the tool refuses the rows); point 8's other reads beside it, deciding nothing. This job changes no seat and buys nothing",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/3",
    "started": "2026-11-11T23:18:57-05:00",
-   "elapsed": 0,
+   "elapsed": 25,
    "done": 0,
    "total": 19360,
    "unit": "replays",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 7,
+   "workers": 3,
+   "workersMax": 3,
+   "cores": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-11T23:18:57-05:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "j213_done": 0,
     "v.tracks": 0,
@@ -109,7 +109,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J213-prepare"
+   "detail": "lab-J213-pilot1"
   }
  ],
  "queue": [],
