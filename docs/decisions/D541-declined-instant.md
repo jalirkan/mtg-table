@@ -8,7 +8,7 @@ appended), the ladder test, the ladder guide's key line, PLAN's rows and this fi
 `tools/ai-bench` or `tools/ai-ladder/*.ts` changes, the live seat does not move, and the player's hash was read from
 the ladder itself (`ai-ladder.sh list` on the lane), not re-implemented.*
 
-**Status: registered; built and self-tested on the lane (*Verification*); the full gate and the merge pending; unplayed. J215 plays it.**
+**Status: registered; built and self-tested on the lane (*Verification*); independently reviewed (its findings are in *What is unverified* and *Verification*); merged 2026-11-12 after the full gate, whose line is in the merge commit; unplayed. J215 plays it.**
 
 **2026-11-12**
 
@@ -25,12 +25,15 @@ the ladder itself (`ai-ladder.sh list` on the lane), not re-implemented.*
   | `search-v3-instant` (`25ee7e76b741`) | 0.5150 [0.4990, 0.5310] | +10.4 [−0.7, +21.5] | INCONCLUSIVE AT 1,200 | 1.84 | 2.15 | 0.187 | 21.2 / 19.1 (×1.11) |
   | `search-v3-lands` (`e0b09eb7b014`) | 0.5017 [0.4862, 0.5172] | +1.2 [−9.6, +11.9] | NOT SHOWN | 3.50 | 2.19 | 0.286 | 21.7 / 18.8 (×1.16) |
 
+  (*candidates a window* is not one quantity down the column: the `declined` row counts the declined spells listed in
+  a window, the `instant` row every candidate in the window.)
+
   No arm is a candidate; none is NOT READ (each key fired far above D540's floor of 0.25 windows a game); no arm
   retried a widened pick; the declined arm listed 4,318 aimed spells and dropped 5,378 with no legal target. Under
   D540 point 9 an INCONCLUSIVE AT 1,200 is information and is not confirmed, and the NOT SHOWN arm, `lands`, is not
   played again.
 - **Every single change to the search since J211 has read between about −2 and +10 Elo, and a 1,200-game match
-  cannot resolve that.** J211's 4,800 games put the block search at −2.2 [−7.4, +3.1]; J212's three horizon arms read
+  cannot resolve that.** J211's 4,800 games read dropping the block search at −2.2 [−7.4, +3.1]; J212's three horizon arms read
   −1.7, +5.2 and +9.8 (against `search-v1-anytime`), J214's three +5.8, +10.4 and +1.2. A 1,200-game match on this
   set has a standard error of about 0.0076–0.0095 in score, 5.3–6.6 Elo, so its interval is about ±11 Elo, and every
   one of those six intervals holds 0. Taken together the six 1,200-game points have a mean of +5.1 Elo and a standard
@@ -92,7 +95,9 @@ the ladder itself (`ai-ladder.sh list` on the lane), not re-implemented.*
    (A's and B's search seconds a game and their ratio) beside it; the cost is reported and never part of the reading
    (D519 point 5's reasoning). INCONCLUSIVE AT 4,800 is information and is not confirmed again (D519 point 3). NOT
    SHOWN closes the candidate-list track for the confirm set — the declined spells and the empty-stack instant-speed
-   windows; the land drop is already closed by J214 — and the next search lane is the value side (D540 point 13's
+   windows, these two keys and nothing beyond them (D540 point 13's untested arms, the stack windows, the windows
+   Forge passes in and the activations Forge declines, are not judged by this match); the land drop is already closed
+   by J214 — and the next search lane is the value side (D540 point 13's
    last case: the leaf, or the MAIN1 transposition the judged labels point at). No reading changes the live seat:
    `SearchConfig.LIVE_DEFAULTS` stays `what=pa,anytime=1`, and the job says so.
 7. **What a reading does not say.** Not which of the two keys carried it: no ablation is promised, and none of J214's
@@ -183,8 +188,24 @@ width it cannot happen (point 5).
   D540 scenarios run one key each. The pilot's 8 games are the first in which both fire in one seat, and its
   recorded run says where the searched windows were.
 - **The declined spells in the instant-speed windows**: how often they appear, and whether an aimed instant at the
-  opponent's end step behaves on the real game as the own-main aims did in J214. The match's counters say how often;
-  nothing here says whether it is good.
+  opponent's end step behaves on the real game as the own-main aims did in J214. The match's counters cannot say how
+  often: `search.p.declined.windows` counts own-main and instant-speed windows alike and no counter counts the two
+  keys together, and the pilot's recordings can only show none (an instant-speed window with three or more candidates
+  does not say which of them is a declined spell). Nothing here says whether it is good.
+- **What an aim leaves behind in the opponent's turn.** A failed aim leaves whatever targets Forge set (D540's *What
+  is unverified*), and aiming runs Forge's own AI logic first, which can write the seat's AI memory, beside D540
+  point 3's `canPlaySa` writes. In an instant-speed window that state lasts through more of Forge's own answers than
+  in the seat's main phase, and B carries none of it. It is part of what the match measures.
+- **The retry count in instant-speed windows is a lower bound.** When Forge's answer to the re-ask is a pass, the
+  pending widened pick is cleared at the next phase without being counted (the review, 2026-11-12; J214's instant
+  arm had the same gap).
+- **One timing hole no card in this deck set reaches.** A listed play passes Forge's `canPlay` first, so a sorcery is
+  not listed outside the seat's own main phase — except under a cast-with-flash effect that needs a target or an X
+  (`anyWithFlashNeedsInfo`), where `canPlay` skips the timing check and the declined listing aims every answer other
+  than WillPlay, `TimingRestrictions` included. None of the confirm set's 668 card names carries such an effect (the
+  review read them; Teferi, Time Raveler and The Wandering Emperor grant flash without needing that information).
+  The fix, skipping `TimingRestrictions` in the declined listing, is a later `bridge/src` lane, with a counter for
+  declined spells in instant-speed windows and an ai-bench scenario that turns both keys on.
 - **The cost**: interpolated from J214's two arms; the pilot's 4 ladder games and the match measure it.
 - **That `hostBase('j215')`'s blocks are unplayed everywhere**: read from the lab's four checkouts and the job files
   on 2026-11-12; the job's block reader checks the match's own folder only.
@@ -192,6 +213,14 @@ width it cannot happen (point 5).
   D398.
 
 **Verification (the lane, 2026-11-12, at `7ff7d6ab2` with this lane on top):**
+
+- **The independent review** (2026-11-12, before the merge) read the lane's diff, the job and the both-keys path in
+  `SearchPolicy.choosePriority` against Forge at the `forge-2.0.14` tag. It recomputed `hostBase('j215')` as
+  519,000,000 and found no job or result on that base, recomputed the hypothesis table at a score standard error of
+  0.0039, checked every *Context* figure against J214's files and the job's verdict against points 3 to 6 (47 of 47
+  self-test cases cover each reading on both sides of its bars). It found no code fault that stops the match; its
+  text findings are settled here: point 6's limit, the four new entries of *What is unverified*, the sign of J211's
+  −2.2 and the note under the *Context* table.
 
 - `./tools/check-forge.sh`: the pinned jar, `3c0a7c38…8e5dd9`. `./bridge/build.sh`: build OK; the lint's self-test
   33 rules, 79 firing cases; the lint 97 files under `bridge/src` and 4 under `tools/`; **decision self-test 472
