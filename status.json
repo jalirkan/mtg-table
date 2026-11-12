@@ -1,19 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-11-12T02:09:16-05:00",
- "heartbeat": "2026-11-12T02:09:16-05:00",
+ "updated": "2026-11-12T02:09:32-05:00",
+ "heartbeat": "2026-11-12T02:09:32-05:00",
  "paused": false,
- "state": "degraded",
+ "state": "running",
  "alerts": [
-  {
-   "at": "2026-11-12T02:09:16-05:00",
-   "id": "J213",
-   "kind": "memory-wait",
-   "needGb": 5.4,
-   "availGb": 24.9,
-   "freeGb": 21.9,
-   "text": "J213 waits on memory held outside the lab slice since 2026-11-12T02:09:16-05:00 (MemAvailable 24.9 GB, need 5.4 GB)"
-  },
   {
    "at": "2026-11-11T15:21:44-05:00",
    "id": "J212",
@@ -28,11 +19,11 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.28,
+  "load1": 5.33,
   "memUsedGb": 5.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 4638,
-  "pressure": 12.52,
+  "pressure": 3.52,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -47,19 +38,19 @@
    "cpu": "heavy",
    "phase": "commands 12/13",
    "started": "2026-11-11T23:18:57-05:00",
-   "elapsed": 10219,
+   "elapsed": 10235,
    "done": 17530,
    "total": 19360,
    "unit": "replays",
    "ratePerHour": 6558.1,
-   "eta": "2026-11-12T02:26:01-05:00",
+   "eta": "2026-11-12T02:26:17-05:00",
    "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-12T02:08:43-05:00",
-   "memGb": 0.04,
+   "memGb": 0.01,
    "live": {
     "j213_done": 17530,
     "v.tracks": 0,
@@ -117,7 +108,8 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": []
+   "pressureEvents": [],
+   "detail": "lab-J213-run12"
   }
  ],
  "queue": [],
