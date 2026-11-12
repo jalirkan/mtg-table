@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-12T11:42:24-05:00",
- "heartbeat": "2026-11-12T11:42:24-05:00",
+ "updated": "2026-11-12T11:45:36-05:00",
+ "heartbeat": "2026-11-12T11:45:36-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,14 +19,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.76,
-  "memUsedGb": 13.4,
+  "load1": 3.47,
+  "memUsedGb": 5.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4978,
-  "pressure": 3.56,
+  "swapUsedMb": 4918,
+  "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -36,21 +36,21 @@
    "id": "J214",
    "title": "What the search considers (D540): three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) of search-v3 with one widening of its priority search against search-v2-no-b (search-v3, the live seat since D539), each in a ladder folder of its own under --host j214 on blocks 416,900,000-416,900,149 -- search-v3-declined (castable spells Forge declines, aimed by Forge's own targeting), search-v3-instant (the empty-stack instant-speed windows where Forge plays, either turn), search-v3-lands (Forge's land drop against each other-named land) -- each read by D519's four readings at 1,200 games with D537's completeness rule and D540's exposure condition, pre-registered in D540. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 3/4",
+   "phase": "commands 4/4",
    "started": "2026-11-12T05:06:55-05:00",
-   "elapsed": 23729,
-   "done": 3568,
+   "elapsed": 23922,
+   "done": 3592,
    "total": 3600,
    "unit": "games",
-   "ratePerHour": 587.4,
-   "eta": "2026-11-12T11:45:40-05:00",
+   "ratePerHour": 523.4,
+   "eta": "2026-11-12T11:46:31-05:00",
    "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-12T11:42:02-05:00",
-   "memGb": 4.71,
+   "dataUpdated": "2026-11-12T11:44:12-05:00",
+   "memGb": 0.01,
    "live": {
     "mde.played": 1200,
     "mde.elo": 5.8,
@@ -84,9 +84,9 @@
     "v.lands.notPlayed": 0,
     "v.candidates": -1,
     "v.notRead": -1,
-    "elapsed_s": 23707,
+    "elapsed_s": 23900,
     "j214_err": 0,
-    "j214_games": 3568,
+    "j214_games": 3592,
     "mde.aSearch.budgetHi": 0.006359,
     "mde.aSearch.budgetLo": 0.003054,
     "mde.aSearch.budgetRate": 0.004707,
@@ -251,7 +251,7 @@
      "pressure": 0.1
     }
    ],
-   "detail": "lab-J214-run3"
+   "detail": "lab-J214-run4"
   }
  ],
  "queue": [],
