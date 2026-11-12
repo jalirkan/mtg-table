@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-12T07:23:58-05:00
+- time: 2026-11-12T07:28:34-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J212 started with 6 of 7 workers at 2026-11-11T15:21:44-05:00, as many as fit (MemAvailable 24 GB, 3.07 GB a worker); raised toward 7 as memory frees
-- running: J214 commands 2/4, 1184/3600 games, 573.3/h, ETA 2026-11-12T11:36:49-05:00, 7 worker(s), 7 core(s)
+- running: J214 commands 2/4, 1200/3600 games, 539.7/h, ETA 2026-11-12T11:55:22-05:00, 7 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 4.96; memory 5.8/30.5 GB, swap 4594 MB, pressure 0% (lab budget 23.4 GB)
+- load: 13.27; memory 14.7/30.5 GB, swap 4593 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J213 done at 2026-11-12T02:34:10-05:00: j213_done 19360 · v.tracks 0 · v.doesNotTrack 1 · v.inconclusive 0 · v.void 0 · v.notRead 0 · v.refused 0 · v.wave2 0 · v.p1.mean 0.019 · v.p1.lo -0.021 · v.p1.hi 0.06 · v.p1Unselected.mean 0.002 · v.p2.mean -0.066 · v.p2.lo -0.111 · v.p2.hi -0.021 · v.p3.mean -0.063 · v.p3.lo -0.107 · v.p3.hi -0.018 · v.droppedCount 0 · rc.errors 0 · rc.errShareMax 0
