@@ -73,10 +73,15 @@ full gate, the review and the merge pending; unplayed. J217 plays it.**
      (`CharmEffect.chainAbilities`) and the live chain's targets part by part, divided allocations;
    - **a triggered ability** as Forge's `TriggerHandler` builds one: a `WrappedAbility` around the copy's own trigger
      on the copy's source (the same mode and description; by place among its triggers when that is ambiguous), its
-     ability copied for the controller, its triggering objects mapped, X and the optional flag carried, the decider
-     mapped;
+     ability copied for the controller, its triggering objects mapped (a card, a player, a stack item, and since the
+     pilot an `FCollection` or `ArrayList` of them element by element: an attack trigger's `Defenders`, a cast
+     trigger's `CurrentCastSpells`), X and the optional flag carried, the decider mapped;
    - **the paid cards** (`getPaidHash`: sacrificed, exiled, discarded, tapped), each the copy's card of the same id
      that reads the same (name, power, toughness, mana value); **the cast-from zone** and `castSA`;
+   - **a card that has ceased to exist** — a token sacrificed for its own ability (a Map, a Clue) or paid for an item
+     (a Goblin token flung) — rebuilt on the copy in no zone by D500's `lkiOnCopy` (its script and copiable
+     characteristics, its controller and timestamps), as a source or a paid card, and then held to the same
+     reads-the-same test (added after the first pilot dry-run, *Verification*);
    - **pushed** by `MagicStack.add`, the only public way onto the stack (`push` is private and the deque has no
      accessor), with the cast and target triggers suppressed (`SpellCast`, `SpellAbilityCast`, `AbilityCast`,
      `SpellCastOrCopy`, `SpellCopy`, `SpellAbilityCopy`, `BecomesTarget`, `BecomesTargetOnce`, the crew, saddle,
@@ -88,7 +93,9 @@ full gate, the review and the merge pending; unplayed. J217 plays it.**
    cards. A mismatch refuses the window (`verify`).
 2. **Refuse rather than guess.** A stack the carry cannot rebuild faithfully refuses the whole window: the seat plays
    Forge's answer, unsearched, and `search.p.stackwin.refused` and `search.p.stackwin.refused.<reason>` count it. The
-   reasons, read on the live game first (`stackRefusal`) and then by one trial carried copy (a few milliseconds):
+   carry is asked only of a stack window with something to choose between (after the listing; a window Forge would
+   answer alone is never a window and never a refusal), so the refusals and the windows searched count the same
+   windows. The reasons, read on the live game first (`stackRefusal`) and then by one trial carried copy (a few milliseconds):
    `waiting` (simultaneous stack entries), `frozen`, `resolving`, `splitSecond`, **`faceDown`** (any face-down item:
    a face-down spell, or an ability of a face-down card), `copied` (a copied spell has no zone to rebuild it from),
    `splice`, `manaSpent` (the source's SVars or a part's parameters name a value read from the mana spent — converge,
@@ -250,7 +257,7 @@ full gate, the review and the merge pending; unplayed. J217 plays it.**
     a searched decision; search seconds a game; each key's windows a game, candidates a window, changes a game and
     retries a game; the refusals; priority overrides by direction a priority decision.
 19. **The pilot, before the match**: the build with the decision self-test at 0 failures and at least 502 checks; the
-    ai-bench self-test at 0 failures with D544's scenarios in it (at least 440 checks); the ladder test; the player at
+    ai-bench self-test at 0 failures with D544's scenarios in it (at least 460 checks); the ladder test; the player at
     its hash and seat config; `hostBase('j217')` 725,000,000; the job's readers tested on synthetic files; a 4-game
     ladder match against B under `--host j217-pilot2` and a 4-game recorded run against Forge Default (the confirm set's
     first pair). **The match is played only if** over those 8 games `search.p.stackwin.windows` and
@@ -365,28 +372,65 @@ lane needs. INCONCLUSIVE AT 4,800 cannot happen at this width (D541 point 5's ar
 - **That the blocks of base 725 and 63 are unplayed everywhere** (point 11): read from the lab's four checkouts'
   ladder rows and the job files on 2026-11-13; the job's block reader checks the match's own folder only.
 - **The exposure floors** (point 13) are proposals from J212's counts of windows with castable plays, not of windows
-  the keys search; the pilot's 8 games are the first measure.
+  the keys search. **Measured since, and well under the hypothesis** (*Verification*): over 24 diagnostic games
+  against Forge Default the union changed 1 decision (0.04 a game; an earlier build's 24 games, 4), and over each pilot
+  dry-run's 4 ladder games against B 1 (0.25 a game). The hypothesis's 0.4–0.5 a game assumed J215's per-window change
+  rate and J212's counts of windows with a castable play; the keys search fewer windows than those counts (a stack
+  window with nothing to list is no window; most equips are aimed at their host and dropped) and change fewer of them.
+  **J217 as registered is likely to read NOT READ** (point 13: under 0.25 changed decisions a game); that is the
+  rule's answer, written before the match, and this lane does not move the bar.
 - One opponent and one deck set: point 10's B and the confirm set's 30 deck pairs.
 
-**Verification (the lane, 2026-11-12, on `1eaa00d30` with this lane on top, before the rebase onto `97122947c`, the lab
-idle; completed after J216):**
+**Verification (the lane; 2026-11-12 on `1eaa00d30`, the lab idle, then 2026-11-13 after J216 on the rebased tree
+`97122947c` + the lane, the lab idle at every compute step: state `idle`, `running` and `queue` empty, read as text):**
 
-- `./tools/check-forge.sh`: the pinned jar, `3c0a7c38…8e5dd9`. `./bridge/build.sh`: build OK at each committed piece
-  (the lint and its self-test, javac, the build's self-tests); **decision self-test 502 checks, 0 failures** (472
-  before this lane plus `wideWindows`' 30).
-- `./tools/ai-bench.sh --selftest`: **440 checks, 0 failures** (352 before D544's scenarios; `--stack-windows` alone,
-  88 checks, 0 failures): the stack carry's (a)–(d), (e) and (e′), (f) and (f′), (g), (h) and the four refusals; the
-  three keys, the opponent's pass and the retry guard (`wideWindowScenarios`).
-- `./tools/cubelab.sh seat-identity`: **all 4 games are the golden's** (forge, search, explore, plain), after the
-  carry and again after the keys.
-- `./tools/ai-ladder.sh list`: `search-v3-wide` at `b95340935592` with point 9's seat config;
-  `search-v3-declined-instant` `af6771947a25`, `search-v2-no-b` `59505e241363`, `search-v1-anytime` `cdd55e02a89c`
-  unchanged. (This command ran once just after the lab turned to J216, by a fault in the lane's state check; it is a
-  read of the registry and took about a second.)
-- **Not yet run** (written while J216 held the lab): the ladder test (`web/test/ai-ladder.test.ts`'s D544 case),
-  `web/test/claude-md.test.ts`, `node tools/decisions.mjs check`, the build and both self-tests on the rebased tree,
-  seat-identity again on it, the full gate, the scan of the lab's ladder rows for bases 725 and 679, `runner.sh check`
-  on the J217 draft and its pilot dry-run, and the independent review.
+- `./tools/check-forge.sh`: the pinned jar, `3c0a7c38…8e5dd9`. `./bridge/build.sh` on the rebased tree: build OK; the
+  lint 97 files under `bridge/src` and 4 under `tools/`, 33 rules, its self-test 79 firing cases; **decision self-test
+  502 checks, 0 failures** (472 before this lane plus `wideWindows`' 30).
+- `./tools/ai-bench.sh --selftest`: **460 checks, 0 failures** (352 before D544's scenarios; `--stack-windows` alone 108
+  checks, 0 failures): the stack carry's (a)–(d), (e) and (e′), (f) and (f′), (g), (h), (m) a Clue token's ability
+  (the source rebuilt), (n) a Goblin token in Fling's paid cards, (o) prowess's `CurrentCastSpells` over its Bolt, (p)
+  an attack trigger's `Defenders` (driven through Forge's own loop), and the four refusals; the three keys, the
+  opponent's pass and the retry guard (`wideWindowScenarios`). 440 on the rebased tree before (m)–(p).
+- `./tools/cubelab.sh seat-identity`: **all 4 games are the golden's** (forge, search, explore, plain): after the carry,
+  after the keys, on the rebased tree, and after the pilot's fixes.
+- `./tools/ai-ladder.sh list`: identical to main's listing line for line but for `search-v3-wide` at `b95340935592`
+  (point 9's seat config) and the kinds line's three new params; `search-v3-declined-instant` `af6771947a25`,
+  `search-v2-no-b` `59505e241363`, `search-v1-anytime` `cdd55e02a89c`, `forge-default` `3ed453ffef1c`. (On
+  2026-11-12 this command once ran just after the lab turned to J216, by a fault in the lane's state check, which
+  tested an exit code; a read of the registry, about a second.)
+- `node --test web/test/ai-ladder.test.ts` 57 of 57 (D544's case among them); `web/test/claude-md.test.ts` 5 of 5;
+  `node tools/decisions.mjs check` OK (458 decisions, next D545); `./tools/public-check.sh` OK.
+- **The deals** (point 11): of 360,238 ladder result rows under the lab's four checkouts none is on base 725; the
+  pilot's first host name, `j217-pilot`, shares base 679 with `j214-pilot` (12 rows on block 679,900,000), so the
+  pilot's host is `j217-pilot2` (base 63, no row).
+- **The J217 draft** (`drafts/J217-wide-windows.md`): `./tools/runner.sh check` machine-checked, `lint: clean` (8 pilot
+  blocks, 52 checks; 2 command blocks, 25 checks); its readers' self-tests: exposure 8 of 8, verdict 48 of 48,
+  recording 14 of 14, block, rollout and gate readers ok.
+- **The pilot dry-run, first** (`runner.sh dry-run --pilot-only --max-seconds 7200 --workers 6`, pinned to `e9e549b`):
+  51 of 52 checks (only `merged == 1`), every block exit 0 — but **the gate kept the match out**: stack windows
+  refused 27 against 6 searched (a share of 0.818; `unmappable` 9 and `triggering` 5 in the ladder games). A 24-game
+  diagnostic (the wide player against Forge Default on the confirm set's first 6 pairs, the refusal messages printed
+  by a local, uncommitted flag) gave the causes: a Map or Clue token's ability whose sacrificed source the copy did not
+  hold (16), a sacrificed Goblin token as a paid card (5), `Defenders` (17) and `CurrentCastSpells` (14) as
+  collections, flashback and may-play casts on the stack (about 20), a modal trigger, a copied spell, LKI reading
+  differently (a few). The first four are fixed in the carry (point 1); the refusal was asked before the listing, so a
+  window Forge would answer alone counted as a refusal (point 2: now asked only of a window with something to list).
+  After both, the same 24 games refused 1 stack window against 17 searched. **Flashback and may-play casts on the
+  stack stay refusals**: no faithful public route rebuilds them (the play's variant exists only from the card's former
+  zone).
+- **The pilot dry-run, twice on the fixed pin `4430e36`**: each 51 of 52 checks (only `merged == 1`, the lane is not on
+  `origin/main`), every block exit 0 (the build and self-tests 39–40 s, the ladder match 105–113 s, the recorded run
+  63 s); decision self-test 502/0, ai-bench self-test 460/0; B `search-v3-declined-instant` resolved; names, hashes and
+  seat configs exact; both sides searched priority and attacks and no block; B's new-key counters and A's lands
+  counters 0; no searched decision on a stack with the seat's own item on top. **The gate plays both times**: stack
+  windows 5 and 7 (ladder 2 and 3, recorded 3 and 4), pass windows 2 and 2, dactiv windows 16 and 16, refused 0 and 0,
+  no error or timeout, no retry. In the 4 ladder games each time the union changed 1 decision (a dactiv pick); search
+  seconds a game A 12.9 / B 13.2 and A 12.9 / B 11.3 (×0.98, ×1.15).
+- **J217's time, from the pilots**: A searched ×0.98–1.15 of B's seconds a game; at J215's 21.7 s for B, A about
+  23–25 s and both about 45–47 s a game, so by D537 point 11's fit at four times the games about 9.7 h (9.2–10.3 h)
+  for the match, plus the pilot's 4 minutes: point 20's estimate stands.
+- **Not run on the lane**: the full gate and the independent review (the coordinator's, at the merge).
 
 **Follow-up.** J217 plays the match after the merge and after J216's read resolves point 10's B; its `report.md`
 carries the reading, every exposure rate and the refusals. A candidate's adoption is its own decision. Its row in PLAN
