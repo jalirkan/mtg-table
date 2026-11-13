@@ -563,6 +563,16 @@ reading rule changed.
   self-tests exposure 8 of 8, verdict 50 of 50 (the deck set's two cases added), recording 14 of 14, the block,
   rollout and gate readers ok; its code check passes on the lane and on a registry with D545's player appended
   before this one. The full gate and the pilot dry-run were not run here (the coordinator's).
+- **After the re-review** (2026-11-13, the lane with main `23854dde0` merged in (D545) and the re-review's fix,
+  `a287c4b35`; the lab idle, no pilot beside a build): `./bridge/build.sh` build OK; **decision self-test 504 checks,
+  0 failures**; **`./tools/ai-bench.sh --selftest` 476 checks, 0 failures** (475 before: the opponent's-turn case
+  1); `./tools/cubelab.sh seat-identity`: all 4 games are the golden's; `./tools/ai-ladder.sh list`: unchanged by the
+  fix; `node --test web/test/ai-ladder.test.ts` 58 of 58 (D545's case with this lane's); `web/test/claude-md.test.ts`
+  5 of 5; `node tools/decisions.mjs check` OK; `./tools/public-check.sh` OK. **The pilot dry-run** (`runner.sh
+  dry-run --pilot-only --workers 6`, the draft pinned to the commit under test): once on `2d0c094eb` (the merge of
+  main, before the fix) and twice on `a287c4b35`, each time **51 of 52 checks**, the one that fails `merged == 1`,
+  which only a commit on main passes; the nine-file code check (`sd.count == 9`, `sd.exact == 1`) passes on the lane
+  with D545 under it; the four pilot games had B's new counters and A's lands counters at 0 and no error.
 - **Not run on the lane**: the full gate (the coordinator's, at the merge).
 
 **Follow-up.** J217 plays the match after the merge and after J216's read resolves point 10's B; its `report.md`
