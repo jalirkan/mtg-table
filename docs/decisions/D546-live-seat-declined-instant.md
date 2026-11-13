@@ -127,7 +127,9 @@ a comment in `RecordMatch.java`, and checks in `ai/DecisionSelfTest.java`. The a
   and must admit exactly this lane's five files there (`ai/SearchConfig.java`, `ai/SearchPolicy.java`,
   `ai/DecisionSelfTest.java`, `MtgTable.java`, `RecordMatch.java`: two constants, comments, a start line's words
   and self-test checks), beside D539's and D540's, and nothing else under the frozen paths, or that night is not
-  posted under D509 point 1; this paragraph is the admission.
+  posted under D509 point 1; this paragraph is the admission. (At the merge, 2026-11-13: D544 merged before this
+  lane and admits six files of its own in its own paragraph, three of them these; the night's check admits the
+  union, eight files since `97122947c`.)
 
 **Hidden information (hard rule 8) and threads (hard rule 3).** Nothing new on the wire: D540's paragraph holds for
 the live seat as it held for the ladder's. `declined` lists the seat's own castable spells and aims them through Forge's

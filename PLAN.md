@@ -11752,7 +11752,9 @@ Its follow-up is the cube lab's 62 ([the list](#fu-cube-lab)).
 checks and 0 failures, seat-identity all four golden games, the ladder's listing identical to main's, a three-game
 `MtgTable --ai-policy search` session whose start line and headers say search-v4 with both keys, 49 searched
 decisions with 2 at instant speed and the longest 1,931 ms, and three `RecordMatch` games with 3 instant and 4
-declined windows); the full gate and the merge pending.** Branch `pc/live-seat-declined-instant` off main `97122947c` (D543's merge, J216's pin).
+declined windows), independently reviewed, and merged 2026-11-13 after D545 and D544, on the full gate and a
+three-game live-seat session replayed on the merged tree (the merge commit carries both).** Branch
+`pc/live-seat-declined-instant` off main `97122947c` (D543's merge, J216's pin), with D544's lane merged in before the gate.
 `docs/decisions/D546-live-seat-declined-instant.md` is the decision.
 
 - **The evidence**: J215 (D541) on the confirm set and J216 (D543) on the dev set, `search-v3-declined-instant`
