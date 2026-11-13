@@ -9,8 +9,8 @@ engine scenarios in the ai-bench self-test, a `DecisionSelfTest` case, the ladde
 ladder test, the guide's line and PLAN's row 61. **Parts of this lane were written while J216 held the lab and are
 unbuilt or unrun; the *Verification* paragraph says which, and is completed after J216.***
 
-**Status: built and self-tested on the lane in part (*Verification*); the ladder test, the full gate, the review and
-the merge pending; unplayed. J217 plays it.**
+**Status: built and self-tested on the lane (*Verification*); B resolved to `search-v3-declined-instant` (point 10); the
+full gate, the review and the merge pending; unplayed. J217 plays it.**
 
 **2026-11-12**
 
@@ -176,6 +176,12 @@ the merge pending; unplayed. J217 plays it.**
       directly, the union's base against itself plus the keys.
     - **WITHDRAWN or OPEN: B = the live seat `search-v2-no-b` (`59505e241363`).** The match measures the union against
       the live seat, the two D541 keys included.
+    **Resolved 2026-11-13, before any J217 game: B = `search-v3-declined-instant` (`af6771947a25`).** J216 read SMALL
+    GAIN on the dev set alone, +8.3 Elo [+2.4, +14.1], score 0.5119 [0.5034, 0.5203], 4,800 games, complete, both keys
+    exposed (declined 3.505 windows a game, instant 1.891), cost ×1.173; pooled with J215, +7.6 Elo [+3.5, +11.7]. The
+    recommendation STANDS, carried by J216 alone (`results/J216/verdict.json`, `recByAlone` 1). The live seat itself has
+    not moved: `search-v3-declined-instant` is the owner's to adopt and the owner has not answered; J217 measures the
+    three keys' increment over it whether or not it is adopted (D543 point 6's last bullet).
     The job carries both forms of B, in its pilot's B block and in its match step, each commented out under a sentinel
     that stops the pilot until one is uncommented (`drafts/J217-wide-windows.md`); the coordinator resolves both from
     J216's read before the job is posted, the match step refuses to play when they disagree, and the verdict reads B
@@ -186,10 +192,12 @@ the merge pending; unplayed. J217 plays it.**
     in a ladder folder of its own emptied by its step, at `--game-timeout 900`. `hostBase('j217')` is 725,000,000
     (FNV-1a as `tools/ai-ladder/schedule.ts` computes it; recomputed on the lane and checked on `j214` → 416,000,000,
     `j215` → 519,000,000 and `j216` → 622,000,000), so the match is dealt **blocks 725,900,000–725,900,599**, on a
-    first run and on a retry; the pilot's host `j217-pilot` has base 679,000,000. No job file in `pc-jobs/jobs/` or
-    `drafts/` names `j217` or a block on base 725, and no ladder folder named for `j217` exists under the lab's four
-    checkouts (read 2026-11-12); the full scan of the lab's ladder rows for bases 725 and 679 was stopped when J216
-    began and is owed before the job is posted (*What is unverified*). 600 consecutive blocks give each of the confirm
+    first run and on a retry. No job file in `pc-jobs/jobs/` or `drafts/` names `j217` or a block on base 725, and of
+    the 360,238 ladder result rows under the lab's four checkouts' `var/` (read 2026-11-13, after J216) none is on base
+    725; the rows lie on 30 bases. **The pilot's host is `j217-pilot2`, base 63,000,000**, on which no row lies either:
+    the first name drafted, `j217-pilot`, hashes to 679,000,000, the base `j214-pilot` also hashes to, where J214's
+    three pilots played 12 games on block 679,900,000 (a collision of the 997 bases, found by the scan; a pilot is not
+    read, but its deals should be new too). 600 consecutive blocks give each of the confirm
     set's 30 deck pairs exactly 40 batches, 160 games, in both seat orders (`batchPairs`).
 12. **The match is complete** when its line names A and B in that order at their hashes, says `complete: true`,
     played all 4,800 games with engine errors plus timeouts at most 240 (one in 20, D519 point 2), and carries
@@ -244,7 +252,7 @@ the merge pending; unplayed. J217 plays it.**
 19. **The pilot, before the match**: the build with the decision self-test at 0 failures and at least 502 checks; the
     ai-bench self-test at 0 failures with D544's scenarios in it (at least 440 checks); the ladder test; the player at
     its hash and seat config; `hostBase('j217')` 725,000,000; the job's readers tested on synthetic files; a 4-game
-    ladder match against B under `--host j217-pilot` and a 4-game recorded run against Forge Default (the confirm set's
+    ladder match against B under `--host j217-pilot2` and a 4-game recorded run against Forge Default (the confirm set's
     first pair). **The match is played only if** over those 8 games `search.p.stackwin.windows` and
     `search.p.dactiv.windows` are each above 0 and `search.p.passwin.windows` is reported (it may be 0 in 8 games),
     none of the 8 ended in an engine error or a timeout, the three keys' retries together are at most 2 a game, and the
@@ -354,8 +362,8 @@ lane needs. INCONCLUSIVE AT 4,800 cannot happen at this width (D541 point 5's ar
 - **The dactiv memory restore** puts back the thirteen memory sets; what an AI path changes outside them (the
   targets left on the ability, cached predictions) stays, as D540's.
 - **The listing's cost in a stack window** has no time limit, as D540's in the windows it widened.
-- **That the blocks of base 725 and 679 are unplayed everywhere** (point 11): the job files and folder names were
-  read; the full scan of the lab's ladder rows was cut off when J216 began and is owed before the job is posted.
+- **That the blocks of base 725 and 63 are unplayed everywhere** (point 11): read from the lab's four checkouts'
+  ladder rows and the job files on 2026-11-13; the job's block reader checks the match's own folder only.
 - **The exposure floors** (point 13) are proposals from J212's counts of windows with castable plays, not of windows
   the keys search; the pilot's 8 games are the first measure.
 - One opponent and one deck set: point 10's B and the confirm set's 30 deck pairs.
