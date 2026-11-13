@@ -903,7 +903,8 @@ public final class DecisionSelfTest {
      * defaults, in {@link SearchConfig#LIVE_DEFAULTS} and in the live parse.  The union player's text is
      * search-v3-declined-instant's plus the three, in D544's order.  Then the opponent's conditional pass
      * ({@link RolloutController.Forced#takePass(String)}): given once, only on the stack it was armed on, disarmed
-     * either way, and never on a controller nothing armed.  The behaviour is the ai-bench selftest's (engine).
+     * either way, and never on a controller nothing armed.  A refusal's detail (the skeptic's read): ids and words kept,
+     * anything else replaced by the reason.  The behaviour is the ai-bench selftest's (engine).
      */
     private static void wideWindows() {
         final String v3Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1";
@@ -950,6 +951,14 @@ public final class DecisionSelfTest {
         f.priority(null);
         f.passWhile("");
         check(f.takePass("") && f.unanswered(), "D544: the conditional pass never takes a forced answer armed beside it");
+
+        // the skeptic's read, finding 4b: a refusal's detail is ids and reason words; any other character replaces it
+        final LenientGameCopier.StackRefused clean = new LenientGameCopier.StackRefused("stale", "card 12: a target");
+        check("stale".equals(clean.reason) && "card 12: a target".equals(clean.detail) && clean.getMessage().endsWith("card 12: a target"),
+                "D544: a refusal's detail of ids and words is kept: " + clean.getMessage());
+        final LenientGameCopier.StackRefused dirty = new LenientGameCopier.StackRefused("verify", "live [s1 by 2 -> c3] copy []");
+        check("refused verify".equals(dirty.detail) && !dirty.getMessage().contains("["),
+                "D544: a refusal's detail with any other character is replaced by its reason: " + dirty.getMessage());
     }
 
     /**

@@ -6,11 +6,12 @@ subject) and D541 (the union's base and its form); uses D398's fixed match and D
 J215 (`results/J215/`) and J212's recording. Code: the stack carry in `LenientGameCopier`, three `SearchConfig` keys,
 the search's windows (`SearchPolicy`), the opponent's conditional pass (`RolloutController`, `RolloutForcing`),
 engine scenarios in the ai-bench self-test, a `DecisionSelfTest` case, the ladder's three params and one player, the
-ladder test, the guide's line and PLAN's row 61. **Parts of this lane were written while J216 held the lab and are
-unbuilt or unrun; the *Verification* paragraph says which, and is completed after J216.***
+ladder test, the guide's line and PLAN's row 61. Written while J216 held the lab and completed after it: *Verification*
+says what was run and when.*
 
-**Status: built and self-tested on the lane (*Verification*); B resolved to `search-v3-declined-instant` (point 10); the
-full gate, the review and the merge pending; unplayed. J217 plays it.**
+**Status: built and self-tested on the lane (*Verification*); B resolved to `search-v3-declined-instant` (point 10);
+reviewed by an independent skeptic, whose four code findings are fixed on the lane (*The skeptic's read*, 2026-11-13);
+the full gate and the merge pending; unplayed. J217 plays it.**
 
 **2026-11-12**
 
@@ -85,7 +86,10 @@ full gate, the review and the merge pending; unplayed. J217 plays it.**
    - **pushed** by `MagicStack.add`, the only public way onto the stack (`push` is private and the deque has no
      accessor), with the cast and target triggers suppressed (`SpellCast`, `SpellAbilityCast`, `AbilityCast`,
      `SpellCastOrCopy`, `SpellCopy`, `SpellAbilityCopy`, `BecomesTarget`, `BecomesTargetOnce`, the crew, saddle,
-     station, cycle and waterbend triggers): they fired in the live game already;
+     station, cycle and waterbend triggers, and since the skeptic's read `CommitCrime`): they fired in the live game
+     already; and the push's per-turn records that `GameCopier` had already copied are put back as it made them (each
+     player's crimes this turn; an activated ability's activations this turn and this game on its source, and the
+     stack's list of abilities activated this turn);
    - **mapped**: each live item's spell ability to the copy's, so `find` maps a stack item (a counter's target) and
      D312's install of a counter candidate needs nothing new.
    After the carry, **a self-check**: the copy's stack against the live one item by item, top first — the kind, the
@@ -105,7 +109,14 @@ full gate, the review and the merge pending; unplayed. J217 plays it.**
    remembered objects, one the copy's source does not carry), `triggering` (a triggering object the copy cannot hold
    as it was), `modes` (a modal trigger), `paid` (a paid card the copy cannot stand for), `castFrom`, `mayPlay` (a
    may-play whose `ReplaceGraveyard` effect `MagicStack.add` would make a second time), `push` (Forge refused the
-   push: no legal target), `unmappable`, `verify`, and `copy` (any other copier failure). **A face-down item is
+   push: no legal target), `unmappable`, `verify`, `copy` (any other copier failure), and since the skeptic's read
+   **`stale`** (a card target that has changed zones since it was targeted, a creature flickered in response: Forge's
+   fizzle test reads it as illegal, `game.getCardState(t).equalsWithGameTimestamp(t)` false, while the copier's
+   id-keyed map would hand the copy the card's new object; read on the live game, targets only, never a paid card or
+   a triggering object, which are last-known objects by design) and **`hidden`** (a triggering object that is a card
+   the seat may not see, by the determinizer's rule: in a library, or in another player's hand, and not
+   `mayPlayerLook(seat)`; a draw trigger's drawn card in the opponent's hand). A refusal's detail names cards by id
+   only. **A face-down item is
    refused always, never rebuilt**: `GameCopier` rebuilds a Stack-zone card face up from its paper card, and a
    rollout must never see a face the seat cannot see — hard rule 8's spirit applied inside the search, where nothing
    reaches the wire but a pick could still be made on a hidden name. No refusal reason is worked around by reflection
@@ -143,9 +154,17 @@ full gate, the review and the merge pending; unplayed. J217 plays it.**
    the first player to have priority, so on a copy the opponent is asked once more after the seat's pass where in
    the live game it had already passed and the pass ends the step or resolves the top item (D540 point 5). In D544's
    windows only (a `stackwin` or `passwin` window; never in `instant=1`'s windows, never with the new keys off), when
-   the opponent has already passed — on an empty stack, the seat is not the active player; on a stack, the opponent's
-   item is on top and is not a trigger put there in the seat's own turn (after a trigger the active player has
-   priority first, 117.3b; after a spell or ability its controller does, 117.3c, and passed it on) — each rollout
+   the opponent has already passed on the stack as it stands — on an empty stack, the seat is not the active player;
+   on a stack whose top item is the opponent's, read against the stack the seat saw at its previous priority decision
+   in the same turn and step (`SearchPolicy.opponentPassed`: the items' instance ids, bottom first, noted at every
+   priority decision that reaches the search, with a new key on only): at the seat's first decision of a step, yes in
+   the opponent's turn when no item is the seat's (the active player has priority first in a step and after each
+   resolution) and no in the seat's own turn; after it, yes only when nothing the seat saw has left the stack,
+   something is new, every new item is the opponent's and one of them is not a trigger (the opponent cast or
+   activated it, so it had priority and passed it on, 117.3c). After a resolution the active player has priority
+   first, so in the seat's own turn the opponent has not passed on what is left: the rule first written here (the
+   opponent's item on top and not a trigger put there in the seat's own turn) granted that pass, and the skeptic's
+   read rewrote it (*The skeptic's read*, finding 2) — each rollout
    seats the opponent with a forcing-capable controller (Forge's plain AI, D390's outlets or D523's random seat, as
    the config says, each answering as before with nothing armed), gives it priority first and arms a **conditional
    pass**: its first priority answer is a pass provided the stack is then the one installed
@@ -230,6 +249,11 @@ full gate, the review and the merge pending; unplayed. J217 plays it.**
       (`refused / (refused + stackwin.windows)`) with each reason's count, `.ownAim`, `.sameHost`,
       `.memoryRestored`, `.oppPassed`, every key's `.retry` a game (a retry is a widened pick that did not happen, and
       counts against A in its own match), and `search.p.declined.instantWindows`.
+    - how to read the counters (a reading aid, added after the skeptic's read; no rule above changes):
+      `search.p.stackwin.changed` and `search.p.passwin.changed` count every change of Forge's answer in their window,
+      a switch to pass included, while `search.p.dactiv.changed` counts only a pick of a widened activation. And A's
+      `search.p.declined.*` counters include the stack and pass windows (a wide window lists the aimed declined spells
+      whether or not `declined` is on), so the report never compares A's declined counters with B's.
 14. **The readings, written before any game: D519's four at 4,800 games, exactly one for a complete match that is not
     NOT READ, in this precedence, compared as the line carries them** (`lo` in integer ten-thousandths, Elo in integer
     tenths): **SHOWN**: `lo` above 0.5 and `elo` at least +15; **SMALL GAIN**: `lo` above 0.5 and `elo` below +15;
@@ -296,7 +320,9 @@ seat that names none of the new keys plays as before:
 
 **Hidden information (hard rule 8) and threads (hard rule 3).** The carry reads the stack, which is public, and the
 cards paid for it, which are public once paid; it refuses every face-down item (point 2), so no rollout sees a face
-the seat cannot. The listings are D540's (the seat's own castable spells and its own activations, aimed by Forge's
+the seat cannot, and (since the skeptic's read) every item with a triggering object that is a card the seat may not
+see (`hidden`, by the determinizer's own rule), so no carried trigger names a card the determinizer redeals. A
+refusal's detail, which can reach the search's event stream through `CopyFailed`, names cards by id only. The listings are D540's (the seat's own castable spells and its own activations, aimed by Forge's
 targeting). Every rollout redeals what the seat cannot see exactly as today (`Determinizer`); the Stack zone is not
 redealt. Nothing touches the wire, `Snap` or a `CardView`. Every new call runs inside `chooseSpellAbilityToPlay` on the
 game thread; `WIDE` is a thread-local of that thread; no thread and no `invokeInGameThread` is added, so `HOP_ALLOW`
@@ -320,11 +346,14 @@ that plus whatever D541's two keys hold, J215's +6.9 if it stands). With J211's 
 | +10 Elo | 3.3% | 92.6% | 4.2% |
 | +12 Elo | 13.4% | 85.9% | 0.7% |
 
-**So a true +6 reads SHOWN or SMALL GAIN 60% of the time and a true +5 45%: the expected effect sits at the lab's
-resolution, and a NOT SHOWN here is weak evidence against an effect of that size** (it says the union is worth less
-than about +10.6 Elo at this width, not that it is worth nothing). That is the plain size of the bet; the night is
-worth it because the stack windows are where counter-magic lives and the carry is the piece every later stack-side
-lane needs. INCONCLUSIVE AT 4,800 cannot happen at this width (D541 point 5's argument).
+**Contradicted since by a measurement** (the hypothesis above and its table stand as registered; this paragraph, written
+before the measurement, said a true +5 to +6 sat at the lab's resolution). An exposure run of 240 dev-set games after
+the lane was written (*Verification*) measured **0.292 changed decisions a game**, not 0.4–0.5; at J215's and J216's
++11 Elo per changed decision a game that is about **+3 Elo**, where the table gives SHOWN or SMALL GAIN about one
+time in five (19.7%), and a NOT SHOWN, which closes the union (point 15), cannot tell +3 Elo from 0
+(*What is unverified*). INCONCLUSIVE AT 4,800 cannot happen at this width (D541 point 5's argument). The night is
+still the plain bet it was: the stack windows are where counter-magic lives, and the carry is the piece every later
+stack-side lane needs.
 
 **Rejected.**
 
@@ -363,23 +392,69 @@ lane needs. INCONCLUSIVE AT 4,800 cannot happen at this width (D541 point 5's ar
   characteristics mattered but read the same on those four would be carried as the copy's card.
 - **The conditional pass** is given on the stack key (kinds, sources, controllers); a stack whose targets changed but
   whose key did not would still get it. The priority-order self-test holds one window.
-- **The opponent-passed rule** reads the stack's top item; a window where the opponent cast a spell and a trigger
-  of the seat's went on top in the opponent's turn is read as not passed (the top is not the opponent's), which is
-  right, and one where both players' triggers stacked in an order the rule does not see is not tested.
+- **The opponent-passed rule** (point 6, as the skeptic's read rewrote it) reads the stack against the one the seat
+  saw at its previous decision in the turn and step, and that record is kept only at decisions that reach the search:
+  a play the outlet policy makes first keeps none, which the rule's own seat-item test turns into "not passed", and a
+  special action or a mana ability of the seat's that triggers nothing is not seen at all (the opponent's earlier pass
+  is then read as standing). The self-tests hold a cast-and-pass, the seat's own item on top, the opponent's item on
+  top again after the seat's response resolved in the seat's own turn (no pass), a trigger in the seat's own turn, and
+  an empty stack in either turn.
+- **What a push records again.** The carry puts back each player's crimes this turn, and an activated ability's
+  activation records (the source's tables and the stack's list) where a push takes them above the live game's; a
+  planeswalker's loyalty-activation count and the
+  players' spells cast this turn have no public setter, and the stack's cast list, expend, cycling and a card's
+  became-target record are not put back, so on the copy a carried spell counts as cast twice this turn.
 - **The dactiv memory restore** puts back the thirteen memory sets; what an AI path changes outside them (the
   targets left on the ability, cached predictions) stays, as D540's.
 - **The listing's cost in a stack window** has no time limit, as D540's in the windows it widened.
 - **That the blocks of base 725 and 63 are unplayed everywhere** (point 11): read from the lab's four checkouts'
   ladder rows and the job files on 2026-11-13; the job's block reader checks the match's own folder only.
 - **The exposure floors** (point 13) are proposals from J212's counts of windows with castable plays, not of windows
-  the keys search. **Measured since, and well under the hypothesis** (*Verification*): over 24 diagnostic games
-  against Forge Default the union changed 1 decision (0.04 a game; an earlier build's 24 games, 4), and over each pilot
-  dry-run's 4 ladder games against B 1 (0.25 a game). The hypothesis's 0.4–0.5 a game assumed J215's per-window change
-  rate and J212's counts of windows with a castable play; the keys search fewer windows than those counts (a stack
-  window with nothing to list is no window; most equips are aimed at their host and dropped) and change fewer of them.
-  **J217 as registered is likely to read NOT READ** (point 13: under 0.25 changed decisions a game); that is the
-  rule's answer, written before the match, and this lane does not move the bar.
+  the keys search. Measured since on 240 dev-set games (*Verification*): 0.292 changed decisions a game. J217 is
+  therefore expected to clear point 13's 0.25, though not by much: on counting error alone a true rate under 0.25 is
+  about one chance in nine, and the move from the dev set to the confirm set adds to it. This lane does not move the
+  floor. At about +11 Elo per changed decision a game (J215, J216), 0.29 is about +3 Elo, not the hypothesis's +5 to
+  +6. At that size the table above gives SHOWN or SMALL GAIN about one time in five, and a NOT SHOWN, which closes the
+  union (point 15), cannot tell +3 Elo from 0. What a change in the new windows is worth is unmeasured. The run was
+  played on `04bafbfb3`, before the skeptic's fixes: its counts are the unfixed build's, and the fixed build refuses
+  more stack windows (`stale`, `hidden`) and grants the opponent's pass in fewer.
 - One opponent and one deck set: point 10's B and the confirm set's 30 deck pairs.
+
+**The skeptic's read (2026-11-13).** An independent review of the lane at `04bafbfb3` found four faults in the code,
+none a leak to the wire; each is fixed on the lane with a self-test case beside the lane's own (*Verification*):
+
+1. **A target that left and came back was carried as still legal.** `GameCopier`'s card map is keyed by
+   `GameEntity.equals`, the id alone, so a removal aimed at a creature the seat flickered in response mapped to the
+   creature's new object on the copy: live the removal fizzles (`MagicStack.hasFizzled`), on the copy it resolved, and
+   the self-check, which compares ids, passed. Fixed by refusing the window (`stale`, point 2), read on the live game
+   with Forge's own test; ai-bench case (q).
+2. **The opponent's pass was misread in the seat's own turn after a resolution.** The opponent's O1, the seat's S1 on
+   it, S1 resolved: O1 is on top again and the seat, the active player, has priority first, but the rule granted the
+   opponent's pass, so every candidate's rollout denied the opponent a response to the seat's pass. Fixed by reading
+   the stack against the one the seat saw at its previous decision (point 6); ai-bench case
+   `d544-opp-passed-after-resolution`, and the two earlier cases call the rule with no history.
+3. **A carried push ran side effects again.** `MagicStack.add` commits a crime for an item aimed at an opponent or
+   what it has, and `CommitCrime` was not held; and it counts an activated ability's activation again. Fixed by
+   holding `CommitCrime` and putting back each player's crimes this turn (`setCommitedCrimeThisTurn`; the copier
+   copies them: live 1, the copy 1, the unfixed carry 2) after the carry (point 1). The activation half was measured
+   rather than assumed: the copier does **not** copy the activation of an item still on the stack (live 1, the copy
+   0), so there the push's count is the live one and is kept; the records (the source's two `ActivationTable`s,
+   through their public table methods, and the stack's list) are put back only where a push takes them above the
+   live game's. ai-bench case (r). What has no public route is in *What is unverified*.
+4. **Hidden information, a gap in a claim.** (a) A triggering object that is a card in a zone hidden from the seat (a
+   draw trigger's drawn card in the opponent's hand) was carried onto the copy: refused now (`hidden`, the
+   determinizer's rule); ai-bench case (s). (b) Refusal details named cards and could reach the search's event stream
+   (`copy failed ... ` + the cause): every detail is ids and reason words now, a detail with any other character is
+   replaced by its reason, and every refusal case in the ai-bench self-test checks it (`^[a-zA-Z0-9 :=,._-]*$`, no card
+   name of the game); the decision self-test checks the replacement.
+
+**The exposure run** (*Verification*) **was played before these fixes**, on `04bafbfb3`: its counts are the unfixed
+build's. Finding 2 in particular touches them: the opponent's pass was granted in 404 of its 432 stack windows, some of
+them wrongly, and the fixed build grants it in fewer and refuses some windows the run searched (`stale`, `hidden`). The
+review's text findings are folded in above: the header, the hypothesis's prose (contradicted by the exposure run; the
+registered table and numbers are unchanged), point 13's reading aid, and *What is unverified*. J217's verdict also
+checks that the match line's deck set is the confirm set's file (point 11's set, as a completeness part: a match that
+point 11 describes always meets it). No registered number, threshold, floor, block, host, hash or reading rule changed.
 
 **Verification (the lane; 2026-11-12 on `1eaa00d30`, the lab idle, then 2026-11-13 after J216 on the rebased tree
 `97122947c` + the lane, the lab idle at every compute step: state `idle`, `running` and `queue` empty, read as text):**
@@ -430,7 +505,36 @@ lane needs. INCONCLUSIVE AT 4,800 cannot happen at this width (D541 point 5's ar
 - **J217's time, from the pilots**: A searched ×0.98–1.15 of B's seconds a game; at J215's 21.7 s for B, A about
   23–25 s and both about 45–47 s a game, so by D537 point 11's fit at four times the games about 9.7 h (9.2–10.3 h)
   for the match, plus the pilot's 4 minutes: point 20's estimate stands.
-- **Not run on the lane**: the full gate and the independent review (the coordinator's, at the merge).
+- **An exposure run after the lane was written** (2026-11-13 08:09-08:40 EST, at `04bafbfb3`): 240 games,
+  `search-v3-wide` against `search-v3-declined-instant` on the dev set (`--pairs tools/ai-bench/pairs-dev.txt`,
+  `--host d544-exposure`, host base 8,000,000, blocks 8,900,000-8,900,029, not 725 or 63; 7 workers;
+  `var/d544-exposure/`), read by the J217 draft's `exposure.cjs`: complete, 0 errors, 0 timeouts, 0 retries on any
+  key. stackwin 432 windows (1.80 a game, 2.15 candidates a window), 37 changed (0.154 a game); passwin 94 (0.392), 8
+  changed (0.033); dactiv 438 (1.825), 25 changed (0.104); the union 70 changed decisions, **0.292 a game** (about
+  ±0.035 from counting alone; the earlier small samples pooled 7 over 56 games, 0.125). Every key is above its floor.
+  Stack windows refused: 40 (unmappable 18, triggering 17, paid 3, copied 1, trigger 1), a share of 0.085; own-stack
+  aims dropped 4, equips at their host 589; the opponent had passed in 404 of the stack windows and 40 of the pass
+  windows. B's D544 counters were all 0 (`bNew` 0). B's D540 counters above 0 (`bD540` 9) are its own two keys, which
+  J217 requires at 0 only when B is the live seat. A's lands counters were 0. Search seconds a game: A 24.3, B 22.3
+  (×1.09). The ladder printed the run's score line; it was not read, because 240 games cannot resolve effects of this
+  size (standard error about 0.020 in score, about 14 Elo), and no rule, floor, threshold, block or host here was
+  changed after it was printed. The run predates the skeptic's fixes (*The skeptic's read*): its counts are the
+  unfixed build's.
+- **After the skeptic's read** (2026-11-13, on the lane's fix commit, the lab idle and no pilot running at each compute
+  step): `./bridge/build.sh` build OK (the lint 97 files under `bridge/src` and 4 under `tools/`, 33 rules, its
+  self-test 79 firing cases); **decision self-test 504 checks, 0 failures** (502 before: the refusal detail's two);
+  **`./tools/ai-bench.sh --selftest` 475 checks, 0 failures** (460 before: (q) 3, (r) 4, (s) 3, the opponent's pass
+  after a resolution 1, and the detail check on each of the four earlier refusals; `--stack-windows` alone 123, 108
+  before). Each of the cases for findings 1, 3 (the crimes) and 4a was seen to fail with its fix taken out (a mutated
+  build, never committed: 5 failures, every one of them these cases'). `./tools/cubelab.sh seat-identity`: all 4 games
+  are the golden's. `./tools/ai-ladder.sh list`: identical to main's but for `search-v3-wide` at `b95340935592` and the
+  kinds line's three params. `node --test web/test/ai-ladder.test.ts` 57 of 57; `web/test/claude-md.test.ts` 5 of 5;
+  `node tools/decisions.mjs check` OK (458, next D545); `./tools/public-check.sh` OK. The J217 draft: `runner.sh
+  check` machine-checked, `lint: clean` (8 pilot blocks, 52 checks; 2 command blocks, 25 checks); its readers'
+  self-tests exposure 8 of 8, verdict 50 of 50 (the deck set's two cases added), recording 14 of 14, the block,
+  rollout and gate readers ok; its code check passes on the lane and on a registry with D545's player appended
+  before this one. The full gate and the pilot dry-run were not run here (the coordinator's).
+- **Not run on the lane**: the full gate (the coordinator's, at the merge).
 
 **Follow-up.** J217 plays the match after the merge and after J216's read resolves point 10's B; its `report.md`
 carries the reading, every exposure rate and the refusals. A candidate's adoption is its own decision. Its row in PLAN

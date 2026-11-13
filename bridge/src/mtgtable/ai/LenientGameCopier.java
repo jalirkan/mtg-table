@@ -228,6 +228,8 @@ public final class LenientGameCopier extends GameCopier {
     private final Map<Card, String> failures = new IdentityHashMap<>();
     /** D544: whether {@link #makeCopy} carries the stack ({@link #carryStack(boolean)}); off, a copy is what it was. */
     private boolean carryStack;
+    /** D544: the searching seat of the copy being carried (the copier's {@code aiPlayer}; null when none was given). */
+    private Player seat;
     /** D544: each live stack item's spell ability, by identity, to the one on the copy's stack. */
     private final Map<SpellAbility, SpellAbility> stackMap = new IdentityHashMap<>();
     /** D544: the copy's cards by id, and the last-known cards the carry rebuilt (a sacrificed token), by the original. */
@@ -375,7 +377,7 @@ public final class LenientGameCopier extends GameCopier {
         }
         carry(copy);
         if (carryStack) {
-            carryStackItems(copy);   // D544: only when the search asks, so every other copy is what it was
+            carryStackItems(copy, aiPlayer);   // D544: only when the search asks, so every other copy is what it was
         }
         return copy;
     }
@@ -785,11 +787,18 @@ public final class LenientGameCopier extends GameCopier {
     // D544: the stack carry
     // ==================================================================
 
-    /** D544: the cast and target triggers held while the carry pushes an item (they fired in the live game already). */
+    /**
+     * D544: the cast and target triggers held while the carry pushes an item (they fired in the live game already);
+     * the skeptic's read added {@code CommitCrime}, which {@code MagicStack.add} runs through {@code Player.commitCrime}.
+     */
     private static final TriggerType[] HELD = {TriggerType.SpellCast, TriggerType.SpellAbilityCast, TriggerType.AbilityCast,
             TriggerType.SpellCastOrCopy, TriggerType.SpellCopy, TriggerType.SpellAbilityCopy, TriggerType.BecomesTarget,
             TriggerType.BecomesTargetOnce, TriggerType.Crewed, TriggerType.BecomesCrewed, TriggerType.Saddled,
-            TriggerType.BecomesSaddled, TriggerType.Stationed, TriggerType.Cycled, TriggerType.Waterbend};
+            TriggerType.BecomesSaddled, TriggerType.Stationed, TriggerType.Cycled, TriggerType.Waterbend,
+            TriggerType.CommitCrime};
+
+    /** D544 (the skeptic's read): a refusal's detail is ids and reason words only, never a card's name. */
+    static final java.util.regex.Pattern DETAIL_CHARS = java.util.regex.Pattern.compile("^[a-zA-Z0-9 :=,._-]*$");
 
     /**
      * D544: the stack items' effects that read the mana spent on them -- a value the carry does not rebuild (a
@@ -802,14 +811,22 @@ public final class LenientGameCopier extends GameCopier {
     /**
      * D544: the stack carry is refused for this window; {@link #reason} is the counter's suffix
      * ({@code search.p.stackwin.refused.<reason>}).  Thrown out of {@link #makeCopy} only when the carry was asked.
+     * {@link #detail} names cards by id only (the skeptic's read: it reaches the search's event stream through
+     * {@code CopyFailed}); a detail with any character outside {@link #DETAIL_CHARS} is replaced by its reason.
      */
     public static final class StackRefused extends RuntimeException {
         private static final long serialVersionUID = 1L;
         public final String reason;
+        public final String detail;
 
         StackRefused(final String reason, final String detail) {
-            super("stack carry refused (" + reason + "): " + detail);
+            super("stack carry refused (" + reason + "): " + clean(reason, detail));
             this.reason = reason;
+            this.detail = clean(reason, detail);
+        }
+
+        private static String clean(final String reason, final String detail) {
+            return detail != null && DETAIL_CHARS.matcher(detail).matches() ? detail : "refused " + reason;
         }
     }
 
@@ -833,7 +850,8 @@ public final class LenientGameCopier extends GameCopier {
      * that is resolving ({@code resolving}), a split second item ({@code splitSecond}), any face-down item -- a
      * face-down spell or an ability of a face-down card: a copy would rebuild it face up from its paper card, and a
      * rollout must never see a face the seat cannot ({@code faceDown}) -- a copied spell, which has no zone to rebuild
-     * it from ({@code copied}), and a spliced spell ({@code splice}).
+     * it from ({@code copied}), a spliced spell ({@code splice}), and (the skeptic's read) an item with a card target
+     * that has changed zones since it was targeted ({@code stale}, {@link #staleTarget}).
      */
     public static String stackRefusal(final Game g) {
         final forge.game.zone.MagicStack st = g.getStack();
@@ -864,8 +882,40 @@ public final class LenientGameCopier extends GameCopier {
             if (sa.getSplicedCards() != null && !sa.getSplicedCards().isEmpty()) {
                 return "splice";
             }
+            if (staleTarget(g, sa)) {
+                return "stale";
+            }
         }
         return null;
+    }
+
+    /**
+     * D544 (the skeptic's read): a card target of {@code sa}'s chain that has left its zone since it was targeted -- a
+     * creature flickered in response, so the card is a new object with a new timestamp.  Forge's own fizzle test
+     * ({@code MagicStack.hasFizzled}) reads such a target as illegal: {@code game.getCardState(t)} found in the game
+     * and not {@code equalsWithGameTimestamp(t)}.  The copier's map is keyed by {@code GameEntity.equals}, the id
+     * alone, so it would hand the copy the card's new object and the copy's item would resolve where the live one
+     * fizzles; the window is refused instead.  Only targets: a paid card and a trigger's triggering objects are
+     * last-known objects by design.  A card no longer in the game ({@code getCardState} hands back the target itself)
+     * is the copier's to map or refuse ({@code unmappable}).
+     */
+    static boolean staleTarget(final Game g, final SpellAbility sa) {
+        final SpellAbility root = sa instanceof forge.game.trigger.WrappedAbility
+                ? ((forge.game.trigger.WrappedAbility) sa).getWrappedAbility() : sa;
+        for (SpellAbility s = root; s != null; s = s.getSubAbility()) {
+            if (!s.usesTargeting()) {
+                continue;
+            }
+            for (final GameObject t : s.getTargets()) {
+                if (t instanceof Card) {
+                    final Card cur = g.getCardState((Card) t);
+                    if (cur == null || !cur.equalsWithGameTimestamp((Card) t)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -887,15 +937,24 @@ public final class LenientGameCopier extends GameCopier {
      * {@code MagicStack.add} with {@link #HELD}'s triggers suppressed (it is the only public way onto the stack; the
      * cast happened in the live game, so its triggers must not fire again), and mapped in {@link #stackMap}; then
      * {@link #verifyStack}.  Anything that cannot be rebuilt faithfully throws {@link StackRefused}: the window is
-     * refused, never guessed.
+     * refused, never guessed.  {@code seat} is the searching seat (the copier's {@code aiPlayer}): a triggering object
+     * it may not see refuses the window ({@code hidden}).  The skeptic's read: the push's per-turn records that
+     * {@code GameCopier} had already copied are put back as the copier made them -- each player's crimes this turn
+     * ({@code setCommitedCrimeThisTurn}) and, for an activated ability, its source's activations this turn and this
+     * game and the stack's list of abilities activated this turn ({@link #ActivationRecord}).
      */
-    private void carryStackItems(final Game copy) {
+    private void carryStackItems(final Game copy, final Player seat) {
         stackMap.clear();
         stackById = null;
         stackLki.clear();
+        this.seat = seat;
         final String pre = stackRefusal(orig);
         if (pre != null) {
             throw new StackRefused(pre, "the live stack");
+        }
+        final Map<Player, Integer> crimes = new IdentityHashMap<>();
+        for (final Player p : copy.getPlayers()) {
+            crimes.put(p, p.getCommittedCrimeThisTurn());
         }
         final List<forge.game.spellability.SpellAbilityStackInstance> items = new ArrayList<>();
         for (final forge.game.spellability.SpellAbilityStackInstance si : orig.getStack()) {
@@ -913,10 +972,12 @@ public final class LenientGameCopier extends GameCopier {
             for (final forge.game.spellability.SpellAbilityStackInstance si : items) {
                 final SpellAbility n = rebuildItem(copy, si);
                 final int before = copy.getStack().size();
+                final ActivationRecord rec = new ActivationRecord(copy, n.getHostCard(), orig, si.getSourceCard());
                 copy.getStack().add(n);
+                rec.restore();   // MagicStack.add counts an activated ability once more: the copier copied the count
                 if (copy.getStack().size() != before + 1) {
                     // MagicStack.add returns without a push when the item has no legal target ("failed to target")
-                    throw new StackRefused("push", si.getSourceCard().getName());
+                    throw new StackRefused("push", "card " + si.getSourceCard().getId());
                 }
                 stackMap.put(si.getSpellAbility(), copy.getStack().peekAbility());
             }
@@ -925,13 +986,93 @@ public final class LenientGameCopier extends GameCopier {
             throw e;
         } catch (final RuntimeException e) {
             stackMap.clear();
-            throw new StackRefused("unmappable", String.valueOf(e));
+            throw new StackRefused("unmappable", e.getClass().getSimpleName());
         } finally {
             for (final TriggerType t : held) {
                 th.clearSuppression(t);
             }
+            for (final Map.Entry<Player, Integer> e : crimes.entrySet()) {
+                // MagicStack.add commits a crime again for an item that targets an opponent or what it has (CommitCrime
+                // is held above, so no trigger ran); the copier had copied the count
+                e.getKey().setCommitedCrimeThisTurn(e.getValue());
+            }
         }
         verifyStack(copy);
+    }
+
+    /**
+     * D544 (the skeptic's read): an activated ability's records that {@code MagicStack.add} writes on a push
+     * ({@code addAbilityActivatedThisTurn}: the source's activations this turn and this game, and the stack's list of
+     * abilities activated this turn), taken before the push and put back after it, through the tables' and the list's
+     * own public methods, wherever the push took a record above the live game's.  Measured on the pinned engine
+     * (ai-bench case (r)): {@code GameCopier} does not copy the activation of an item still on the stack (live 1, the
+     * copy 0), so there the push's count is the live one and is kept; where the copier has copied it, the push would
+     * count it twice and the record is put back.  A planeswalker's loyalty-activation count has no public setter and is
+     * not compared (D544's *What is unverified*).
+     */
+    private static final class ActivationRecord {
+        private final Card host;
+        private final List<Object[]> turn;
+        private final List<Object[]> game;
+        private final List<SpellAbility> stackList;
+        private final int stackSize;
+        private final int liveTurn;
+        private final int liveGame;
+        private final int liveList;
+
+        ActivationRecord(final Game copy, final Card host, final Game live, final Card liveHost) {
+            this.host = host;
+            this.turn = host == null ? null : cells(host.getAbilityActivatedThisTurn());
+            this.game = host == null ? null : cells(host.getAbilityActivatedThisGame());
+            this.stackList = copy.getStack().getAbilityActivatedThisTurn();
+            this.stackSize = stackList == null ? 0 : stackList.size();
+            this.liveTurn = liveHost == null ? 0 : total(liveHost.getAbilityActivatedThisTurn());
+            this.liveGame = liveHost == null ? 0 : total(liveHost.getAbilityActivatedThisGame());
+            final List<SpellAbility> l = live.getStack().getAbilityActivatedThisTurn();
+            this.liveList = l == null ? 0 : l.size();
+        }
+
+        private static int total(final forge.game.card.ActivationTable t) {
+            int n = 0;
+            for (final com.google.common.collect.Multiset<Player> m : t.values()) {
+                n += m == null ? 0 : m.size();
+            }
+            return n;
+        }
+
+        private static List<Object[]> cells(final forge.game.card.ActivationTable t) {
+            final List<Object[]> out = new ArrayList<>();
+            for (final com.google.common.collect.Table.Cell<SpellAbility, java.util.Optional<forge.game.staticability.StaticAbility>,
+                    com.google.common.collect.Multiset<Player>> c : t.cellSet()) {
+                out.add(new Object[] {c.getRowKey(), c.getColumnKey(),
+                        c.getValue() == null ? null : com.google.common.collect.HashMultiset.create(c.getValue())});
+            }
+            return out;
+        }
+
+        @SuppressWarnings("unchecked")
+        private static void put(final forge.game.card.ActivationTable t, final List<Object[]> cells) {
+            t.clear();
+            for (final Object[] c : cells) {
+                if (c[2] != null) {
+                    t.put((SpellAbility) c[0], (java.util.Optional<forge.game.staticability.StaticAbility>) c[1],
+                            com.google.common.collect.HashMultiset.create((com.google.common.collect.Multiset<Player>) c[2]));
+                }
+            }
+        }
+
+        void restore() {
+            if (host != null && total(host.getAbilityActivatedThisTurn()) > liveTurn) {
+                put(host.getAbilityActivatedThisTurn(), turn);
+            }
+            if (host != null && total(host.getAbilityActivatedThisGame()) > liveGame) {
+                put(host.getAbilityActivatedThisGame(), game);
+            }
+            final int keep = Math.max(stackSize, liveList);
+            while (stackList != null && stackList.size() > keep) {
+                stackList.remove(stackList.size() - 1);
+            }
+        }
     }
 
     /** D544: one live stack item rebuilt on {@code copy}, not yet pushed. */
@@ -941,14 +1082,14 @@ public final class LenientGameCopier extends GameCopier {
         final Player act = playerOnCopy(si.getActivatingPlayer());
         final Card host = cardOnCopy(copy, src);
         if (act == null || host == null) {
-            throw new StackRefused("unmappable", "the source or controller of " + src.getName());
+            throw new StackRefused("unmappable", "the source or controller of card " + src.getId());
         }
         if (readsManaSpent(src, sa)) {
-            throw new StackRefused("manaSpent", src.getName());
+            throw new StackRefused("manaSpent", "card " + src.getId());
         }
         for (final forge.game.mana.Mana m : sa.getPayingMana()) {
             if (m.addsNoCounterMagic(sa) || m.addsCounters(sa) || m.addsKeywords(sa) || m.triggersWhenSpent()) {
-                throw new StackRefused("manaEffects", src.getName());
+                throw new StackRefused("manaEffects", "card " + src.getId());
             }
         }
         final SpellAbility n;
@@ -956,12 +1097,12 @@ public final class LenientGameCopier extends GameCopier {
             n = rebuildTrigger(copy, sa, src, host, act);
         } else {
             if (sa.isTrigger() || sa.isWrapper()) {
-                throw new StackRefused("unmappable", "an item of unknown kind from " + src.getName());
+                throw new StackRefused("unmappable", "an item of unknown kind from card " + src.getId());
             }
             try {
                 n = SearchPolicy.mapSaOn(this, sa, act, host);
             } catch (final RuntimeException e) {
-                throw new StackRefused("unmappable", src.getName() + ": " + e.getMessage());
+                throw new StackRefused("unmappable", "card " + src.getId() + ": " + e.getClass().getSimpleName());
             }
             if (sa.getChosenList() != null) {
                 // a modal item: Forge's cast appends a clone of each chosen mode to the spell (CharmEffect.chainAbilities)
@@ -971,7 +1112,7 @@ public final class LenientGameCopier extends GameCopier {
             }
             if (n.getMayPlay() != null && n.getMayPlay().hasParam("ReplaceGraveyard")) {
                 // MagicStack.add would make the may-play's replacement effect again beside the copied one
-                throw new StackRefused("mayPlay", src.getName());
+                throw new StackRefused("mayPlay", "card " + src.getId());
             }
         }
         carryPaid(copy, sa, n);
@@ -980,7 +1121,7 @@ public final class LenientGameCopier extends GameCopier {
             if (from != null) {
                 final forge.game.zone.Zone m = zoneOnCopy(copy, from);
                 if (m == null) {
-                    throw new StackRefused("castFrom", src.getName());
+                    throw new StackRefused("castFrom", "card " + src.getId());
                 }
                 host.setCastFrom(m);
             }
@@ -1045,20 +1186,20 @@ public final class LenientGameCopier extends GameCopier {
      */
     private SpellAbility rebuildTrigger(final Game copy, final SpellAbility sa, final Card src, final Card host, final Player act) {
         if (!(sa instanceof forge.game.trigger.WrappedAbility)) {
-            throw new StackRefused("trigger", src.getName());
+            throw new StackRefused("trigger", "card " + src.getId());
         }
         final forge.game.trigger.WrappedAbility w = (forge.game.trigger.WrappedAbility) sa;
         final Trigger t = w.getTrigger();
         final SpellAbility innerLive = w.getWrappedAbility();
         if (t == null || innerLive == null || t.getSpawningAbility() != null || !t.getTriggerRemembered().isEmpty()) {
-            throw new StackRefused("trigger", src.getName());
+            throw new StackRefused("trigger", "card " + src.getId());
         }
         if (innerLive.getChosenList() != null) {
-            throw new StackRefused("modes", src.getName());
+            throw new StackRefused("modes", "card " + src.getId());
         }
         final Trigger tc = matchTrigger(src, host, t);
         if (tc == null) {
-            throw new StackRefused("trigger", src.getName() + ": " + t);
+            throw new StackRefused("trigger", "card " + src.getId() + ": mode " + t.getMode());
         }
         final SpellAbility inner = tc.ensureAbility().copy(host, act, false);
         inner.setTrigger(tc);
@@ -1070,7 +1211,7 @@ public final class LenientGameCopier extends GameCopier {
         copyTargetsOnto(innerLive, inner, src);
         final Player decider = w.getDecider() == null ? null : playerOnCopy(w.getDecider());
         if (w.getDecider() != null && decider == null) {
-            throw new StackRefused("trigger", src.getName() + ": its decider");
+            throw new StackRefused("trigger", "card " + src.getId() + ": its decider");
         }
         final forge.game.trigger.WrappedAbility n = new forge.game.trigger.WrappedAbility(tc, inner, decider);
         n.setActivatingPlayer(act);
@@ -1108,22 +1249,24 @@ public final class LenientGameCopier extends GameCopier {
                 continue;
             }
             if (v instanceof Card) {
+                hiddenFromSeat((Card) v, e.getKey(), src);
                 out.put(e.getKey(), sameCardOnCopy(copy, (Card) v, "triggering", src));
             } else if (v instanceof Player) {
                 final Player p = playerOnCopy((Player) v);
                 if (p == null) {
-                    throw new StackRefused("triggering", src.getName() + ": " + e.getKey());
+                    throw new StackRefused("triggering", "card " + src.getId() + ": " + e.getKey());
                 }
                 out.put(e.getKey(), p);
             } else if (v instanceof SpellAbility) {
                 final SpellAbility m = stackMap.get(v);
                 if (m == null) {
-                    throw new StackRefused("triggering", src.getName() + ": " + e.getKey() + " is not on the stack");
+                    throw new StackRefused("triggering", "card " + src.getId() + ": " + e.getKey() + " is not on the stack");
                 }
                 out.put(e.getKey(), m);
             } else if (v instanceof CardCollection) {
                 final CardCollection cc = new CardCollection();
                 for (final Card c : (CardCollection) v) {
+                    hiddenFromSeat(c, e.getKey(), src);
                     cc.add(sameCardOnCopy(copy, c, "triggering", src));
                 }
                 out.put(e.getKey(), cc);
@@ -1139,15 +1282,37 @@ public final class LenientGameCopier extends GameCopier {
             } else if (v instanceof Number || v instanceof String || v instanceof Boolean || v instanceof Enum) {
                 out.put(e.getKey(), v);
             } else {
-                throw new StackRefused("triggering", src.getName() + ": " + e.getKey() + " (" + v.getClass().getSimpleName() + ")");
+                throw new StackRefused("triggering", "card " + src.getId() + ": " + e.getKey() + " holds " + v.getClass().getSimpleName());
             }
         }
         return out;
     }
 
+    /**
+     * D544 (the skeptic's read): a triggering object that is a card the searching seat may not see refuses the window
+     * ({@code hidden}) -- a draw trigger's drawn card in the opponent's hand, say: carried, the copy's trigger would
+     * name the card the determinizer redeals.  The rule is {@link Determinizer}'s, read on the card where it is now in
+     * the live game: a card in a library, or in another player's hand, that {@code mayPlayerLook(seat)} does not let
+     * the seat look at.  With no seat given, every card in a library or a hand counts as hidden.
+     */
+    private void hiddenFromSeat(final Card c, final forge.game.ability.AbilityKey key, final Card src) {
+        final Card cur = orig.getCardState(c);
+        final Card x = cur == null ? c : cur;
+        final Zone z = x.getZone();
+        if (z == null) {
+            return;
+        }
+        final ZoneType t = z.getZoneType();
+        final boolean hiddenZone = t == ZoneType.Library || t == ZoneType.Hand && (seat == null || x.getOwner() != seat);
+        if (hiddenZone && (seat == null || !x.mayPlayerLook(seat))) {
+            throw new StackRefused("hidden", "card " + src.getId() + ": " + key + " is a card in a hidden zone");
+        }
+    }
+
     /** D544: one element of a collection-valued triggering object, mapped as a single value would be (or refused). */
     private Object mapTriggeringElement(final Game copy, final Object x, final forge.game.ability.AbilityKey key, final Card src) {
         if (x instanceof Card) {
+            hiddenFromSeat((Card) x, key, src);
             return sameCardOnCopy(copy, (Card) x, "triggering", src);
         }
         if (x instanceof Player) {
@@ -1161,7 +1326,7 @@ public final class LenientGameCopier extends GameCopier {
                 return m;
             }
         }
-        throw new StackRefused("triggering", src.getName() + ": " + key + " holds "
+        throw new StackRefused("triggering", "card " + src.getId() + ": " + key + " holds "
                 + (x == null ? "null" : x.getClass().getSimpleName()));
     }
 
@@ -1173,12 +1338,12 @@ public final class LenientGameCopier extends GameCopier {
     private Card sameCardOnCopy(final Game copy, final Card c, final String why, final Card src) {
         final Card m = cardOnCopy(copy, c);
         if (m == null) {
-            throw new StackRefused(why, src.getName() + ": " + c.getName() + " is not on the copy");
+            throw new StackRefused(why, "card " + src.getId() + ": card " + c.getId() + " is not on the copy");
         }
         if (readsSame(c, m)) {
             return m;
         }
-        throw new StackRefused(why, src.getName() + ": " + c.getName() + " reads differently on the copy");
+        throw new StackRefused(why, "card " + src.getId() + ": card " + c.getId() + " reads differently on the copy");
     }
 
     private static boolean readsSame(final Card a, final Card b) {
@@ -1198,7 +1363,7 @@ public final class LenientGameCopier extends GameCopier {
                     try {
                         m = find(t);
                     } catch (final RuntimeException e) {
-                        throw new StackRefused("unmappable", src.getName() + ": its target " + t);
+                        throw new StackRefused("unmappable", "card " + src.getId() + ": a target");
                     }
                     b.getTargets().add(m);
                     if (a.isDividedAsYouChoose()) {
@@ -1210,7 +1375,7 @@ public final class LenientGameCopier extends GameCopier {
             b = b.getSubAbility();
         }
         if (a != null || b != null) {
-            throw new StackRefused("unmappable", src.getName() + ": its parts differ on the copy");
+            throw new StackRefused("unmappable", "card " + src.getId() + ": its parts differ on the copy");
         }
     }
 
@@ -1250,8 +1415,13 @@ public final class LenientGameCopier extends GameCopier {
         final List<String> b = stackShape(copy.getStack());
         if (!a.equals(b)) {
             stackMap.clear();
-            throw new StackRefused("verify", "live " + a + " copy " + b);
+            throw new StackRefused("verify", "live " + shapeDetail(a) + " copy " + shapeDetail(b));
         }
+    }
+
+    /** D544: a stack's shape as a refusal's detail: ids and words only ({@link #DETAIL_CHARS}). */
+    private static String shapeDetail(final List<String> shape) {
+        return shape.isEmpty() ? "empty" : String.join(", ", shape).replace(" ->", " at").replace("?", "u");
     }
 
     /** D544: {@link #verifyStack}'s view of a stack (ids only, top first). */

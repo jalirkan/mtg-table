@@ -150,6 +150,15 @@ public final class SearchPolicy {
     private long widenedProgress;
     /** D544: the stack when the widened pick was made ({@link LenientGameCopier#stackKey}; empty for D540's picks). */
     private String widenedStack = "";
+    /**
+     * D544 (the skeptic's read): the stack's instance ids, bottom first, at the seat's last priority decision in this
+     * turn and step ({@link #notePriority}), and whether the opponent had passed at the decision in hand.  Kept only
+     * with {@code stackwin} or {@code passwin} on.
+     */
+    private int seenTurn = -1;
+    private PhaseType seenPhase;
+    private int[] seenIds;
+    private boolean oppPassedNow;
     private final Set<String> widenOff = new HashSet<>();
     private int widenOffTurn = -1;
     private PhaseType widenOffPhase;
@@ -627,6 +636,9 @@ public final class SearchPolicy {
      * the others.  With every widening key off this is {@link #wantsPriority(Player)} and reads nothing more.
      */
     public boolean wantsPriority(final Player ai, final List<SpellAbility> forge) {
+        if (cfg.priority && (cfg.stackwin || cfg.passwin)) {
+            notePriority(ai);   // D544: every priority decision of the seat that can reach the search, before any return
+        }
         if (wantsPriority(ai)) {
             return true;
         }
@@ -682,23 +694,107 @@ public final class SearchPolicy {
     }
 
     /**
-     * D544: whether the opponent has already passed in this window, so a rollout asks it first and it passes while the
-     * stack is the one installed ({@link #WIDE_PASSED}).  On an empty stack: the seat is not the active player (the
-     * active player has priority first in every step).  On a stack: its top item is the opponent's, and it is not a
-     * trigger put there in the seat's own turn (the active player has priority first after a trigger is put on the
-     * stack, 117.3b; after a spell or an ability, its controller does, 117.3c, and passed it on).
+     * D544, rewritten after the skeptic's read: whether the opponent has already passed on the stack as it stands, so
+     * a rollout asks it first and it passes while the stack is the one installed ({@link #WIDE_PASSED}).  Read from
+     * what the seat itself has seen: {@code seen} is the stack's instance ids, bottom first, at the seat's previous
+     * priority decision in this turn and step (null: this is its first).
+     * <ul>
+     * <li>An empty stack: the seat is not the active player (the active player has priority first in every step, and
+     *     after every resolution).</li>
+     * <li>A stack whose top item is the seat's, or with no controller: no.</li>
+     * <li>The seat's first priority in this step: in the opponent's turn yes when no item on the stack is the seat's
+     *     (the opponent had priority first in the step and after each resolution, so it has passed on what is there; an
+     *     item of the seat's would mean the seat acted this step through a path that kept no record); in the seat's own
+     *     turn no (the seat has priority first in a step, so whatever is already there was put there by a trigger and
+     *     nobody has passed on it).</li>
+     * <li>Otherwise yes only when every item the seat saw is still where it was (nothing has resolved: after a
+     *     resolution the active player has priority first, and in the seat's own turn that is the seat with nobody
+     *     having passed -- the case the first rule missed: the opponent's O1, the seat's S1 on it, S1 resolved, O1 on
+     *     top again), at least one item is new, every new item is the opponent's, and at least one of them is not a
+     *     trigger: the opponent cast or activated it, so it had priority after the seat's last decision and passed it
+     *     on with this stack (117.3c).  New items that are triggers alone (one the seat's own action caused, a land drop
+     *     under the opponent's punisher) are not a pass.</li>
+     * </ul>
      */
-    public static boolean opponentPassed(final Player ai) {
+    public static boolean opponentPassed(final Player ai, final int[] seen) {
         final Game g = ai.getGame();
         final PhaseHandler ph = g.getPhaseHandler();
-        if (g.getStack().isEmpty()) {
+        final List<forge.game.spellability.SpellAbilityStackInstance> items = stackBottomFirst(g);
+        if (items.isEmpty()) {
             return !ph.isPlayerTurn(ai);
         }
-        final forge.game.spellability.SpellAbilityStackInstance top = g.getStack().peek();
-        if (top == null || top.getActivatingPlayer() == null || top.getActivatingPlayer() == ai) {
+        final forge.game.spellability.SpellAbilityStackInstance top = items.get(items.size() - 1);
+        if (top.getActivatingPlayer() == null || top.getActivatingPlayer() == ai) {
             return false;
         }
-        return !(top.isTrigger() && ph.isPlayerTurn(ai));
+        if (seen == null) {
+            if (ph.isPlayerTurn(ai)) {
+                return false;
+            }
+            for (final forge.game.spellability.SpellAbilityStackInstance si : items) {
+                if (si.getActivatingPlayer() == null || si.getActivatingPlayer() == ai) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (seen.length >= items.size()) {
+            return false;   // nothing new: an item resolved or nothing moved
+        }
+        for (int i = 0; i < seen.length; i++) {
+            if (items.get(i).getId() != seen[i]) {
+                return false;   // something the seat saw has left the stack: a resolution since
+            }
+        }
+        boolean cast = false;
+        for (int i = seen.length; i < items.size(); i++) {
+            final forge.game.spellability.SpellAbilityStackInstance si = items.get(i);
+            if (si.getActivatingPlayer() == null || si.getActivatingPlayer() == ai) {
+                return false;
+            }
+            cast |= !si.isTrigger();
+        }
+        return cast;
+    }
+
+    /** D544: the stack's items, bottom first (the stack iterates top first). */
+    private static List<forge.game.spellability.SpellAbilityStackInstance> stackBottomFirst(final Game g) {
+        final List<forge.game.spellability.SpellAbilityStackInstance> out = new ArrayList<>();
+        for (final forge.game.spellability.SpellAbilityStackInstance si : g.getStack()) {
+            out.add(0, si);
+        }
+        return out;
+    }
+
+    /** D544: the stack's instance ids, bottom first ({@link #opponentPassed}'s {@code seen}). */
+    public static int[] stackIds(final Game g) {
+        final List<forge.game.spellability.SpellAbilityStackInstance> items = stackBottomFirst(g);
+        final int[] out = new int[items.size()];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = items.get(i).getId();
+        }
+        return out;
+    }
+
+    /**
+     * D544 (the skeptic's read): a priority decision of the seat: whether the opponent had passed ({@link
+     * #opponentPassed}, against the stack the seat saw at its previous decision in this turn and step), then this
+     * stack as the one it has seen.  Called once a decision, by {@link #wantsPriority(Player, List)}, with a new key on.
+     * Reads the game only.
+     */
+    private void notePriority(final Player ai) {
+        final PhaseHandler ph = ai.getGame().getPhaseHandler();
+        final boolean same = ph.getTurn() == seenTurn && ph.getPhase() == seenPhase;
+        oppPassedNow = opponentPassed(ai, same ? seenIds : null);
+        seenTurn = ph.getTurn();
+        seenPhase = ph.getPhase();
+        seenIds = stackIds(ai.getGame());
+    }
+
+    /** For the self-test only (D544): a priority decision of the seat noted, as the search notes one; the pass it read. */
+    public boolean notePriorityForTest(final Player ai) {
+        notePriority(ai);
+        return oppPassedNow;
     }
 
     /**
@@ -884,7 +980,7 @@ public final class SearchPolicy {
             }
             // D544: the rollouts of a new window carry the stack (stackwin) and, where the opponent has passed already,
             // ask it first with a conditional pass; 0 for every other window, so their rollouts are today's
-            WIDE.set(wide == null ? 0 : ("stackwin".equals(wide) ? WIDE_STACK : 0) | (opponentPassed(ai) ? WIDE_PASSED : 0));
+            WIDE.set(wide == null ? 0 : ("stackwin".equals(wide) ? WIDE_STACK : 0) | (oppPassedNow ? WIDE_PASSED : 0));
             rank(ai, cands, "p", forgeSa != null ? 2 : 1, t0);
             sink.add("search.p.considered", 1);
             // D540's exposure counters: a window the widening reached, its candidates, and (below) its changes
@@ -895,7 +991,7 @@ public final class SearchPolicy {
             if (wide != null) {
                 sink.add("search.p." + wide + ".windows", 1);
                 sink.add("search.p." + wide + ".cands", cands.size());
-                if (opponentPassed(ai)) {
+                if (oppPassedNow) {
                     sink.add("search.p." + wide + ".oppPassed", 1);
                 }
             }

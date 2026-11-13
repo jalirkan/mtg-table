@@ -2153,6 +2153,150 @@ public final class AiBench {
             }
         });
 
+        // (q) the skeptic's read, finding 1: the opponent's Lightning Bolt on the seat's Grizzly Bears, and the seat's
+        // Ephemerate on the Bears already resolved (the Bears flickered: a new object, a new timestamp). Live, the Bolt
+        // fizzles (MagicStack.hasFizzled); the copier's id-keyed map would aim the copy's Bolt at the new Bears, so the
+        // carry refuses the window (stale)
+        scenario("d544-q-stale-target", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanhand=Lightning Bolt", "humanbattlefield=Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aihand=Ephemerate",
+                "aibattlefield=Grizzly Bears;Plains", "ailibrary=Plains;Plains;Plains;Plains"), PolicyLobbyPlayerAi.Outlets.OFF,
+                (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final boolean bolt = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Lightning Bolt"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            final boolean eph = bolt && forge.ai.ComputerUtil.handlePlayingSpellAbility(ai,
+                    playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Ephemerate"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            if (eph) {
+                g.getStack().resolveStack();   // the Ephemerate resolves: the Bears leave and come back
+                if (g.getStack().hasSimultaneousStackEntries()) {
+                    g.getStack().addAllTriggeredAbilitiesToStack();
+                }
+                g.getPhaseHandler().setPriority(ai);
+            }
+            final Card now = g.getCardState(bears);
+            final boolean ok = eph && g.getStack().size() == 1 && g.getStack().peek().isSpell() && now != null
+                    && now.isInZone(ZoneType.Battlefield) && !now.equalsWithGameTimestamp(bears);
+            check(ok, "d544 (q): the board: the Bolt on top, aimed at the Bears as they were, and the Bears back on the battlefield "
+                    + "as a new object (" + stackOf(g) + "; Bears in " + (now == null ? "none" : String.valueOf(now.getZone())) + ")");
+            if (ok) {
+                refusal("d544 (q) a target flickered in response", ai, "stale");
+            }
+        });
+
+        // (r) the skeptic's read, finding 3: the push's side effects. The opponent's Prodigal Pyromancer aims its ability
+        // at the seat's Grizzly Bears (a crime: it targets what an opponent controls); the seat's Patrolling Peacemaker
+        // triggers on an opponent's crime. A carried copy keeps each player's crimes this turn as the copier made them (the
+        // carry off; the copier copies them), the Pyromancer's activations this turn and this game at the live game's (the
+        // copier does not copy an activation whose item is still on the stack, so the push's is the one), and no crime
+        // trigger runs on it
+        scenario("d544-r-side-effects", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanbattlefield=Prodigal Pyromancer;Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain",
+                "aibattlefield=Patrolling Peacemaker|Counters:P1P1=2;Grizzly Bears;Plains", "ailibrary=Plains;Plains;Plains;Plains"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final Card pyro = named(opp.getCardsIn(ZoneType.Battlefield), "Prodigal Pyromancer");
+            forge.game.spellability.SpellAbility ping = null;
+            for (final forge.game.spellability.SpellAbility sa : pyro.getSpellAbilities()) {
+                ping = ping == null && sa.isActivatedAbility() && !sa.isManaAbility() ? sa : ping;
+            }
+            // live, the crime's trigger is held, so the live stack holds the ability alone (the live crime is counted)
+            g.getTriggerHandler().suppressMode(forge.game.trigger.TriggerType.CommitCrime);
+            final boolean act;
+            try {
+                act = ping != null && forge.ai.ComputerUtil.handlePlayingSpellAbility(opp, withActivator(ping, opp), sa -> {
+                    sa.resetTargets();
+                    sa.getTargets().add(bears);
+                });
+            } finally {
+                g.getTriggerHandler().clearSuppression(forge.game.trigger.TriggerType.CommitCrime);
+            }
+            g.getPhaseHandler().setPriority(ai);
+            final boolean ok = act && g.getStack().size() == 1 && !g.getStack().hasSimultaneousStackEntries()
+                    && opp.getCommittedCrimeThisTurn() >= 1;
+            check(ok, "d544 (r): the board: the Pyromancer's ability on the Bears on the stack, the opponent's crime counted ("
+                    + stackOf(g) + "; crimes " + opp.getCommittedCrimeThisTurn() + ")");
+            if (!ok) {
+                return;
+            }
+            final Game off = new LenientGameCopier(g).makeCopy(null, ai);
+            Game on = null;
+            String refused = null;
+            try {
+                on = new LenientGameCopier(g).carryStack(true).makeCopy(null, ai);
+            } catch (final LenientGameCopier.StackRefused e) {
+                refused = e.reason;
+            }
+            check(on != null, "d544 (r): the carry accepts the stack (" + (refused == null ? "accepted" : "refused " + refused) + ")");
+            if (on == null) {
+                return;
+            }
+            on.getTriggerHandler().runWaitingTriggers();
+            final StringBuilder crimes = new StringBuilder();
+            boolean same = true;
+            for (final Player p : g.getPlayers()) {
+                final int live = p.getCommittedCrimeThisTurn();
+                final int a = off.getPlayer(p.getId()).getCommittedCrimeThisTurn();
+                final int b = on.getPlayer(p.getId()).getCommittedCrimeThisTurn();
+                same &= live == a && a == b;
+                crimes.append(p.getName()).append(" live ").append(live).append(" off ").append(a).append(" carried ").append(b).append("; ");
+            }
+            check(same && !on.getStack().hasSimultaneousStackEntries() && stackOf(on).toString().equals(stackOf(g).toString()),
+                    "d544 (r): after the carry each player's crimes this turn are the original's, and no crime trigger runs on the "
+                            + "copy (" + crimes + "copy stack " + stackOf(on) + ", waiting " + on.getStack().hasSimultaneousStackEntries() + ")");
+            final int[] live = activations(g, pyro.getId());
+            final int[] a = activations(off, pyro.getId());
+            final int[] b = activations(on, pyro.getId());
+            final int la = off.getStack().getAbilityActivatedThisTurn().size();
+            final int lb = on.getStack().getAbilityActivatedThisTurn().size();
+            final int ll = g.getStack().getAbilityActivatedThisTurn().size();
+            check(live[0] >= 1 && b[0] == live[0] && b[1] == live[1] && lb >= la && lb <= Math.max(la, ll),
+                    "d544 (r): after the carry the Pyromancer's activations this turn and this game are the live game's, never one "
+                            + "more, and the stack's list of abilities activated this turn is no longer than the live one's (live "
+                            + live[0] + "/" + live[1] + "/" + ll + ", the carry off " + a[0] + "/" + a[1] + "/" + la + ", carried "
+                            + b[0] + "/" + b[1] + "/" + lb + ")");
+        });
+
+        // (s) the skeptic's read, finding 4a: the seat's Underworld Dreams triggers on the opponent's draw (no target to
+        // choose); its triggering object is the drawn card, in the opponent's hand, which the seat may not see: the carry
+        // refuses (hidden)
+        scenario("d544-s-hidden-trigger", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanbattlefield=Island",
+                "humanlibrary=Lightning Bolt;Island;Island;Island", "aibattlefield=Underworld Dreams;Swamp",
+                "ailibrary=Swamp;Swamp;Swamp;Swamp"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            g.getTriggerHandler().resetActiveTriggers();
+            final int handBefore = opp.getCardsIn(ZoneType.Hand).size();
+            opp.drawCards(1);
+            g.getTriggerHandler().runWaitingTriggers();
+            g.getStack().addAllTriggeredAbilitiesToStack();   // the trigger goes on the stack (frozen outside a cast here)
+            if (g.getStack().isFrozen()) {
+                g.getStack().unfreezeStack();
+            }
+            g.getPhaseHandler().setPriority(ai);
+            final boolean ok = g.getStack().size() == 1 && g.getStack().peek().isTrigger();
+            check(ok, "d544 (s): the board: Underworld Dreams' trigger on the opponent's draw on the stack (" + stackOf(g) + "; hand " + handBefore + " -> "
+                    + opp.getCardsIn(ZoneType.Hand).size() + ")");
+            if (ok) {
+                refusalOnCopy("d544 (s) a triggering object in the opponent's hand", ai, "hidden");
+            }
+        });
+
         // (i)-(l) the refusals: a face-down spell, a copied spell, split second, a frozen stack
         scenario("d544-i-refusals", lone.apply("Gathan Raiders;Lightning Bolt;Sudden Shock"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
             final Game g = ai.getGame();
@@ -2283,7 +2427,7 @@ public final class AiBench {
         scenario("d544-opp-passed", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
             ai.getGame().setAge(forge.game.GameStage.Play);
             castBearsAndPass(ai);
-            check(mtgtable.ai.SearchPolicy.opponentPassed(ai) && mtgtable.ai.SearchPolicy.stackWindow(ai),
+            check(mtgtable.ai.SearchPolicy.opponentPassed(ai, null) && mtgtable.ai.SearchPolicy.stackWindow(ai),
                     "D544: the opponent's spell on top in its turn: a stack window, and the opponent has passed");
         });
         scenario("d544-opp-passed-trigger", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai",
@@ -2301,9 +2445,49 @@ public final class AiBench {
             g.getStack().resolveStack();
             g.getStack().addAllTriggeredAbilitiesToStack();
             check(g.getStack().size() == 1 && g.getStack().peek().isTrigger() && mtgtable.ai.SearchPolicy.stackWindow(ai)
-                            && !mtgtable.ai.SearchPolicy.opponentPassed(ai),
+                            && !mtgtable.ai.SearchPolicy.opponentPassed(ai, null),
                     "D544: the opponent's trigger on top in the seat's own turn: a stack window, and the opponent has NOT passed ("
                             + stackOf(g) + ")");
+        });
+        // the skeptic's read, finding 2: in the seat's own turn the opponent's Lightning Bolt on the seat's Grizzly Bears,
+        // the seat's Giant Growth on the Bears, the Growth resolved: the Bolt is on top again and the seat, the active
+        // player, has priority first -- the opponent has not passed on this stack, so no pass is granted (the first rule,
+        // "the opponent's spell on top", granted one). Before it, the cast-and-pass is granted and the seat's own item is not
+        scenario("d544-opp-passed-after-resolution", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai",
+                "activephase=MAIN1", "humanhand=Lightning Bolt", "humanbattlefield=Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aihand=Giant Growth", "aibattlefield=Grizzly Bears;Forest",
+                "ailibrary=Forest;Forest;Forest;Forest"), PolicyLobbyPlayerAi.Outlets.OFF, stackOn, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = opp(ai);
+            final mtgtable.ai.SearchPolicy sp = ((PolicyControllerAi) ai.getController()).search();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            g.getPhaseHandler().setPriority(ai);
+            final boolean p0 = sp.notePriorityForTest(ai);   // the seat's main phase, the stack empty: its own turn
+            final boolean bolt = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Lightning Bolt"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            g.getPhaseHandler().setPriority(ai);
+            final boolean p1 = sp.notePriorityForTest(ai);   // the opponent cast the Bolt and passed it on
+            final boolean growth = bolt && forge.ai.ComputerUtil.handlePlayingSpellAbility(ai,
+                    playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Giant Growth"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            final boolean p2 = sp.notePriorityForTest(ai);   // the seat's own Growth on top
+            if (growth) {
+                g.getStack().resolveStack();                   // the Growth resolves; the active player has priority first
+                g.getPhaseHandler().setPriority(ai);
+            }
+            final boolean p3 = sp.notePriorityForTest(ai);
+            final boolean board = growth && g.getStack().size() == 1 && g.getStack().peek().isSpell()
+                    && g.getStack().peek().getActivatingPlayer() == opp && mtgtable.ai.SearchPolicy.stackWindow(ai);
+            check(board && !p0 && p1 && !p2 && !p3,
+                    "D544 (the skeptic's read): in the seat's own turn the opponent's Bolt after the cast is a granted pass, the seat's "
+                            + "own Growth on top is not, and the Bolt on top again after the Growth resolved is not (empty " + p0
+                            + ", cast " + p1 + ", own " + p2 + ", after the resolution " + p3 + "; " + stackOf(g) + ")");
         });
         // the priority order in a rollout of a window the opponent has passed in
         scenario("d544-opp-pass-order", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
@@ -2536,13 +2720,65 @@ public final class AiBench {
         final Game g = ai.getGame();
         final String live = LenientGameCopier.stackRefusal(g);
         String onCopy = "accepted";
+        String detail = null;
         try {
             new LenientGameCopier(g).carryStack(true).makeCopy(null, ai);
         } catch (final LenientGameCopier.StackRefused e) {
             onCopy = e.reason;
+            detail = e.detail;
         }
         check(reason.equals(live) && reason.equals(onCopy), label + ": the carry refuses (" + reason + "): live "
                 + live + ", on a copy " + onCopy + " (" + stackOf(g) + ")");
+        detailClean(label, g, detail);
+    }
+
+    /** D544 (the skeptic's read): the live test lets the stack through and a carrying copy refuses it with {@code reason}. */
+    private static void refusalOnCopy(final String label, final Player ai, final String reason) {
+        final Game g = ai.getGame();
+        final String live = LenientGameCopier.stackRefusal(g);
+        String onCopy = "accepted";
+        String detail = null;
+        try {
+            new LenientGameCopier(g).carryStack(true).makeCopy(null, ai);
+        } catch (final LenientGameCopier.StackRefused e) {
+            onCopy = e.reason;
+            detail = e.detail;
+        }
+        check(live == null && reason.equals(onCopy), label + ": the live test lets it through and the carry refuses (" + reason
+                + "): live " + live + ", on a copy " + onCopy + " (" + stackOf(g) + ")");
+        detailClean(label, g, detail);
+    }
+
+    /**
+     * D544 (the skeptic's read, finding 4b): a refusal's detail is ids and reason words -- it matches
+     * {@code ^[a-zA-Z0-9 :=,._-]*$} -- and names no card of the game.
+     */
+    private static void detailClean(final String label, final Game g, final String detail) {
+        final java.util.regex.Pattern ok = java.util.regex.Pattern.compile("^[a-zA-Z0-9 :=,._-]*$");
+        String named = null;
+        for (final Card c : g.getCardsInGame()) {
+            if (detail != null && !c.getName().isEmpty() && detail.contains(c.getName())) {
+                named = c.getName();
+            }
+        }
+        check(detail != null && ok.matcher(detail).matches() && named == null, label + ": the refusal's detail is ids and words, "
+                + "and names no card (" + (detail == null ? "no detail" : "\"" + detail + "\"") + (named == null ? "" : "; names " + named) + ")");
+    }
+
+    /** D544: card {@code id}'s activation records on {@code g}: activations this turn, and this game, every entry summed. */
+    private static int[] activations(final Game g, final int id) {
+        final Card c = g.findById(id);
+        final int[] out = new int[2];
+        if (c == null) {
+            return out;
+        }
+        for (final com.google.common.collect.Multiset<Player> m : c.getAbilityActivatedThisTurn().values()) {
+            out[0] += m == null ? 0 : m.size();
+        }
+        for (final com.google.common.collect.Multiset<Player> m : c.getAbilityActivatedThisGame().values()) {
+            out[1] += m == null ? 0 : m.size();
+        }
+        return out;
     }
 
     /** D544: {@code sa} with its activating player set (Forge's own cast path expects it). */
