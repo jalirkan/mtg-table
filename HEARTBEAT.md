@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-13T01:21:50-05:00
+- time: 2026-11-13T01:26:30-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
-- running: J216 commands 1/2, 1368/4800 games, 575.3/h, ETA 2026-11-13T07:19:46-05:00, 7 worker(s), 7 core(s)
+- running: J216 commands 1/2, 1408/4800 games, 559.2/h, ETA 2026-11-13T07:30:28-05:00, 7 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 11.01; memory 13.5/30.5 GB, swap 4660 MB, pressure 0% (lab budget 23.4 GB)
+- load: 13.09; memory 13.2/30.5 GB, swap 4661 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J215 done at 2026-11-12T21:09:27-05:00: cm.played 4800 · cm.score 0.51 · cm.lo 0.502 · cm.hi 0.518 · cm.elo 6.9 · cm.eloLo 1.4 · cm.eloHi 12.5 · v.shown 0 · v.smallGain 1 · v.inconclusive4800 0 · v.notShown 0 · v.notRead 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 0 · v.measuredLoss 0 · v.measuredGain 1 · v.declinedWindowsPerGame 3.458 · v.instantWindowsPerGame 1.8 · v.declinedChangedPerGame 0.382 · v.instantChangedPerGame 0.234 · v.aSecPerGame 21.893 · v.bSecPerGame 19.168 · v.costRatio 1.142 · v.liveSeatCandidate 1 · v.trackClosed 0 · bs.min 519900000 · bs.max 519900599
