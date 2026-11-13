@@ -60,7 +60,7 @@
 //                                                              of a J145-shaped read, --generations 1; knobs balanceMinGames=400
 //                                                              balanceSwaps=1 balanceBand=0.05 (--evolve)
 //   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|forge-ranks|llm:<model>|human-picks:<f>] [--drafter-b ...]
-//           [--player-a <Profile>|search-v3] [--player-b ...] [--pace 600] [--out <dir>]   (D440, D443, watch.ts)
+//           [--player-a <Profile>|search-v4] [--player-b ...] [--pace 600] [--out <dir>]   (D440, D443, watch.ts)
 //           [--llm-max-usd 1] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   an llm: drafter's cap for the watch (D442)
 //           ONE grid draft (run --drafts 1 --games 0), draft.json, then a paced best of N recorded from seat 0's eyes
 //   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
@@ -138,7 +138,7 @@ function usage(msg?: string): never {
                         [--balance <balance.json>]   (D469: balance mode, --generations 1)
        tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3]
                         [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<f>] [--drafter-b ...]   (one side at most not lab)
-                        [--player-a <Profile>|search-v3] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
+                        [--player-a <Profile>|search-v4] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
                         [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   (D440, D442, D443)
                         [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff]   (D446; both lab drafters)
        tools/cubelab.sh census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   (D445, no engine)

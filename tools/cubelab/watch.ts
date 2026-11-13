@@ -5,7 +5,7 @@
 //   tools/cubelab.sh watch cubes/fair-fight-cube-180.md [--format grid] [--seed S] [--games 3]
 //       [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<x.picks.json>] [--drafter-b ...]
 //       [--shape-a|--shape-b <shape>] (D446; both sides the lab drafter)
-//       [--player-a <Profile>|search-v3] [--player-b ...] [--pace 600] [--out <dir>]
+//       [--player-a <Profile>|search-v4] [--player-b ...] [--pace 600] [--out <dir>]
 //       [--ratings <tsv>] [--game-timeout <sec>]
 //       [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]
 //
@@ -56,11 +56,13 @@
 // decklist, never what B holds.
 //
 // A player is a Forge AI profile (an .ai file: Default, Cautious, Reckless,
-// Experimental) or `search` -- search-v3, the live search seat (Default plus
+// Experimental) or `search` -- search-v4, the live search seat (Default plus
 // D310's outlets plus D412's anytime search, its blocks left to Forge since
-// D539; the ladder's search-v2-no-b), seated by RecordMatch's --policy search.
-// `search-v3` names it too, and so does `search-v2`, its name before D539, so a
-// request stored then still starts (it plays the live seat, search-v3).
+// D539, D540's declined spells and instant-speed windows searched since D546;
+// the ladder's search-v3-declined-instant), seated by RecordMatch's --policy
+// search.  `search-v4` names it too, and so do `search-v2`, its name before
+// D539, and `search-v3`, its name from D539 until D546, so a request stored then
+// still starts (it plays the live seat, search-v4).
 //
 // match.json is rewritten whole (a temp file renamed over it) after every change,
 // so a reader never sees half of one; draft.json is written once.  The coach
@@ -85,16 +87,16 @@ import { RESERVED_SEED_MIN, VERIFY_SEED_MIN } from './seeds.ts';
 export type Side = 'A' | 'B';
 export type WatchStatus = 'drafting' | 'playing' | 'done' | 'error' | 'stopped';
 
-/** One seat's player: a Forge profile, or `search` (search-v3 on the Default profile, D539). */
+/** One seat's player: a Forge profile, or `search` (search-v4 on the Default profile, D546). */
 export interface Player { player: string; profile: string; policy: 'plain' | 'search' }
 
-/** The live search seat's version, as RecordMatch prints it (SearchConfig.LIVE_VERSION; search-v2 until D539). */
-export const SEARCH_VERSION = 'search-v3';
+/** The live search seat's version, as RecordMatch prints it (SearchConfig.LIVE_VERSION; search-v2 until D539, search-v3 until D546). */
+export const SEARCH_VERSION = 'search-v4';
 
-/** `--player-a` / `--player-b`: a profile name (any case) or `search` / `search-v3` (or `search-v2`, its name until D539). */
+/** `--player-a` / `--player-b`: a profile name (any case) or `search` / `search-v4` (or `search-v2` / `search-v3`, its names until D546). */
 export function parsePlayer(text: string, profiles: string[]): Player {
   const t = text.trim();
-  if (/^search(-v[23])?$/i.test(t)) return { player: 'search', profile: 'Default', policy: 'search' };
+  if (/^search(-v[234])?$/i.test(t)) return { player: 'search', profile: 'Default', policy: 'search' };
   const p = profiles.find((x) => x.toLowerCase() === t.toLowerCase());
   if (!p) throw new Error(`player "${text}" is not search or one of the profiles ${profiles.join(', ')}`);
   return { player: p, profile: p, policy: 'plain' };
@@ -102,11 +104,12 @@ export function parsePlayer(text: string, profiles: string[]): Player {
 
 /**
  * The seat spec `run` records for this player (run.json's profiles; games 0 plays none).  A search player's
- * mirrors the live seat by hand -- SearchConfig.LIVE_DEFAULTS, `what=pa,anytime=1` since D539 (`anytime=1` from
- * D412) -- because a seat spec is parsed by SearchConfig.parse, whose own defaults are the bench's.
+ * mirrors the live seat by hand -- SearchConfig.LIVE_DEFAULTS, `what=pa,anytime=1,declined=1,instant=1` since D546
+ * (`what=pa,anytime=1` from D539, `anytime=1` from D412) -- because a seat spec is parsed by SearchConfig.parse, whose
+ * own defaults are the bench's.
  */
 export function seatSpecOf(p: Player): string {
-  return p.policy === 'search' ? `${p.profile}+outlets+search:what=pa,anytime=1` : p.profile;
+  return p.policy === 'search' ? `${p.profile}+outlets+search:what=pa,anytime=1,declined=1,instant=1` : p.profile;
 }
 
 // ------------------------------------------------------------------ draft.json

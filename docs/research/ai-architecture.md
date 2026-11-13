@@ -352,7 +352,7 @@ players.json ─► kinds.ts: {kind, params} ─► ai-bench seat config ("Reckl
   syntax. The search kind maps onto §8's
   `+search:ms=…,cands=…,turns=…` seat syntax, and `search-v1` was the game's
   `--ai-policy search` seat (from D412 it was `search-v1-anytime`, the live
-  seat's search-v2, and since D539 it is `search-v2-no-b`, search-v3); the evaluator kind is declared and waits for its
+  seat's search-v2, from D539 `search-v2-no-b`, search-v3, and since D546 it is `search-v3-declined-instant`, search-v4); the evaluator kind is declared and waits for its
   bench option.
 - **Paired by construction.** `--mirror` plays each deal from both sides, and a
   matchup's k-th batch uses the same deals as every other matchup's k-th

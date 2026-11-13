@@ -244,11 +244,12 @@ test('players: a profile in any case, or search; RecordMatch\'s summary read bac
   assert.deepEqual(parsePlayer('reckless', profiles), { player: 'Reckless', profile: 'Reckless', policy: 'plain' });
   assert.deepEqual(parsePlayer('search', profiles), { player: 'search', profile: 'Default', policy: 'search' });
   assert.deepEqual(parsePlayer('Search-V2', profiles), { player: 'search', profile: 'Default', policy: 'search' });
-  // D539: the live seat is search-v3; search-v2, its name before, still names it
+  // D546: the live seat is search-v4; search-v2 and search-v3, its names before, still name it
   assert.deepEqual(parsePlayer('search-v3', profiles), { player: 'search', profile: 'Default', policy: 'search' });
-  assert.throws(() => parsePlayer('search-v4', profiles), /not search or one of/);
+  assert.deepEqual(parsePlayer('Search-V4', profiles), { player: 'search', profile: 'Default', policy: 'search' });
+  assert.throws(() => parsePlayer('search-v5', profiles), /not search or one of/);
   assert.throws(() => parsePlayer('Godlike', profiles), /not search or one of/);
-  assert.equal(seatSpecOf(parsePlayer('search', profiles)), 'Default+outlets+search:what=pa,anytime=1');
+  assert.equal(seatSpecOf(parsePlayer('search', profiles)), 'Default+outlets+search:what=pa,anytime=1,declined=1,instant=1');
   assert.equal(seatSpecOf(parsePlayer('Cautious', profiles)), 'Cautious');
   const out = 'player turns   = 18 (round 9)\nwinner         = AI-Seat1, reason = AllOpponentsLost\ngame wall time = 9 ms\nRECORD OK\n';
   assert.deepEqual(parseSummary(out), { winner: 'B', reason: 'AllOpponentsLost', turns: 18, ok: true });
