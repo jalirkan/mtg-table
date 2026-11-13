@@ -1,0 +1,7 @@
+==== J218 pilot4 started 2026-11-13T10:11:15-05:00 in unit lab-J218-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+ok   both keys 1 window a game on both sides, no lands counter above 0: clean, both kinds
+ok   B with search.p.lands.windows 1 in one game: B not lands-clean
+ok   A with search.p.lands.cands 2 in one game: A not lands-clean
+ok   A with no attack search: kindsOk 0
+ok   B that searched a block: kindsOk 0
+{"ok":1,"cases":5,"passed":5}
