@@ -31,7 +31,7 @@ only when `watch` is 1. It also lists the choices `POST /watch` takes (D443):
 "watchPlayers": [
   { "id": "Cautious", "label": "Forge AI (Cautious)" }, { "id": "Default", "label": "Forge AI (Default)" },
   { "id": "Experimental", "label": "Forge AI (Experimental)" }, { "id": "Reckless", "label": "Forge AI (Reckless)" },
-  { "id": "search-v3", "label": "Search AI (search-v3: Forge AI plus a look-ahead search)" }
+  { "id": "search-v4", "label": "Search AI (search-v4: Forge AI plus a look-ahead search)" }
 ],
 "watchLlmCap": { "maxUsd": 1, "maxCalls": 40, "maxFallbackRate": 0.25 },
 "watchCustom": 1
@@ -80,11 +80,13 @@ The body:
   line; `llm:<model>` asks Claude once a pick (D439) and spends (below).
 - `playerA`, `playerB` — who plays each drafter's deck: an id from
   `watchPlayers`, any case — a Forge AI profile (`Default`, `Cautious`,
-  `Reckless`, `Experimental`) or `search-v3` (the live search seat: Default plus
+  `Reckless`, `Experimental`) or `search-v4` (the live search seat: Default plus
   the outlet policy and the anytime search, its block declarations Forge's own
-  since D539; the AI ladder's `search-v2-no-b`; the older `"search"` and
-  `"search-v2"`, its id until D539, are the same seat and are answered as
-  `search-v3`). Default `Default`. A profile is a style,
+  since D539, and the spells Forge declines and its instant-speed plays searched
+  since D546; the AI ladder's `search-v3-declined-instant`; the older
+  `"search"`, `"search-v2"`, its id until D539, and `"search-v3"`, its id from
+  D539 until D546, are the same seat and are answered as `search-v4`). Default
+  `Default`. A profile is a style,
   not a difficulty (D107): never label one harder.
 - `pace` — milliseconds the recorder waits at a frame where something happened
   (a quarter of it after one that only moved the phase strip); 0 … 5000, default

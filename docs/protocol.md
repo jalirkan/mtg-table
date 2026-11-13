@@ -30,6 +30,21 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-11-13 — the session header's search version is search-v4
+
+The live search seat now also considers the spells Forge's own AI declines and searches the instant-speed windows
+where Forge plays (D540's `declined=1` and `instant=1`: J215 and J216, two 4,800-game matches on disjoint deck sets,
+each a measured gain against search-v3, and the owner said yes), so the version M62's `ai` names when the seat runs
+the live default is `"search-v4"`: search-v3 with `declined=1,instant=1`. The shape is unchanged — the same four
+keys, `version` still a `search-v<n>` or null — so no reader changes; a log written before this names `"search-v3"`
+or `"search-v2"`, which is what that game's seat ran. One row. Decision **D546**. Held by
+`mtgtable.ai.DecisionSelfTest` (`bridge/build.sh`), `web/test/ai-ladder.test.ts` and `tools/check-redaction.mjs`
+(`ai.version` matches `^search-v\d+$`, as before).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M84 | §8.1, M62, M82 | **`ai.version` is `"search-v4"` when the seat runs the live default** (`SearchConfig.LIVE_VERSION`; `config` then ends `…,what=pa,anytime=1,declined=1,instant=1`), at any budget, and `null` when other knobs were changed — `--ai-search declined=0,instant=0`, search-v3's loop, included, as M82's `what=pab` was. `"search-v3"` stays a valid value and is what every log written from D539 to D546 carries for the live default (`config` `…,what=pa,anytime=1`). | D546 |
+
 ### 2026-11-11 — the session header's search version is search-v3
 
 The live search seat stopped searching block declarations (J211's 4,800-game head-to-head held D536's −10 Elo bar,
@@ -2447,7 +2462,7 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `paceMs` | **Optional** (amendment **M47**). Present only on a PACED AI-vs-AI recording — `mtgtable.RecordMatch --pace <ms>`, which `./scripts/spectate.sh` passes in follow mode: the engine dwelt `paceMs` at every phase boundary (a quarter of it after a frame that only moved the phase strip), so the `t` gaps are the watcher's pace, not the engine's. It changes nothing else — a paced and an unpaced recording of one seed are the same frames (§8.7). A positive integer; `tools/check-redaction.mjs` fails it beside `transport`, because a seat's pace is its player's. |
 | `humans` | **Optional** (amendment **M59**). `2` on each seat's log at a table of two (`MtgTable --humans 2`): the other seat is a person, so `hello_ok.match` takes its two-person form and `table` frames appear. Only beside `transport`. Each seat writes its own log, `var/games/<gameId>-seat<N>/frames.jsonl`. |
 | `record` | **Optional** (amendment **M60**, D407). `true` or `false`: this seat's player agreed (or not) to this game going into the human test set (D369, `var/ml/human-friends/`) and the automatic engine review (D385, that player's own). Only beside `humans: 2`; absent means not agreed. |
-| `ai` | **Optional** (amendment **M62**, D414). The AI seat's controller when it is not plain Forge: `{"policy":"outlets"}` or `{"policy":"search","version":"search-v3"\|null,"budgetMs":1500,"config":"ms=1500,…"}` — `version` the live default's name (`"search-v3"` since amendment **M82**, D539; `"search-v2"` on a log written before it). Absent for plain Forge and on every log before M62. Only beside `transport`, never beside `humans`. |
+| `ai` | **Optional** (amendment **M62**, D414). The AI seat's controller when it is not plain Forge: `{"policy":"outlets"}` or `{"policy":"search","version":"search-v4"\|null,"budgetMs":1500,"config":"ms=1500,…"}` — `version` the live default's name (`"search-v4"` since amendment **M84**, D546; `"search-v3"` from **M82**, D539, and `"search-v2"` before it, on a log written then). Absent for plain Forge and on every log before M62. Only beside `transport`, never beside `humans`. |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
 
 **A frame produced before the header is held, not dropped** (amendment M9). The

@@ -289,7 +289,7 @@ node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summar
 #   decks/doom-legion.dck under the Default profile.
 ./scripts/play.sh --ai-profile Reckless              # one of Forge's four AI profiles
 ./scripts/play.sh --mirror --ai-profile Cautious     # the AI plays a copy of your deck
-./scripts/play.sh --engine-only --ai-plain           # Forge's own AI: the default is search-v3, outlet policy + look-ahead search, blocks left to Forge (D312-D314, D412, D414, D539)
+./scripts/play.sh --engine-only --ai-plain           # Forge's own AI: the default is search-v4, outlet policy + look-ahead search, blocks left to Forge, declined spells and instant-speed plays searched (D312-D314, D412, D414, D539, D546)
 ./scripts/play.sh --ai-deck decks/masters-of-evil.dck   # B/R villain aggro (D116)
 ./scripts/play.sh --ai-deck decks/hulk-family.dck       # R/G gamma stompy (D116)
 ./scripts/play.sh --ai-deck decks/wakanda.dck           # G/W go-wide (D116)
