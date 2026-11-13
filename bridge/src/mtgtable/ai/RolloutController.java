@@ -125,6 +125,31 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
                     + armTurn + "; the copy is at turn " + ph.getTurn() + " " + at + ")";
         }
 
+        /** D544: a pending conditional pass ({@link RolloutForcing#forcePassWhile}): the stack key it holds for. */
+        private String passKey;
+
+        void passWhile(final String stackKey) {
+            passKey = stackKey;
+        }
+
+        /**
+         * D544: whether this priority answer is the conditional pass -- once, and only while the stack is the one it
+         * was armed on; it is disarmed either way.  Never touches the forced answer ({@link #takePriority}).
+         */
+        boolean takePass(final Game g) {
+            return passKey != null && takePass(LenientGameCopier.stackKey(g));
+        }
+
+        /** {@link #takePass(Game)} against a stack key already read (the self-test's entry). */
+        boolean takePass(final String now) {
+            if (passKey == null) {
+                return false;
+            }
+            final String k = passKey;
+            passKey = null;
+            return k.equals(now);
+        }
+
         /** Non-null (possibly "pass", an empty marker) when the priority answer is forced now. */
         boolean takePriority(final Game g) {
             if (!forcePriority) {
@@ -251,7 +276,15 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
     }
 
     @Override
+    public void forcePassWhile(final String stackKey) {
+        forced.passWhile(stackKey);   // D544
+    }
+
+    @Override
     public List<SpellAbility> chooseSpellAbilityToPlay() {
+        if (forced.takePass(getGame())) {
+            return null;   // D544: the opponent has passed in this window already
+        }
         if (forced.takePriority(getGame())) {
             return forced.priorityAnswer();
         }
@@ -341,7 +374,15 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
         }
 
         @Override
+        public void forcePassWhile(final String stackKey) {
+            forced.passWhile(stackKey);   // D544
+        }
+
+        @Override
         public List<SpellAbility> chooseSpellAbilityToPlay() {
+            if (forced.takePass(getGame())) {
+                return null;   // D544: the opponent has passed in this window already
+            }
             if (forced.takePriority(getGame())) {
                 return forced.priorityAnswer();
             }
@@ -421,7 +462,15 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
         }
 
         @Override
+        public void forcePassWhile(final String stackKey) {
+            forced.passWhile(stackKey);   // D544
+        }
+
+        @Override
         public List<SpellAbility> chooseSpellAbilityToPlay() {
+            if (forced.takePass(getGame())) {
+                return null;   // D544: the opponent has passed in this window already
+            }
             if (forced.takePriority(getGame())) {
                 return forced.priorityAnswer();
             }

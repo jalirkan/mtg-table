@@ -48,4 +48,13 @@ interface RolloutForcing {
 
     /** D477: a forced answer is armed and has not been given yet. */
     boolean unanswered();
+
+    /**
+     * D544: this seat's next priority answer is a pass, provided the stack then is the one {@code stackKey} names
+     * ({@link LenientGameCopier#stackKey}); otherwise it answers as it would have.  The opponent's seat in a rollout of
+     * a window it has already passed in.  Only the controllers a rollout seats for the opponent implement it.
+     */
+    default void forcePassWhile(final String stackKey) {
+        throw new UnsupportedOperationException("forcePassWhile on " + getClass().getSimpleName());
+    }
 }

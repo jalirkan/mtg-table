@@ -123,6 +123,9 @@ export const KINDS: Record<string, Kind> = {
       declined: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: castable spells Forge's per-card AI declines for any reason, aimed by Forge's own targeting (dropped with no legal target), are priority candidates after today's -- in the windows already searched and in the own-main empty-stack windows where Forge passed with nothing else to consider" },
       instant: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: outside the seat's own main phases, on an empty stack and either turn, a window where Forge plays a non-land, non-mana play is searched: Forge's play against pass and the alternatives" },
       lands: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: where a land of another name than Forge's is legal, Forge's land drop against each other-named land (no pass, no holding the land)" },
+      stackwin: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D544: a stack window -- the opponent's item on top, nothing waiting -- on either turn is searched, the stack carried onto every rollout copy; a stack the carry cannot rebuild faithfully (a face-down item among others) refuses the window, which is then Forge's" },
+      passwin: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D544: the opponent's declare-attackers step (attackers declared), its end step and the seat's own declare-blockers step, on an empty stack where Forge passes, are searched when the widened listing gives an aimed play" },
+      dactiv: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D544: in the own-main windows, activated abilities Forge declines that are sorcery speed (equip, loyalty) are candidates, aimed by Forge's forced targeting; an equip aimed at its own host dropped; one per source a turn" },
     },
     // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
     // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
@@ -149,6 +152,9 @@ export const KINDS: Record<string, Kind> = {
       if (p.declined === 'on') kv.push('declined=1');
       if (p.instant === 'on') kv.push('instant=1');
       if (p.lands === 'on') kv.push('lands=1');
+      if (p.stackwin === 'on') kv.push('stackwin=1');
+      if (p.passwin === 'on') kv.push('passwin=1');
+      if (p.dactiv === 'on') kv.push('dactiv=1');
       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
     },
     available: (repo) => {

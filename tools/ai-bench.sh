@@ -15,6 +15,7 @@
 #   ./tools/ai-bench.sh paired --control var/ai-bench/<c>/shard-*.jsonl \
 #        --treatment var/ai-bench/<t>/shard-*.jsonl     # same --pairs/--seed/--games
 #   ./tools/ai-bench.sh --selftest [--no-engine]
+#   ./tools/ai-bench.sh --selftest --stack-windows   # D544's scenarios alone (they are in the default run too)
 #
 # A seat config is <Profile>[+sim|+hybrid][+outlets|+shadow][+search[:k=v,..]]: an .ai profile
 # (Default, Cautious, Reckless, Experimental), Forge's simulation option (a

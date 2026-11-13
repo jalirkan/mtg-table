@@ -1364,6 +1364,43 @@ test('D545: search-v3-declined-instant-t1-x3 is search-v3-declined-instant with 
   assert.equal(by.get('search-v2-a1')!.hash, '3cf65e94df28');
 });
 
+test('D544: search-v3-wide is search-v3-declined-instant with stackwin, passwin and dactiv on and nothing else, at its own hash', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const DICFG = 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1';
+  const diRaw = raw.players.find((p) => p.name === 'search-v3-declined-instant')!;
+  const xr = raw.players.find((p) => p.name === 'search-v3-wide')!;
+  const x = by.get('search-v3-wide');
+  assert.ok(x?.cfg, 'search-v3-wide is registered and playable');
+  assert.equal(xr.kind, diRaw.kind);
+  // the hash was read from the ladder itself (ai-ladder.sh list on the lane), not re-implemented; this test holds it
+  assert.deepEqual(xr.params, { ...diRaw.params, stackwin: 'on', passwin: 'on', dactiv: 'on' },
+    "its params are search-v3-declined-instant's with the three keys on");
+  const rest: Record<string, unknown> = { ...x!.resolved };
+  delete rest.stackwin;
+  delete rest.passwin;
+  delete rest.dactiv;
+  assert.deepEqual(rest, by.get('search-v3-declined-instant')!.resolved, "every other resolved param is search-v3-declined-instant's");
+  assert.equal(x!.cfg, `${DICFG},stackwin=1,passwin=1,dactiv=1`, "its seat config is search-v3-declined-instant's plus the three keys");
+  assert.equal(x!.hash, 'b95340935592', "search-v3-wide's config hash (D544)");
+  assert.equal(reg.filter((y) => y.hash === 'b95340935592').length, 1, 'one registered player has the hash b95340935592');
+  assert.match(xr.note ?? '', /D544/);
+  assert.match(xr.note ?? '', /never the live seat/);
+  // off, the keys are out of every config and every hash
+  const plain = resolveParams('search', {});
+  assert.deepEqual(resolveParams('search', { stackwin: 'off', passwin: 'off', dactiv: 'off' }), plain);
+  assert.doesNotMatch(KINDS.search!.cfg(plain), /stackwin|passwin|dactiv/);
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /stackwin|passwin|dactiv/, 'the live seat turns none of them on');
+  for (const k of ['stackwin', 'passwin', 'dactiv']) assert.ok(java.includes(`case "${k}"`), `SearchConfig parses ${k}=`);
+  // every player it is built from keeps its hash
+  assert.equal(by.get('search-v3-declined-instant')!.hash, 'af6771947a25');
+  assert.equal(by.get('search-v2-no-b')!.hash, '59505e241363');
+  assert.equal(by.get('search-v1-anytime')!.hash, 'cdd55e02a89c');
+  assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
