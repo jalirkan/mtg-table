@@ -5,7 +5,7 @@ live seat's version and defaults) and reads J215 (D541) and J216 (D543) (`result
 `pc-results`: `summary.md`, `verdict.json`). The number is D546 although `node tools/decisions.mjs next` on main
 prints an earlier one: D544 and D545 are reserved by unmerged lanes. Code: `SearchConfig`'s two live constants and
 the comments that name the live version, the self-tests, the ladder's two notes, the watch bots' player id,
-protocol amendment M83 and the docs that say which search the game plays — the same places D539 changed, and no
+protocol amendment M84 and the docs that say which search the game plays — the same places D539 changed, and no
 other. Written as text first, while another run held the machine; what the build, the self-tests and a played
 session showed is the *Verification* paragraph, filled in after.*
 
@@ -67,12 +67,12 @@ session showed is the *Verification* paragraph, filled in after.*
    - **Outside its own main phases, on an empty stack, on either player's turn, where Forge wants to make a play**
      (an instant, a flash creature, an activated ability; never a land or a mana ability) **the AI now thinks
      before it plays** (`instant`, D540 point 3): Forge's play is rolled out against holding it and the other
-     options. So at the player's end step, in combat or in its own upkeep, a pause of up to about a second and a
-     half can come before an AI instant, where Forge used to answer at once; with the stack non-empty — a response
+     options. So at the player's end step, in combat or in its own upkeep, a pause of up to about two
+     seconds (1,931 ms the longest in the played session) can come before an AI instant, where Forge used to answer at once; with the stack non-empty — a response
      to the player's spell — it is still Forge's own answer, at Forge's speed.
    - Its main-phase plays and attacks are searched as before; its block declarations are still Forge's, with no
      pause (D539).
-   - **Thinking time**: about 17% more search time a game on this machine (22.2 against 18.9 s in J216, 21.9
+   - **Thinking time**: 14 to 17% more search time a game on this machine (22.2 against 18.9 s in J216, 21.9
      against 19.2 in J215), about 3 s more over a whole game, from about 15% more searched decisions at the same
      time each. Head to head against search-v3 it measured +6.9 and +8.3 Elo on two disjoint sets of 30 deck pairs,
      +7.6 [+3.5, +11.7] pooled: a small gain, under D519's +15 line.
@@ -82,7 +82,7 @@ session showed is the *Verification* paragraph, filled in after.*
    `af6771947a25` and is how the ladder rates search-v4 (no `search-v4` alias is registered: one name per config,
    as D539 point 4 kept `search-v2-no-b` for search-v3), `search-v2-no-b` keeps `59505e241363`; both notes say
    what they are now, and the notes are the only lines of `tools/ai-ladder/players.json` that change. The wire's
-   shape: `hello_ok` is unchanged, and the session header's `ai` (M62) keeps its four keys — amendment **M83** says
+   shape: `hello_ok` is unchanged, and the session header's `ai` (M62) keeps its four keys — amendment **M84** (M83 is the number D542's unmerged text and saved patch carry, so it stays theirs) says
    only that `version` names `"search-v4"` when the seat runs the live default. A log written before D546 says
    `"search-v3"` (or `"search-v2"` before D539), which is what that game played; `tools/ml/human_collect.py`
    carries any `search-v<n>` as written, and `tools/check-redaction.mjs` already accepts `^search-v\d+$`.
@@ -129,11 +129,19 @@ a comment in `RecordMatch.java`, and checks in `ai/DecisionSelfTest.java`. The a
   and self-test checks), beside D539's and D540's, and nothing else under the frozen paths, or that night is not
   posted under D509 point 1; this paragraph is the admission.
 
-**Hidden information (hard rule 8) and threads (hard rule 3).** Nothing new: D540's paragraph holds for the live
-seat as it held for the ladder's. `declined` lists the seat's own castable spells and aims them through Forge's
+**Hidden information (hard rule 8) and threads (hard rule 3).** Nothing new on the wire: D540's paragraph holds for
+the live seat as it held for the ladder's. `declined` lists the seat's own castable spells and aims them through Forge's
 targeting among objects the spell may target; `instant` adds no listing, only more windows for today's search;
 every rollout redeals what the seat cannot see (`Determinizer`). Nothing touches the wire, `Snap` or a `CardView`,
 every call runs on the game thread inside `chooseSpellAbilityToPlay`, and `HOP_ALLOW` stays three.
+
+**One thing a person can now read off the clock, which is not the wire's.** The seat searches an empty-stack
+instant-speed window only when Forge itself wants to play something there, so a pause in the player's end step or
+combat that ends in a pass says the AI holds an instant-speed play it could pay for and chose not to make (J216:
+1.89 such windows and 0.256 changed decisions a game); `declined` does the same in the AI's own main phases, where a
+pause now comes before some passes. search-v3 already paused only where it had a play to weigh, in its own main
+phases; this widens that tell to the player's turn. It names no card and nothing is sent, so hard rule 8 is
+untouched; it is written down because a person, unlike the ladder's other seat, can time it.
 
 One lab consequence that is not the atlas's: `census-play --policy-a/-b search` seats the live seat by definition
 (D447), and `plan.json` still binds the pilot as the string `search` (`tools/cubelab/censusplay.ts`'s plan keys),
@@ -176,6 +184,12 @@ its own, and no reading pools the two.
 - The seconds are this machine's (D388), on 7 workers.
 - D544's and D545's lanes (unmerged) were built on `search-v3-declined-instant` as D543 point 6 asked; nothing here
   changes what they measure against.
+- **D544 merges before this lane and rewrites the path these two keys run** (`alternatives` becomes a widened
+  listing, the retry guard compares a stack key, the playout takes a flag). With D544's three keys off it argues,
+  and its bench scenarios hold, that behaviour is J215's and J216's; but this lane's played session ran on
+  `97122947c`'s code, and no gate step plays a `parseLive` seat (seat-identity's search game is an explicit
+  `parse()` spec). So the played session and the redaction check are run again on the merged tree, and the merge
+  commit records them.
 
 **Verification (the lane, 2026-11-13, on `ba5f1c04f` once the D544 exposure run had ended with `rc 0` and the lab
 printed `idle [] []`; one JVM at a time, beside another lane's pilot).**
@@ -224,5 +238,6 @@ printed `idle [] []`; one JVM at a time, beside another lane's pilot).**
 
 **Follow-up.** The seat-queue row for `search-v3-declined-instant` (D509, row 10 of
 `~/code/pc-results/study/seat-queue.md`, in pc-results, which this lane does not write) is marked landed by D546 at
-the merge. The cube lab's 59 is closed by this decision, and it adds the cube lab's 63: ForgeCoach's words for the
+the merge. The cube lab's 59 was J216's read, closed with it (D545 records the read; this decision is the owner's yes it led
+to); this decision adds the cube lab's 63: ForgeCoach's words for the
 live seat, which still say search-v3.

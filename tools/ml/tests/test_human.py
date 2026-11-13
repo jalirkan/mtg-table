@@ -219,7 +219,7 @@ class CollectTest(unittest.TestCase):
             # D539 (M82): the live default's new name is carried as written, not dropped
             "human-ws-5": {"policy": "search", "version": "search-v3", "budgetMs": 1500,
                            "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1"},
-            # D546 (M83): and the next one
+            # D546 (M84): and the next one
             "human-ws-6": {"policy": "search", "version": "search-v4", "budgetMs": 1500,
                            "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1,declined=1,instant=1"},
         }

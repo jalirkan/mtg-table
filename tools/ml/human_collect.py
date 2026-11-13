@@ -58,7 +58,7 @@ D414 added three labels:
 - `aiSearch`: the search AI's own settings, from the session header's `ai`
   (protocol amendment M62): `{version, budgetMs, config}` -- `version` is the
   live default's name when the seat ran it (`search-v2` from D412, `search-v3`
-  from D539, amendment M82, `search-v4` since D546, amendment M83; any
+  from D539, amendment M82, `search-v4` since D546, amendment M84; any
   `search-v<n>` is carried as written), else
   null; `budgetMs` its
   wall-clock budget per searched decision; `config` the seat's whole config string

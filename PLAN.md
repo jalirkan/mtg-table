@@ -11694,12 +11694,12 @@ declined windows); the full gate and the merge pending.** Branch `pc/live-seat-d
   The owner said yes.
 - **The change**: `SearchConfig.LIVE_VERSION` `search-v4`, `LIVE_DEFAULTS` `what=pa,anytime=1,declined=1,instant=1`;
   `parse()` and every ladder name and hash unchanged. `--ai-search declined=0,instant=0` plays search-v3. Protocol
-  amendment M83: the session header's `ai.version` says `search-v4`. The watch bots' id is `search-v4`, with
+  amendment M84: the session header's `ai.version` says `search-v4`. The watch bots' id is `search-v4`, with
   `search`, `search-v2` and `search-v3` kept as aliases.
 - **The atlas's seat (D509)**: unchanged — no atlas seat goes through `parseLive`, and seat-identity's golden is
   not touched; the decision names the five `bridge/src` files the next atlas night's `seat_code` check must admit.
 
-It closes the cube lab's 59 and adds its 63 ([the list](#fu-cube-lab)).
+It adds the cube lab's 63 ([the list](#fu-cube-lab)); its 59 closed with J216's read.
 
 ## Deferred — out of scope for M0–M7
 
