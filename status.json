@@ -1,15 +1,15 @@
 {
  "schema": 1,
- "updated": "2026-11-13T10:10:47-05:00",
- "heartbeat": "2026-11-13T10:10:47-05:00",
+ "updated": "2026-11-13T10:11:01-05:00",
+ "heartbeat": "2026-11-13T10:11:01-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.31,
-  "memUsedGb": 8.1,
+  "load1": 3.87,
+  "memUsedGb": 7.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 5624,
   "pressure": 0,
@@ -25,9 +25,9 @@
    "id": "J218",
    "title": "The search's horizon on the pair (D545): one fixed 4,800-game match (2,400 mirrored pairs, D398, tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-declined-instant-t1-x3 (9aeacaff9142, a new player: search-v3-declined-instant with turns=1 and ms=4500, aturns unset so attacks follow turns -- J212's two positive depth points, t1-x3 +9.8 and a1 +5.2 Elo at 1,200 games, together) against B = search-v3-declined-instant (af6771947a25, D543 point 6's base: J216 SMALL GAIN, the recommendation STANDS), in a ladder folder of its own under --host j218 on deal blocks no job has played, 655,900,000-655,900,599, at --game-timeout 1800, read by D519's four readings at 4,800 games as D545 writes them for this match, with D545's completeness parts. Never pooled. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "pilot 2/7",
+   "phase": "pilot 3/7",
    "started": "2026-11-13T10:09:26-05:00",
-   "elapsed": 81,
+   "elapsed": 95,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -115,10 +115,19 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J218-pilot2"
+   "detail": "lab-J218-pilot3"
   }
  ],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": "The search on the stack and in quiet steps: one 4,800-game match",
+   "publicEst": "~10 h (one night)",
+   "id": "J217",
+   "title": "D544's wide windows: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v3-wide (search-v3-declined-instant with stackwin=1, passwin=1 and dactiv=1, a new player, b95340935592) against B = search-v3-declined-instant (af6771947a25), fixed by D544 point 10 from J216's read: D543's recommendation STANDS (J216 SMALL GAIN alone, +8.3 Elo [+2.4, +14.1]); the live seat has not moved, in a ladder folder of its own under --host j217 on deal blocks no job has played, 725,900,000-725,900,599, read by D519's four readings at 4,800 games as D544 writes them for this match, with D544's completeness parts and exposure conditions. Never pooled with J215 or J216. This job never changes the live seat",
+   "cpu": "heavy",
+   "est": "~10 h at 7 workers (an estimate; range 9.5-11 h), 13.8 h at worst (the pilot and the match's own stop). From this host at 7 workers, alone, a 1,200-game match against the search's family takes about 0.47 h + 0.0436 h x both sides' search seconds a game (D537 point 11's fit; residual sd 0.15 h), about 9.01 h for J211 at four times the games against its 8.57. B searched about 21.7 s a game as search-v3-declined-instant (J215) and 19 s as search-v2-no-b; A about B-as-declined-instant's plus the three keys', about 24-26 s (D544 point 20). Both sides 46-48 s a game (B = search-v3-declined-instant) or 43-45 s (B = the live seat): the match about 9.5-10.3 h. Pilot about 15 minutes (the build, the self-tests with D544's scenarios, 8 games). About 11.5 h if memory pressure holds the night at 6 workers; the match stops itself at --hours 13.5 under the step's 14 h timeout, and a match that reaches its own stop reports complete: false and gets no reading"
+  }
+ ],
  "waiting": [],
  "finished": [
   {
