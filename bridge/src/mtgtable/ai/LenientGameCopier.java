@@ -797,7 +797,11 @@ public final class LenientGameCopier extends GameCopier {
             TriggerType.BecomesSaddled, TriggerType.Stationed, TriggerType.Cycled, TriggerType.Waterbend,
             TriggerType.CommitCrime};
 
-    /** D544 (the skeptic's read): a refusal's detail is ids and reason words only, never a card's name. */
+    /**
+     * D544 (the skeptic's read): a refusal's detail is built from ids and reason words only, never a card's name.
+     * This is a check of characters, not of names (a name of plain letters would pass it): it drops a detail that
+     * carries anything else, and every site that builds one must keep names out itself.
+     */
     static final java.util.regex.Pattern DETAIL_CHARS = java.util.regex.Pattern.compile("^[a-zA-Z0-9 :=,._-]*$");
 
     /**

@@ -2489,6 +2489,58 @@ public final class AiBench {
                             + "own Growth on top is not, and the Bolt on top again after the Growth resolved is not (empty " + p0
                             + ", cast " + p1 + ", own " + p2 + ", after the resolution " + p3 + "; " + stackOf(g) + ")");
         });
+        // the re-review's finding 2: in the OPPONENT's turn the opponent, the active player, has priority first after every
+        // resolution, so the seat holding priority on a stack with nothing of its own is a pass whatever resolved since
+        // its last decision: a second Bolt after the first resolved, the same stack asked twice, and the Bolt on top again
+        // after the seat's own Growth resolved (the first rewrite granted none of the three)
+        scenario("d544-opp-passed-opp-turn", List.of("humanlife=20", "ailife=20", "turn=6", "activeplayer=human",
+                "activephase=MAIN1", "humanhand=Lightning Bolt;Lightning Bolt", "humanbattlefield=Mountain;Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aihand=Giant Growth", "aibattlefield=Grizzly Bears;Forest",
+                "ailibrary=Forest;Forest;Forest;Forest"), PolicyLobbyPlayerAi.Outlets.OFF, stackOn, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = opp(ai);
+            final mtgtable.ai.SearchPolicy sp = ((PolicyControllerAi) ai.getController()).search();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            g.getPhaseHandler().setPriority(ai);
+            final boolean p0 = sp.notePriorityForTest(ai);   // the opponent's main phase, the stack empty: it passed
+            final boolean bolt1 = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Lightning Bolt"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(ai);
+                    });
+            g.getPhaseHandler().setPriority(ai);
+            final boolean p1 = sp.notePriorityForTest(ai);   // the first Bolt, cast and passed on
+            if (bolt1) {
+                g.getStack().resolveStack();                   // it resolves; the opponent has priority first
+            }
+            final boolean bolt2 = bolt1 && g.getStack().isEmpty() && forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Lightning Bolt"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            g.getPhaseHandler().setPriority(ai);
+            final boolean p2 = sp.notePriorityForTest(ai);   // the second Bolt: nothing the seat saw is still there
+            final boolean p2again = sp.notePriorityForTest(ai);   // the same stack, asked again
+            final boolean growth = bolt2 && forge.ai.ComputerUtil.handlePlayingSpellAbility(ai,
+                    playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Giant Growth"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            final boolean p3 = sp.notePriorityForTest(ai);   // the seat's own Growth on top
+            if (growth) {
+                g.getStack().resolveStack();                   // the Growth resolves; the opponent has priority first
+                g.getPhaseHandler().setPriority(ai);
+            }
+            final boolean p4 = sp.notePriorityForTest(ai);
+            final boolean board = growth && ai.getLife() == 17 && g.getStack().size() == 1 && g.getStack().peek().isSpell()
+                    && g.getStack().peek().getActivatingPlayer() == opp && !g.getPhaseHandler().isPlayerTurn(ai);
+            check(board && p0 && p1 && p2 && p2again && !p3 && p4,
+                    "D544 (the re-review): in the opponent's turn a pass is granted on its second Bolt after the first resolved, on "
+                            + "the same stack asked again, and on the Bolt after the seat's Growth resolved; the seat's own Growth "
+                            + "on top is not (empty " + p0 + ", first " + p1 + ", second " + p2 + ", again " + p2again + ", own "
+                            + p3 + ", after the resolution " + p4 + "; life " + ai.getLife() + "; " + stackOf(g) + ")");
+        });
         // the priority order in a rollout of a window the opponent has passed in
         scenario("d544-opp-pass-order", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
             final Game g = ai.getGame();

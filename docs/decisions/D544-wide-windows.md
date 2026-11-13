@@ -157,14 +157,19 @@ the full gate and the merge pending; unplayed. J217 plays it.**
    the opponent has already passed on the stack as it stands — on an empty stack, the seat is not the active player;
    on a stack whose top item is the opponent's, read against the stack the seat saw at its previous priority decision
    in the same turn and step (`SearchPolicy.opponentPassed`: the items' instance ids, bottom first, noted at every
-   priority decision that reaches the search, with a new key on only): at the seat's first decision of a step, yes in
-   the opponent's turn when no item is the seat's (the active player has priority first in a step and after each
-   resolution) and no in the seat's own turn; after it, yes only when nothing the seat saw has left the stack,
-   something is new, every new item is the opponent's and one of them is not a trigger (the opponent cast or
-   activated it, so it had priority and passed it on, 117.3c). After a resolution the active player has priority
+   priority decision that reaches the search, with a new key on only). **In the opponent's turn**, yes when no item
+   is the seat's — the opponent, the active player, has priority first in a step and after each resolution and keeps
+   it after casting, so the seat holds priority only because the opponent passed it on — except when everything the
+   seat saw is still there and every new item is a trigger (the seat's own action off the stack caused them, and
+   nobody has passed since). **In the seat's own turn**, no at its first decision of a step; after it, yes only when
+   nothing the seat saw has left the stack, something is new, every new item is the opponent's and one of them is not
+   a trigger (the opponent cast or activated it, so it had priority and passed it on, 117.3c). A stack that has not
+   moved since the seat's last decision keeps the answer it had. After a resolution the active player has priority
    first, so in the seat's own turn the opponent has not passed on what is left: the rule first written here (the
    opponent's item on top and not a trigger put there in the seat's own turn) granted that pass, and the skeptic's
-   read rewrote it (*The skeptic's read*, finding 2) — each rollout
+   read rewrote it (*The skeptic's read*, finding 2); that rewrite in turn refused the pass after any resolution, in
+   the opponent's turn too, where the opponent has passed, and the re-review put it back (*The re-review*) — each
+   rollout
    seats the opponent with a forcing-capable controller (Forge's plain AI, D390's outlets or D523's random seat, as
    the config says, each answering as before with nothing armed), gives it priority first and arms a **conditional
    pass**: its first priority answer is a pass provided the stack is then the one installed
@@ -392,13 +397,15 @@ stack-side lane needs.
   characteristics mattered but read the same on those four would be carried as the copy's card.
 - **The conditional pass** is given on the stack key (kinds, sources, controllers); a stack whose targets changed but
   whose key did not would still get it. The priority-order self-test holds one window.
-- **The opponent-passed rule** (point 6, as the skeptic's read rewrote it) reads the stack against the one the seat
+- **The opponent-passed rule** (point 6, as the skeptic's read and the re-review left it) reads the stack against the one the seat
   saw at its previous decision in the turn and step, and that record is kept only at decisions that reach the search:
   a play the outlet policy makes first keeps none, which the rule's own seat-item test turns into "not passed", and a
   special action or a mana ability of the seat's that triggers nothing is not seen at all (the opponent's earlier pass
   is then read as standing). The self-tests hold a cast-and-pass, the seat's own item on top, the opponent's item on
-  top again after the seat's response resolved in the seat's own turn (no pass), a trigger in the seat's own turn, and
-  an empty stack in either turn.
+  top again after the seat's response resolved in the seat's own turn (no pass), a trigger in the seat's own turn, an
+  empty stack in either turn, and in the opponent's turn its second spell after the first resolved, the same stack
+  asked twice and its item on top again after the seat's response resolved (a pass each). The opponent's-turn
+  exception (new triggers alone) has no self-test case.
 - **What a push records again.** The carry puts back each player's crimes this turn, and an activated ability's
   activation records (the source's tables and the stack's list) where a push takes them above the live game's; a
   planeswalker's loyalty-activation count and the
@@ -455,6 +462,28 @@ review's text findings are folded in above: the header, the hypothesis's prose (
 registered table and numbers are unchanged), point 13's reading aid, and *What is unverified*. J217's verdict also
 checks that the match line's deck set is the confirm set's file (point 11's set, as a completeness part: a match that
 point 11 describes always meets it). No registered number, threshold, floor, block, host, hash or reading rule changed.
+
+**The re-review (2026-11-13).** A second independent review, of the lane with the four fixes (`e6aa4f56a`), found no
+fault that changes a number and asked for one thing before the merge and one improvement, both done:
+
+1. **J217 is pinned to this lane's own merge commit**, never to a later main: its code check counts the files changed
+   since `97122947c`, and D546, which merges after this lane, edits one of them (`SearchConfig.java`).
+2. **The rewritten pass rule missed real passes in the opponent's turn.** The seat saw O1, O1 resolved, the opponent
+   cast O2 and passed: not granted, since something the seat saw had left the stack. The seat saw O1 and its own S1 on
+   it, S1 resolved, the opponent passed on O1 again: not granted. Both are passes (the active opponent has priority
+   first after a resolution), and the first is the common one, a second spell in one phase; a missed pass gives the
+   opponent one more answer before the seat's pass resolves anything, in every candidate's rollout alike. Fixed as
+   point 6 now reads; a stack that did not move keeps its answer (the seat asked again after a cast it declined).
+   ai-bench case `d544-opp-passed-opp-turn`.
+3. **A wording, not a fault**: the refusal detail's pattern (finding 4b above) is a character check, not a filter of
+   names — a name of plain letters would pass it. What keeps names out is that every site builds its detail from ids
+   and reason words; the pattern drops a detail that carries anything else, and the self-test's refusal cases compare
+   against the game's card names. The triggering-object test (4a) covers triggering objects only; nothing else of an
+   item reaches a string or the wire.
+
+The exposure run's counts (*Verification*) predate this too; the fix grants the opponent's pass in more of the
+opponent's-turn windows than the first rewrite did, and no registered number, threshold, floor, block, host, hash or
+reading rule changed.
 
 **Verification (the lane; 2026-11-12 on `1eaa00d30`, the lab idle, then 2026-11-13 after J216 on the rebased tree
 `97122947c` + the lane, the lab idle at every compute step: state `idle`, `running` and `queue` empty, read as text):**

@@ -702,18 +702,23 @@ public final class SearchPolicy {
      * <li>An empty stack: the seat is not the active player (the active player has priority first in every step, and
      *     after every resolution).</li>
      * <li>A stack whose top item is the seat's, or with no controller: no.</li>
-     * <li>The seat's first priority in this step: in the opponent's turn yes when no item on the stack is the seat's
-     *     (the opponent had priority first in the step and after each resolution, so it has passed on what is there; an
-     *     item of the seat's would mean the seat acted this step through a path that kept no record); in the seat's own
-     *     turn no (the seat has priority first in a step, so whatever is already there was put there by a trigger and
-     *     nobody has passed on it).</li>
-     * <li>Otherwise yes only when every item the seat saw is still where it was (nothing has resolved: after a
-     *     resolution the active player has priority first, and in the seat's own turn that is the seat with nobody
-     *     having passed -- the case the first rule missed: the opponent's O1, the seat's S1 on it, S1 resolved, O1 on
-     *     top again), at least one item is new, every new item is the opponent's, and at least one of them is not a
-     *     trigger: the opponent cast or activated it, so it had priority after the seat's last decision and passed it
-     *     on with this stack (117.3c).  New items that are triggers alone (one the seat's own action caused, a land drop
-     *     under the opponent's punisher) are not a pass.</li>
+     * <li>In the opponent's turn: yes when no item on the stack is the seat's (the opponent, the active player, has
+     *     priority first in the step and after every resolution, and keeps it after casting, so the seat holds priority
+     *     only because the opponent passed it on with this stack; an item of the seat's means the seat acted and nobody
+     *     has passed on its item), with one exception read from {@code seen}: every item the seat saw is still where it
+     *     was and every new item is a trigger -- the seat's own action that does not use the stack caused them (a mana
+     *     ability under the opponent's punisher) and the seat kept priority, so nobody has passed on them.  This covers
+     *     what the first rewrite missed (the re-review's finding 2): the seat saw O1, O1 resolved, the opponent cast O2
+     *     and passed; the seat saw O1 and its own S1 on it, S1 resolved, the opponent passed on O1 again.  (A stack
+     *     that did not move at all is never asked here: {@link #notePriority} keeps the answer it had.)</li>
+     * <li>In the seat's own turn, its first priority in this step: no (the seat has priority first in a step, so
+     *     whatever is already there was put there by a trigger and nobody has passed on it).</li>
+     * <li>In the seat's own turn otherwise: yes only when every item the seat saw is still where it was (nothing has
+     *     resolved: after a resolution the seat, the active player, has priority first with nobody having passed -- the
+     *     opponent's O1, the seat's S1 on it, S1 resolved, O1 on top again), at least one item is new, every new item
+     *     is the opponent's, and at least one of them is not a trigger: the opponent cast or activated it, so it had
+     *     priority after the seat's last decision and passed it on with this stack (117.3c).  New items that are
+     *     triggers alone (a land drop under the opponent's punisher) are not a pass.</li>
      * </ul>
      */
     public static boolean opponentPassed(final Player ai, final int[] seen) {
@@ -727,16 +732,29 @@ public final class SearchPolicy {
         if (top.getActivatingPlayer() == null || top.getActivatingPlayer() == ai) {
             return false;
         }
-        if (seen == null) {
-            if (ph.isPlayerTurn(ai)) {
-                return false;
-            }
+        if (!ph.isPlayerTurn(ai)) {
             for (final forge.game.spellability.SpellAbilityStackInstance si : items) {
                 if (si.getActivatingPlayer() == null || si.getActivatingPlayer() == ai) {
                     return false;
                 }
             }
-            return true;
+            if (seen == null || seen.length >= items.size()) {
+                return true;   // the seat's first decision, or a resolution since
+            }
+            for (int i = 0; i < seen.length; i++) {
+                if (items.get(i).getId() != seen[i]) {
+                    return true;   // a resolution since: the opponent had priority first after it
+                }
+            }
+            for (int i = seen.length; i < items.size(); i++) {
+                if (!items.get(i).isTrigger()) {
+                    return true;   // the opponent cast or activated it and passed it on
+                }
+            }
+            return false;   // new triggers alone, on a stack the seat's own action did not leave
+        }
+        if (seen == null) {
+            return false;
         }
         if (seen.length >= items.size()) {
             return false;   // nothing new: an item resolved or nothing moved
@@ -780,15 +798,20 @@ public final class SearchPolicy {
      * D544 (the skeptic's read): a priority decision of the seat: whether the opponent had passed ({@link
      * #opponentPassed}, against the stack the seat saw at its previous decision in this turn and step), then this
      * stack as the one it has seen.  Called once a decision, by {@link #wantsPriority(Player, List)}, with a new key on.
-     * Reads the game only.
+     * A stack with something on it that has not moved since that decision keeps the answer it had: the seat is asked
+     * again (a cast it declined, a mana ability) and nobody has passed or acted on the stack in between.  Reads the game
+     * only.
      */
     private void notePriority(final Player ai) {
         final PhaseHandler ph = ai.getGame().getPhaseHandler();
         final boolean same = ph.getTurn() == seenTurn && ph.getPhase() == seenPhase;
-        oppPassedNow = opponentPassed(ai, same ? seenIds : null);
+        final int[] now = stackIds(ai.getGame());
+        if (!(same && now.length > 0 && java.util.Arrays.equals(now, seenIds))) {
+            oppPassedNow = opponentPassed(ai, same ? seenIds : null);   // a stack that did not move keeps its answer
+        }
         seenTurn = ph.getTurn();
         seenPhase = ph.getPhase();
-        seenIds = stackIds(ai.getGame());
+        seenIds = now;
     }
 
     /** For the self-test only (D544): a priority decision of the seat noted, as the search notes one; the pass it read. */
