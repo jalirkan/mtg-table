@@ -148,6 +148,8 @@ public final class SearchPolicy {
     private int widenedTurn = -1;
     private PhaseType widenedPhase;
     private long widenedProgress;
+    /** D544: the stack when the widened pick was made ({@link LenientGameCopier#stackKey}; empty for D540's picks). */
+    private String widenedStack = "";
     private final Set<String> widenOff = new HashSet<>();
     private int widenOffTurn = -1;
     private PhaseType widenOffPhase;
@@ -620,12 +622,19 @@ public final class SearchPolicy {
      * Whether a priority decision whose Forge answer is {@code forge} (null or empty = pass) is one the search looks
      * at: {@link #wantsPriority(Player)}'s windows, and with {@code instant=1} (D540) an instant-speed window --
      * outside the seat's own main phases, on an empty stack, either turn -- where Forge plays something that is not
-     * a land and not a mana ability.  With {@code instant} off this is {@link #wantsPriority(Player)} and reads
-     * nothing more.
+     * a land and not a mana ability.  D544: with {@code stackwin=1} a stack window ({@link #stackWindow}), with
+     * {@code passwin=1} one of three empty-stack steps where Forge passes ({@link #passWindow}); each is disjoint from
+     * the others.  With every widening key off this is {@link #wantsPriority(Player)} and reads nothing more.
      */
     public boolean wantsPriority(final Player ai, final List<SpellAbility> forge) {
         if (wantsPriority(ai)) {
             return true;
+        }
+        if (cfg.priority && cfg.stackwin && stackWindow(ai) && widenOn(ai, "stackwin")) {
+            return true;   // D544
+        }
+        if (cfg.priority && cfg.passwin && (forge == null || forge.isEmpty()) && passWindow(ai) && widenOn(ai, "passwin")) {
+            return true;   // D544
         }
         if (!cfg.instant || !cfg.priority || forge == null || forge.size() != 1) {
             return false;
@@ -640,18 +649,74 @@ public final class SearchPolicy {
     }
 
     /**
-     * D540's retry guard.  Forge's main loop asks an AI seat again after a play it could not make (up to 999 times,
-     * {@code PhaseHandler.mainLoopStep}), and a ladder seat has no pay cap (D465's is the atlas seat's): a widened
-     * pick that fails to cast would be searched and picked again at every ask.  So when a widened pick is pending and
-     * the seat is asked again in the same turn and step with an empty stack and nothing it plays has moved since
-     * ({@link #progress}: no spell cast, no land played, the play's own activations unchanged), that key is off for the
-     * rest of the step -- today's path only -- and counted ({@code search.p.<key>.retry}).  Called only with a key on.
+     * D544: a stack window -- the stack is not empty, its top item is the opponent's, and nothing is waiting to be put
+     * on it -- on either turn, in any step.  Whether the stack can be carried is the search's next question
+     * ({@link #stackRefused}).
+     */
+    static boolean stackWindow(final Player ai) {
+        final forge.game.zone.MagicStack st = ai.getGame().getStack();
+        if (st.isEmpty() || st.hasSimultaneousStackEntries()) {
+            return false;
+        }
+        final forge.game.spellability.SpellAbilityStackInstance top = st.peek();
+        return top != null && top.getActivatingPlayer() != null && top.getActivatingPlayer() != ai;
+    }
+
+    /**
+     * D544: one of the three empty-stack steps {@code passwin=1} looks at: the opponent's declare-attackers step with
+     * attackers declared, the opponent's end step, and the seat's own declare-blockers step (blocks are declared
+     * before anyone has priority there, so a window in that step is after them) with attackers in it.
+     */
+    static boolean passWindow(final Player ai) {
+        final Game g = ai.getGame();
+        final PhaseHandler ph = g.getPhaseHandler();
+        if (!g.getStack().isEmpty() || g.getStack().hasSimultaneousStackEntries() || ph.getPhase() == null) {
+            return false;
+        }
+        final Combat combat = ph.getCombat();
+        final boolean attacking = combat != null && !combat.getAttackers().isEmpty();
+        if (ph.isPlayerTurn(ai)) {
+            return ph.is(PhaseType.COMBAT_DECLARE_BLOCKERS) && attacking;
+        }
+        return ph.is(PhaseType.END_OF_TURN) || ph.is(PhaseType.COMBAT_DECLARE_ATTACKERS) && attacking;
+    }
+
+    /**
+     * D544: whether the opponent has already passed in this window, so a rollout asks it first and it passes while the
+     * stack is the one installed ({@link #WIDE_PASSED}).  On an empty stack: the seat is not the active player (the
+     * active player has priority first in every step).  On a stack: its top item is the opponent's, and it is not a
+     * trigger put there in the seat's own turn (the active player has priority first after a trigger is put on the
+     * stack, 117.3b; after a spell or an ability, its controller does, 117.3c, and passed it on).
+     */
+    static boolean opponentPassed(final Player ai) {
+        final Game g = ai.getGame();
+        final PhaseHandler ph = g.getPhaseHandler();
+        if (g.getStack().isEmpty()) {
+            return !ph.isPlayerTurn(ai);
+        }
+        final forge.game.spellability.SpellAbilityStackInstance top = g.getStack().peek();
+        if (top == null || top.getActivatingPlayer() == null || top.getActivatingPlayer() == ai) {
+            return false;
+        }
+        return !(top.isTrigger() && ph.isPlayerTurn(ai));
+    }
+
+    /**
+     * D540's retry guard, made stack-aware by D544.  Forge's main loop asks an AI seat again after a play it could not
+     * make (up to 999 times, {@code PhaseHandler.mainLoopStep}), and a ladder seat has no pay cap (D465's is the atlas
+     * seat's): a widened pick that fails to cast would be searched and picked again at every ask.  So when a widened
+     * pick is pending and the seat is asked again in the same turn and step, with the same stack
+     * ({@link LenientGameCopier#stackKey}; D540's picks are all made on an empty stack, whose key is empty, so for them
+     * this is D540's "an empty stack") and nothing it plays has moved since ({@link #progress}: no spell cast, no land
+     * played, the play's own activations unchanged), that key is off for the rest of the step -- today's path only --
+     * and counted ({@code search.p.<key>.retry}).  Called only with a key on.
      */
     private boolean widenOn(final Player ai, final String key) {
         final Game g = ai.getGame();
         final PhaseHandler ph = g.getPhaseHandler();
         if (widenedKey != null) {
-            if (ph.getTurn() == widenedTurn && ph.getPhase() == widenedPhase && g.getStack().isEmpty()
+            if (ph.getTurn() == widenedTurn && ph.getPhase() == widenedPhase
+                    && LenientGameCopier.stackKey(g).equals(widenedStack)
                     && progress(ai, widenedSa) == widenedProgress) {
                 sink.add("search.p." + widenedKey + ".retry", 1);
                 if (widenOffTurn != ph.getTurn() || widenOffPhase != ph.getPhase()) {
@@ -674,7 +739,13 @@ public final class SearchPolicy {
         widenedSa = sa;
         widenedTurn = ph.getTurn();
         widenedPhase = ph.getPhase();
+        widenedStack = LenientGameCopier.stackKey(ai.getGame());
         widenedProgress = progress(ai, sa);
+    }
+
+    /** For the self-test only (D544): whether {@code key} is off for the rest of this step (the retry guard fired). */
+    public boolean widenOffForTest(final Player ai, final String key) {
+        return !widenOn(ai, key);
     }
 
     /**
@@ -698,6 +769,44 @@ public final class SearchPolicy {
     }
 
     /**
+     * D544: which of D544's windows this priority decision is -- {@code "stackwin"} or {@code "passwin"} -- or null
+     * (an own-main window, D540's instant-speed window, or every key off).  {@link #wantsPriority(Player, List)} has
+     * already said the search looks at it.
+     */
+    private String wideWindow(final Player ai, final SpellAbility forgeSa) {
+        if (cfg.stackwin && stackWindow(ai)) {
+            return "stackwin";
+        }
+        if (cfg.passwin && forgeSa == null && passWindow(ai)) {
+            return "passwin";
+        }
+        return null;
+    }
+
+    /**
+     * D544: why this stack window cannot be searched (null: it can): {@link LenientGameCopier#stackRefusal} on the live
+     * game, then one trial copy with the stack carried, whose own self-check runs ({@code verify}).  The trial costs a
+     * copy (milliseconds); the rollouts' copies carry the stack the same way.
+     */
+    private String stackRefused(final Player ai) {
+        final String pre = LenientGameCopier.stackRefusal(ai.getGame());
+        if (pre != null) {
+            return pre;
+        }
+        COPYING.set(Boolean.TRUE);
+        try {
+            new LenientGameCopier(ai.getGame()).carryStack(true).makeCopy(null, ai);
+            return null;
+        } catch (final LenientGameCopier.StackRefused e) {
+            return e.reason;
+        } catch (final RuntimeException e) {
+            return "copy";
+        } finally {
+            COPYING.set(Boolean.FALSE);
+        }
+    }
+
+    /**
      * Forge chose {@code forge} (null or empty = pass).  Return it, or a better
      * play found by the search.
      */
@@ -714,67 +823,203 @@ public final class SearchPolicy {
             return forge;   // a land drop (or a multi-ability land list): Forge's
         }
         final long t0 = System.nanoTime();
+        // D544: one of the new windows (null with the keys off, and in every window today's search looks at)
+        final String wide = cfg.stackwin || cfg.passwin ? wideWindow(ai, forgeSa) : null;
+        if ("stackwin".equals(wide)) {
+            final String refused = stackRefused(ai);
+            if (refused != null) {
+                sink.add("search.p.stackwin.refused", 1);
+                sink.add("search.p.stackwin.refused." + refused, 1);
+                return forge;   // the carry cannot rebuild this stack faithfully: Forge's answer, unsearched
+            }
+        }
         // D540: declined=1 widens the list (the widened plays after today's, so today's are its head); off, null.  At an
         // instant-speed window (instant=1) the listing's engine calls run inside Decisions.quiet: the seat B has no
-        // search there and draws nothing from the real game's random stream, so neither may the arm
-        final List<SpellAbility> aimed = cfg.declined && widenOn(ai, "declined") ? new ArrayList<>() : null;
-        final boolean instant = cfg.instant && !ownMain(ai);
-        final List<SpellAbility> alts = instant ? Decisions.quiet(() -> alternatives(ai, aic, forgeSa, sink, aimed))
-                : alternatives(ai, aic, forgeSa, sink, aimed);
-        if (alts.isEmpty() && forgeSa == null) {
-            return forge;   // nothing to choose between
+        // search there and draws nothing from the real game's random stream, so neither may the arm.  D544: a stack or
+        // pass window lists the aimed declined spells whatever declined= says, and quietly, for the same reason; dactiv=1
+        // adds the declined sorcery-speed activations in the own-main windows
+        final List<SpellAbility> aimed = wide != null || cfg.declined && widenOn(ai, "declined") ? new ArrayList<>() : null;
+        final boolean instant = cfg.instant && !ownMain(ai) && wide == null;
+        final boolean dactiv = cfg.dactiv && wide == null && ownMain(ai) && widenOn(ai, "dactiv");
+        final Widen w = new Widen(aimed, dactiv ? dactivSkip(ai) : null, wide != null);
+        final List<SpellAbility> alts = instant || wide != null ? Decisions.quiet(() -> alternativesWide(ai, aic, forgeSa, sink, w))
+                : alternativesWide(ai, aic, forgeSa, sink, w);
+        if ("passwin".equals(wide) && (aimed == null || aimed.isEmpty())) {
+            return forge;   // D544: a pass window is searched only when the widened listing gives an aimed play; not a window
         }
-        final List<Cand> cands = new ArrayList<>();
-        cands.add(priorityCand(forgeSa));
-        if (forgeSa != null) {
-            cands.add(priorityCand(null));
-        }
-        for (final SpellAbility sa : alts) {
-            if (cands.size() >= genLimit()) {
-                break;
+        try {
+            if (alts.isEmpty() && forgeSa == null) {
+                return forge;   // nothing to choose between
             }
-            cands.add(priorityCand(sa));
+            final List<Cand> cands = new ArrayList<>();
+            cands.add(priorityCand(forgeSa));
+            if (forgeSa != null) {
+                cands.add(priorityCand(null));
+            }
+            for (final SpellAbility sa : alts) {
+                if (cands.size() >= genLimit()) {
+                    break;
+                }
+                cands.add(priorityCand(sa));
+            }
+            // D544: the rollouts of a new window carry the stack (stackwin) and, where the opponent has passed already,
+            // ask it first with a conditional pass; 0 for every other window, so their rollouts are today's
+            WIDE.set(wide == null ? 0 : ("stackwin".equals(wide) ? WIDE_STACK : 0) | (opponentPassed(ai) ? WIDE_PASSED : 0));
+            rank(ai, cands, "p", forgeSa != null ? 2 : 1, t0);
+            sink.add("search.p.considered", 1);
+            // D540's exposure counters: a window the widening reached, its candidates, and (below) its changes
+            if (instant) {
+                sink.add("search.p.instant.windows", 1);
+                sink.add("search.p.instant.cands", cands.size());
+            }
+            if (wide != null) {
+                sink.add("search.p." + wide + ".windows", 1);
+                sink.add("search.p." + wide + ".cands", cands.size());
+                if (opponentPassed(ai)) {
+                    sink.add("search.p." + wide + ".oppPassed", 1);
+                }
+            }
+            final int fromDeclined = aimed == null ? 0 : countSas(cands, aimed);
+            if (fromDeclined > 0) {
+                sink.add("search.p.declined.windows", 1);
+                sink.add("search.p.declined.cands", fromDeclined);
+                if (instant) {
+                    sink.add("search.p.declined.instantWindows", 1);   // D541's review: declined casts at instant speed
+                }
+            }
+            final int fromDactiv = countSas(cands, w.activations);
+            if (fromDactiv > 0) {
+                sink.add("search.p.dactiv.windows", 1);
+                sink.add("search.p.dactiv.cands", fromDactiv);
+            }
+            final double[] st = stateFor(ai);
+            final Outcome o = decide(ai, cands, "p", t0, st);
+            exportRow(ai, cands, "p", o == null || o.chosen <= 0 ? 0 : o.chosen, st, t0);
+            if (o == null || o.chosen <= 0) {
+                return forge;
+            }
+            final Cand c = cands.get(o.chosen);
+            final SpellAbility pick = ((PriorityCand) c).sa;
+            sink.add("search.p.changed", 1);
+            sink.add(pick == null ? "search.p.changed.toPass" : (forgeSa == null ? "search.p.changed.fromPass"
+                    : "search.p.changed.toOther"), 1);
+            if (instant) {
+                sink.add("search.p.instant.changed", 1);
+            }
+            if (wide != null) {
+                sink.add("search.p." + wide + ".changed", 1);
+            }
+            final boolean fromAim = pick != null && aimed != null && containsSa(aimed, pick);
+            if (fromAim) {
+                sink.add("search.p.declined.changed", 1);
+            }
+            if (pick != null && containsSa(w.activations, pick)) {
+                sink.add("search.p.dactiv.changed", 1);
+                w.keepMemory = true;   // the activation is played: Forge's memory of aiming it is what Forge would hold
+                dactivPicked.put(pick.getHostCard().getId(), ai.getGame().getPhaseHandler().getTurn());
+                noteWidened(ai, "dactiv", pick);
+            } else if (pick != null && wide != null) {
+                noteWidened(ai, wide, pick);
+            } else if (fromAim) {
+                noteWidened(ai, "declined", pick);
+            } else if (pick != null && instant) {
+                noteWidened(ai, "instant", pick);
+            }
+            sink.event(String.format(Locale.ROOT, "search P: %s over Forge's %s (%s, %d rounds)", c.label,
+                    cands.get(0).label, means(cands, o), o.rounds));
+            if (pick == null) {
+                return null;
+            }
+            final List<SpellAbility> l = new ArrayList<>(1);
+            l.add(pick);
+            return l;
+        } finally {
+            WIDE.set(0);
+            if (w.memory != null && !w.keepMemory) {
+                // D544: the dactiv aims' writes to Forge's AI memory do not outlive a listing that picked something else
+                final int n = restoreMemory(ai, aic, w.memory);
+                if (n > 0) {
+                    sink.add("search.p.dactiv.memoryRestored", n);
+                }
+            }
         }
-        rank(ai, cands, "p", forgeSa != null ? 2 : 1, t0);
-        sink.add("search.p.considered", 1);
-        // D540's exposure counters: a window the widening reached, its candidates, and (below) its changes
-        if (instant) {
-            sink.add("search.p.instant.windows", 1);
-            sink.add("search.p.instant.cands", cands.size());
+    }
+
+    /**
+     * D544: what a priority listing widens beyond today's ({@link #alternatives}).  {@code aimed}: D540's declined
+     * spells, aimed (null: off).  {@code dactivSkip}: {@code dactiv=1}'s sources already played this turn (null: off);
+     * {@code activations} (out) the declined sorcery-speed activations listed, {@code memory} (out) the seat's AI memory
+     * sets as they were before those were aimed.  {@code dropOwnStackAim}: a stack or pass window's listing drops an
+     * aimed play whose target is the seat's own stack item.
+     */
+    static final class Widen {
+        final List<SpellAbility> aimed;
+        final Set<Integer> dactivSkip;
+        final boolean dropOwnStackAim;
+        final List<SpellAbility> activations = new ArrayList<>();
+        Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> memory;
+        boolean keepMemory;
+
+        Widen(final List<SpellAbility> aimed, final Set<Integer> dactivSkip, final boolean dropOwnStackAim) {
+            this.aimed = aimed;
+            this.dactivSkip = dactivSkip;
+            this.dropOwnStackAim = dropOwnStackAim;
         }
-        final int fromDeclined = aimed == null ? 0 : countSas(cands, aimed);
-        if (fromDeclined > 0) {
-            sink.add("search.p.declined.windows", 1);
-            sink.add("search.p.declined.cands", fromDeclined);
+    }
+
+    /** D544: the sources whose declined activation the search picked this turn (card id -> turn). */
+    private final Map<Integer, Integer> dactivPicked = new java.util.HashMap<>();
+
+    /** D544: the sources {@code dactiv=1} lists nothing of this turn: one widened activation per source a turn. */
+    private Set<Integer> dactivSkip(final Player ai) {
+        final int turn = ai.getGame().getPhaseHandler().getTurn();
+        final Set<Integer> out = new HashSet<>();
+        for (final Map.Entry<Integer, Integer> e : dactivPicked.entrySet()) {
+            if (e.getValue() == turn) {
+                out.add(e.getKey());
+            }
         }
-        final double[] st = stateFor(ai);
-        final Outcome o = decide(ai, cands, "p", t0, st);
-        exportRow(ai, cands, "p", o == null || o.chosen <= 0 ? 0 : o.chosen, st, t0);
-        if (o == null || o.chosen <= 0) {
-            return forge;
+        return out;
+    }
+
+    /**
+     * D544: an activated ability that may be played only at sorcery speed -- Forge's own test
+     * ({@code SpellAbility.canCastTiming}): a planeswalker's loyalty ability, or one whose restriction says
+     * {@code SorcerySpeed} (equip, reconfigure, outlast, level up and the like), unless its restriction says
+     * {@code InstantSpeed}.  Not a mana ability.
+     */
+    static boolean sorcerySpeedActivation(final SpellAbility sa) {
+        return sa.isActivatedAbility() && !sa.isManaAbility() && sa.getRestrictions() != null
+                && (sa.isPwAbility() || sa.getRestrictions().isSorcerySpeed()) && !sa.getRestrictions().isInstantSpeed();
+    }
+
+    /** D544: the seat's AI memory sets, each copied. */
+    static Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> snapshotMemory(final Player ai) {
+        final Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> out = new java.util.EnumMap<>(forge.ai.AiCardMemory.MemorySet.class);
+        for (final forge.ai.AiCardMemory.MemorySet m : forge.ai.AiCardMemory.MemorySet.values()) {
+            final Set<Card> cur = forge.ai.AiCardMemory.getMemorySet(ai, m);
+            out.put(m, cur == null ? new HashSet<>() : new HashSet<>(cur));
         }
-        final Cand c = cands.get(o.chosen);
-        final SpellAbility pick = ((PriorityCand) c).sa;
-        sink.add("search.p.changed", 1);
-        sink.add(pick == null ? "search.p.changed.toPass" : (forgeSa == null ? "search.p.changed.fromPass"
-                : "search.p.changed.toOther"), 1);
-        if (instant) {
-            sink.add("search.p.instant.changed", 1);
+        return out;
+    }
+
+    /** D544: the seat's AI memory sets put back as {@code snap} holds them; how many sets differed. */
+    static int restoreMemory(final Player ai, final AiController aic,
+                             final Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> snap) {
+        int n = 0;
+        for (final Map.Entry<forge.ai.AiCardMemory.MemorySet, Set<Card>> e : snap.entrySet()) {
+            final Set<Card> cur = forge.ai.AiCardMemory.getMemorySet(ai, e.getKey());
+            final Set<Card> now = cur == null ? new HashSet<>() : new HashSet<>(cur);
+            if (now.equals(e.getValue())) {
+                continue;
+            }
+            n++;
+            forge.ai.AiCardMemory.clearMemorySet(aic, e.getKey());
+            for (final Card c : e.getValue()) {
+                forge.ai.AiCardMemory.rememberCard(aic, c, e.getKey());
+            }
         }
-        if (pick != null && aimed != null && containsSa(aimed, pick)) {
-            sink.add("search.p.declined.changed", 1);
-            noteWidened(ai, "declined", pick);
-        } else if (pick != null && instant) {
-            noteWidened(ai, "instant", pick);
-        }
-        sink.event(String.format(Locale.ROOT, "search P: %s over Forge's %s (%s, %d rounds)", c.label,
-                cands.get(0).label, means(cands, o), o.rounds));
-        if (pick == null) {
-            return null;
-        }
-        final List<SpellAbility> l = new ArrayList<>(1);
-        l.add(pick);
-        return l;
+        return n;
     }
 
     /** D540: how many of {@code cands}' priority plays are in {@code sas} (by identity of the object). */
@@ -904,6 +1149,24 @@ public final class SearchPolicy {
      */
     static List<SpellAbility> alternatives(final Player ai, final AiController aic, final SpellAbility forgeSa,
                                            final Sink sink, final List<SpellAbility> aimed) {
+        return alternativesWide(ai, aic, forgeSa, sink, new Widen(aimed, null, false));
+    }
+
+    /**
+     * D544: {@link #alternatives} with {@link Widen}'s switches.  With {@code dactivSkip} null and
+     * {@code dropOwnStackAim} false it is the five-argument listing exactly (the same engine calls in the same order).
+     * {@code dactiv=1}: an activated ability Forge declines that passes {@link #sorcerySpeedActivation}, the first of
+     * its source in the listing and of a source not played this turn by the widening, is aimed by
+     * {@link #aimDeclined} after the declined spells -- the seat's AI memory sets copied first ({@code memory}), so
+     * the caller can put back what the aims wrote -- and listed last; an equip aimed at the creature it is already on
+     * is dropped ({@code search.p.dactiv.sameHost}).  {@code dropOwnStackAim}: an aimed declined spell whose target is
+     * the seat's own stack item is dropped ({@code search.p.stackwin.ownAim}).
+     */
+    static List<SpellAbility> alternativesWide(final Player ai, final AiController aic, final SpellAbility forgeSa,
+                                               final Sink sink, final Widen widen) {
+        final List<SpellAbility> aimed = widen.aimed;
+        final List<SpellAbility> toActivate = new ArrayList<>();   // D544
+        final Set<Integer> activationHosts = new HashSet<>();
         final List<SpellAbility> willPlay = new ArrayList<>();
         final List<SpellAbility> declined = new ArrayList<>();
         final List<SpellAbility> toAim = new ArrayList<>();   // D540
@@ -949,6 +1212,9 @@ public final class SearchPolicy {
                     declined.add(sa);
                 } else if (aimed != null && sa.isSpell() && sa.getPayCosts() != null) {
                     toAim.add(sa);   // D540: declined for another reason, or targeted: aimed below, after every judgment
+                } else if (widen.dactivSkip != null && sorcerySpeedActivation(sa) && !widen.dactivSkip.contains(host.getId())
+                        && activationHosts.add(host.getId())) {
+                    toActivate.add(sa);   // D544: a declined sorcery-speed activation, aimed below after the spells
                 }
             } catch (final RuntimeException e) {
                 sink.add("search.p.candidateError", 1);
@@ -970,12 +1236,76 @@ public final class SearchPolicy {
                 sink.add("search.p.declined.noTarget", 1);
             }
         }
+        if (widen.dropOwnStackAim) {
+            // D544: in a stack window an aim at the seat's own item (a counter on its own spell) is never a candidate
+            for (final java.util.Iterator<SpellAbility> it = widened.iterator(); it.hasNext();) {
+                if (aimsAtOwnStackItem(ai, it.next())) {
+                    it.remove();
+                    sink.add("search.p.stackwin.ownAim", 1);
+                }
+            }
+        }
         if (aimed != null) {
             sink.add("search.p.declined.listed", widened.size());
             willPlay.addAll(widened);
             aimed.addAll(widened);
         }
+        if (!toActivate.isEmpty()) {
+            // D544: the forced aim can write the seat's AI memory ("attached this turn", mana held for main 2): copied
+            // first, so the caller puts it back unless the pick is one of these
+            widen.memory = snapshotMemory(ai);
+            for (final SpellAbility sa : toActivate) {
+                boolean ok;
+                try {
+                    ok = Decisions.quiet(() -> aimDeclined(ai, sa));
+                } catch (final RuntimeException e) {
+                    ok = false;
+                }
+                if (!ok) {
+                    sink.add("search.p.dactiv.noTarget", 1);
+                } else if (equipsItsHost(sa)) {
+                    sink.add("search.p.dactiv.sameHost", 1);
+                } else {
+                    widen.activations.add(sa);
+                }
+            }
+            sink.add("search.p.dactiv.listed", widen.activations.size());
+            willPlay.addAll(widen.activations);
+        }
         return willPlay;
+    }
+
+    /** D544: an aimed play one of whose targets is a stack item the seat controls. */
+    static boolean aimsAtOwnStackItem(final Player ai, final SpellAbility sa) {
+        for (final SpellAbility s : Explorer.castParts(sa)) {
+            if (!s.usesTargeting()) {
+                continue;
+            }
+            for (final GameObject t : s.getTargets()) {
+                if (t instanceof SpellAbility && ((SpellAbility) t).getActivatingPlayer() == ai) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** D544: an attach activation of an equipment aimed at the creature it is already attached to. */
+    static boolean equipsItsHost(final SpellAbility sa) {
+        final Card host = sa.getHostCard();
+        if (host == null || !(sa.isEquip() || sa.getApi() == forge.game.ability.ApiType.Attach && host.isEquipment())) {
+            return false;
+        }
+        final Card on = host.getAttachedTo();
+        if (on == null || !sa.usesTargeting()) {
+            return false;
+        }
+        for (final GameObject t : sa.getTargets()) {
+            if (t == on) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -3427,6 +3757,8 @@ public final class SearchPolicy {
             }
             final Player aiCopy = (Player) cp.find(ai);
             RolloutForcing rc = null;
+            RolloutForcing oppPass = null;   // D544: the opponent's seat, when it has passed in this window already
+            final boolean passed = (wide & WIDE_PASSED) != 0 && cand instanceof PriorityCand;
             final List<Player> seatsInCopy = new ArrayList<>(copy.getPlayers());
             for (int k = 0; k < seatsInCopy.size(); k++) {
                 final Player p = seatsInCopy.get(k);
@@ -3457,6 +3789,14 @@ public final class SearchPolicy {
                             ExploreMath.seedFor(seed, RANDOM_ROLLOUT_GAME, k), lim.randomSeat);
                     randomSeats.add(r);
                     p.dangerouslySetController(r);
+                    oppPass = r;
+                } else if (passed) {
+                    // D544: the same seat as below with a conditional pass to give (with nothing armed it answers as
+                    // they do); seated only in a window the opponent has already passed in, never otherwise
+                    final RolloutForcing o = lim.outletsThem ? new RolloutController.Outlets(copy, p, p.getLobbyPlayer())
+                            : new RolloutController(copy, p, p.getLobbyPlayer());
+                    p.dangerouslySetController((forge.game.player.PlayerController) o);
+                    oppPass = o;
                 } else if (lim.outletsThem) {
                     p.dangerouslySetController(new PolicyControllerAi(copy, p, p.getLobbyPlayer(), new OutletPolicy(true)));
                 } else {
@@ -3467,6 +3807,19 @@ public final class SearchPolicy {
                 cand.install(cp, copy, aiCopy, rc);
             } catch (final RuntimeException e) {
                 throw new CandidateUnmappable(e);
+            }
+            if (passed && oppPass != null) {
+                // D544: the opponent has already passed in this window (it is not the seat's to give again): it is asked
+                // first and passes while the stack is the one installed, then the seat answers with its candidate.  A
+                // pass then ends the step or resolves the top item, as in the live game; a play gives the opponent its
+                // priority back (117.3c), as it would have
+                final PhaseHandler ph = copy.getPhaseHandler();
+                ph.setPriority(((forge.game.player.PlayerController) oppPass).getPlayer());
+                ph.onStackResolved();
+                oppPass.forcePassWhile(LenientGameCopier.stackKey(copy));
+                if (first) {
+                    sink.add("search.wide.oppPassed", 1);
+                }
             }
             if (lim.oracle) {
                 // D350's bench-only oracle: the copy keeps the real hand and library
