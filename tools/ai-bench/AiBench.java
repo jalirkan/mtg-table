@@ -2057,6 +2057,102 @@ public final class AiBench {
             stackCase("d544 (h)", ai, null, new String[][] {{"Grizzly Bears", ai.getName(), "Graveyard", "-"}});
         });
 
+        // (m) a source that has ceased to exist: the opponent's Clue token, sacrificed to draw; the ability's source is
+        // rebuilt on the copy from its script (the 24-game diagnostic of 2026-11-13 met Map and Clue tokens this way)
+        scenario("d544-m-token-source", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=MAIN1",
+                "humanbattlefield=T:c_a_clue_draw;Island;Island", "humanlibrary=Lightning Bolt;Lightning Bolt;Lightning Bolt;Lightning Bolt",
+                "aibattlefield=Grizzly Bears;Forest", "ailibrary=Forest;Forest;Forest;Forest"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            final Card clue = named(opp.getCardsIn(ZoneType.Battlefield), "Clue Token");
+            forge.game.spellability.SpellAbility draw = null;
+            for (final forge.game.spellability.SpellAbility sa : clue.getSpellAbilities()) {
+                draw = draw == null && sa.isActivatedAbility() && !sa.isManaAbility() ? sa : draw;
+            }
+            final boolean act = draw != null && forge.ai.ComputerUtil.handlePlayingSpellAbility(opp, withActivator(draw, opp), null);
+            final boolean ok = act && g.getStack().size() == 1 && opp.getCardsIn(ZoneType.Battlefield).stream().noneMatch(c -> "Clue Token".equals(c.getName()));
+            check(ok, "d544 (m): the board: the Clue's draw on the stack, the token sacrificed (" + stackOf(g) + ")");
+            if (ok) {
+                stackCase("d544 (m)", ai, null, new String[][] {{"Lightning Bolt", opp.getName(), "Hand", "-"}});
+            }
+        });
+
+        // (n) a paid token: the opponent's Fling, a Goblin token sacrificed (power 1), on the seat's Llanowar Elves
+        scenario("d544-n-paid-token", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=MAIN1",
+                "humanbattlefield=T:r_1_1_goblin;Mountain;Mountain", "humanhand=Fling", "humanlibrary=Mountain;Mountain;Mountain;Mountain",
+                "aibattlefield=Llanowar Elves;Forest", "ailibrary=Forest;Forest;Forest;Forest"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            final Card elves = named(ai.getCardsIn(ZoneType.Battlefield), "Llanowar Elves");
+            final boolean cast = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Fling"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(elves);
+                    });
+            check(cast && g.getStack().size() == 1, "d544 (n): the board: Fling on the seat's Elves, a Goblin token sacrificed (" + stackOf(g)
+                    + "; paid " + (g.getStack().isEmpty() ? "-" : String.valueOf(g.getStack().peekAbility().getPaidHash())) + ")");
+            if (cast) {
+                stackCase("d544 (n)", ai, null, new String[][] {{"Llanowar Elves", ai.getName(), "Graveyard", "-"}});
+            }
+        });
+
+        // (o) a cast trigger's collection: the opponent's Monastery Swiftspear's prowess (CurrentCastSpells, the cards cast this
+        // turn) on top of its Lightning Bolt on the seat's Grizzly Bears
+        scenario("d544-o-prowess", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=MAIN1",
+                "humanbattlefield=Monastery Swiftspear;Mountain", "humanhand=Lightning Bolt", "humanlibrary=Mountain;Mountain;Mountain;Mountain",
+                "aibattlefield=Grizzly Bears;Forest", "ailibrary=Forest;Forest;Forest;Forest"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final boolean cast = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Lightning Bolt"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            g.getStack().addAllTriggeredAbilitiesToStack();
+            final boolean ok = cast && g.getStack().size() == 2 && g.getStack().peek().isTrigger();
+            check(ok, "d544 (o): the board: prowess on top of the Bolt (" + stackOf(g) + ")");
+            if (ok) {
+                stackCase("d544 (o)", ai, null, new String[][] {{"Grizzly Bears", ai.getName(), "Graveyard", "-"},
+                        {"Lightning Bolt", opp.getName(), "Graveyard", "-"}});
+            }
+        });
+
+        // (p) an attack trigger's collection: Sentinel of the Nameless City attacks (Defenders, the players and permanents
+        // it may attack) and its trigger makes a Map token. The live game is played from its beginning of combat by
+        // Forge's own loop until the trigger is on the stack (the opponent's AI declares the attack)
+        scenario("d544-p-attack-trigger", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=COMBAT_BEGIN", "humanbattlefield=Sentinel of the Nameless City",
+                "humanlibrary=Forest;Forest;Forest;Forest", "aibattlefield=Forest", "ailibrary=Forest;Forest;Forest;Forest"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            final forge.game.phase.PhaseHandler ph = g.getPhaseHandler();
+            ph.setCombat(new forge.game.combat.Combat(opp));   // as D540's beginning-of-combat board
+            g.getTriggerHandler().resetActiveTriggers();
+            ph.setPriority(opp);
+            ph.onStackResolved();
+            for (int i = 0; i < 12 && g.getStack().isEmpty() && !g.isGameOver(); i++) {
+                ph.mainLoopStep();
+                if (g.getStack().hasSimultaneousStackEntries()) {
+                    g.getStack().addAllTriggeredAbilitiesToStack();
+                }
+            }
+            if (!g.getStack().isEmpty()) {
+                ph.setPriority(ai);   // the seat is asked once the active player has passed
+            }
+            final boolean ok = g.getStack().size() == 1 && g.getStack().peek().isTrigger() && ph.is(forge.game.phase.PhaseType.COMBAT_DECLARE_ATTACKERS);
+            check(ok, "d544 (p): the board: Sentinel's attack trigger on the stack at declare attackers (" + stackOf(g) + "; phase "
+                    + ph.getPhase() + ")");
+            if (ok) {
+                stackCase("d544 (p)", ai, null, new String[][] {{"Map Token", opp.getName(), "Battlefield", "-"}});
+            }
+        });
+
         // (i)-(l) the refusals: a face-down spell, a copied spell, split second, a frozen stack
         scenario("d544-i-refusals", lone.apply("Gathan Raiders;Lightning Bolt;Sudden Shock"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
             final Game g = ai.getGame();

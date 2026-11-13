@@ -230,6 +230,9 @@ public final class LenientGameCopier extends GameCopier {
     private boolean carryStack;
     /** D544: each live stack item's spell ability, by identity, to the one on the copy's stack. */
     private final Map<SpellAbility, SpellAbility> stackMap = new IdentityHashMap<>();
+    /** D544: the copy's cards by id, and the last-known cards the carry rebuilt (a sacrificed token), by the original. */
+    private Map<Integer, Card> stackById;
+    private final Map<Card, Card> stackLki = new IdentityHashMap<>();
     /**
      * D497: {@code Card.paperCard}, the field {@link #carryPaperCard} writes
      * (null when this engine has no such field of type {@code IPaperCard}).
@@ -888,6 +891,8 @@ public final class LenientGameCopier extends GameCopier {
      */
     private void carryStackItems(final Game copy) {
         stackMap.clear();
+        stackById = null;
+        stackLki.clear();
         final String pre = stackRefusal(orig);
         if (pre != null) {
             throw new StackRefused(pre, "the live stack");
@@ -994,10 +999,22 @@ public final class LenientGameCopier extends GameCopier {
         }
         try {
             final GameObject m = find(c);
-            return m instanceof Card ? (Card) m : null;
+            if (m instanceof Card) {
+                return (Card) m;
+            }
         } catch (final RuntimeException e) {
-            return null;
+            // a last-known card the copy holds no card of: below
         }
+        // a card that has ceased to exist (a token sacrificed to pay for the item, the Map or Clue the ability came
+        // from): rebuilt on the copy, in no zone, as D500 rebuilds a damage source (its script and copiable
+        // characteristics, its controller, its timestamps); null when it cannot be
+        if (stackById == null) {
+            stackById = new HashMap<>();
+            for (final Card x : copy.getCardsInGame()) {
+                stackById.put(x.getId(), x);
+            }
+        }
+        return lkiOnCopy(copy, c, stackById, stackLki);
     }
 
     /** D544: the source's SVars and every part's parameters name a value read from the mana spent ({@link #MANA_SPENT}). */
@@ -1110,6 +1127,15 @@ public final class LenientGameCopier extends GameCopier {
                     cc.add(sameCardOnCopy(copy, c, "triggering", src));
                 }
                 out.put(e.getKey(), cc);
+            } else if (v instanceof forge.util.collect.FCollection || v instanceof java.util.ArrayList) {
+                // the attack trigger's Defenders (players, planeswalkers, battles), a cast trigger's CurrentCastSpells
+                // (the cards cast this turn): each element mapped as a single value is, in a collection of the same kind
+                final java.util.Collection<Object> cc = v instanceof forge.util.collect.FCollection
+                        ? new forge.util.collect.FCollection<>() : new ArrayList<>();
+                for (final Object x : (Iterable<?>) v) {
+                    cc.add(mapTriggeringElement(copy, x, e.getKey(), src));
+                }
+                out.put(e.getKey(), cc);
             } else if (v instanceof Number || v instanceof String || v instanceof Boolean || v instanceof Enum) {
                 out.put(e.getKey(), v);
             } else {
@@ -1117,6 +1143,26 @@ public final class LenientGameCopier extends GameCopier {
             }
         }
         return out;
+    }
+
+    /** D544: one element of a collection-valued triggering object, mapped as a single value would be (or refused). */
+    private Object mapTriggeringElement(final Game copy, final Object x, final forge.game.ability.AbilityKey key, final Card src) {
+        if (x instanceof Card) {
+            return sameCardOnCopy(copy, (Card) x, "triggering", src);
+        }
+        if (x instanceof Player) {
+            final Player p = playerOnCopy((Player) x);
+            if (p != null) {
+                return p;
+            }
+        } else if (x instanceof SpellAbility) {
+            final SpellAbility m = stackMap.get(x);
+            if (m != null) {
+                return m;
+            }
+        }
+        throw new StackRefused("triggering", src.getName() + ": " + key + " holds "
+                + (x == null ? "null" : x.getClass().getSimpleName()));
     }
 
     /**

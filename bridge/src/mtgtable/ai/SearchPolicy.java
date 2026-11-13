@@ -843,14 +843,6 @@ public final class SearchPolicy {
         final long t0 = System.nanoTime();
         // D544: one of the new windows (null with the keys off, and in every window today's search looks at)
         final String wide = cfg.stackwin || cfg.passwin ? wideWindow(ai, forgeSa) : null;
-        if ("stackwin".equals(wide)) {
-            final String refused = stackRefused(ai);
-            if (refused != null) {
-                sink.add("search.p.stackwin.refused", 1);
-                sink.add("search.p.stackwin.refused." + refused, 1);
-                return forge;   // the carry cannot rebuild this stack faithfully: Forge's answer, unsearched
-            }
-        }
         // D540: declined=1 widens the list (the widened plays after today's, so today's are its head); off, null.  At an
         // instant-speed window (instant=1) the listing's engine calls run inside Decisions.quiet: the seat B has no
         // search there and draws nothing from the real game's random stream, so neither may the arm.  D544: a stack or
@@ -868,6 +860,16 @@ public final class SearchPolicy {
         try {
             if (alts.isEmpty() && forgeSa == null) {
                 return forge;   // nothing to choose between
+            }
+            if ("stackwin".equals(wide)) {
+                // D544: asked only of a stack window the search would search (one with something to choose between),
+                // so the refusals and the windows searched count the same windows
+                final String refused = stackRefused(ai);
+                if (refused != null) {
+                    sink.add("search.p.stackwin.refused", 1);
+                    sink.add("search.p.stackwin.refused." + refused, 1);
+                    return forge;   // the carry cannot rebuild this stack faithfully: Forge's answer, unsearched
+                }
             }
             final List<Cand> cands = new ArrayList<>();
             cands.add(priorityCand(forgeSa));
