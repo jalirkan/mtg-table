@@ -105,6 +105,23 @@ public final class SearchPolicy {
     /** True on this thread while a copy is being built: lobby players then seat plain controllers. */
     private static final ThreadLocal<Boolean> COPYING = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
+    /**
+     * D544: what the rollouts of the decision in hand do beyond today's, set by {@link #choosePriority} for a window
+     * only D544's keys search, and 0 otherwise (every other decision, every other caller of {@link #playout}).
+     * {@link #WIDE_STACK}: each copy carries the stack ({@link LenientGameCopier#carryStack}); {@link #WIDE_PASSED}:
+     * the opponent has already passed in this window, so in the rollout it is asked first and passes while the stack
+     * is unchanged ({@link RolloutController.Forced}).  The search runs on the game thread alone, so a thread-local
+     * is the decision's.
+     */
+    private static final ThreadLocal<Integer> WIDE = ThreadLocal.withInitial(() -> 0);
+    public static final int WIDE_STACK = 1;
+    public static final int WIDE_PASSED = 2;
+
+    /** For the self-test only (D544): run the rollouts that follow with these {@link #WIDE} flags (0 = today's). */
+    public static void wideForTest(final int flags) {
+        WIDE.set(flags);
+    }
+
     public static boolean copying() {
         return COPYING.get();
     }
@@ -1220,7 +1237,11 @@ public final class SearchPolicy {
      * renders that host differently (an effect card's source is not copied).
      */
     static SpellAbility mapSa(final LenientGameCopier cp, final SpellAbility orig, final Player aiCopy) {
-        final Card hostCopy = (Card) cp.find(orig.getHostCard());
+        return mapSaOn(cp, orig, aiCopy, (Card) cp.find(orig.getHostCard()));
+    }
+
+    /** {@link #mapSa} on a host card the caller found (D544: a stack item's source, found by its id when last-known). */
+    static SpellAbility mapSaOn(final LenientGameCopier cp, final SpellAbility orig, final Player aiCopy, final Card hostCopy) {
         final String desc = orig.getDescription();
         final String key = matchKey(orig);
         SpellAbility found = null;
@@ -3367,6 +3388,10 @@ public final class SearchPolicy {
         try {
             final long tc = System.nanoTime();
             final LenientGameCopier cp = new LenientGameCopier(game);
+            final int wide = WIDE.get();
+            if ((wide & WIDE_STACK) != 0) {
+                cp.carryStack(true);   // D544: a stack window under stackwin=1 (refused windows never get here)
+            }
             final Game copy;
             COPYING.set(Boolean.TRUE);
             try {

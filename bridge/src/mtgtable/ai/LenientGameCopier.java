@@ -36,6 +36,7 @@ import forge.game.GameEntity;
 import forge.game.GameObject;
 import forge.game.card.Card;
 import forge.game.card.CardCopyService;
+import forge.game.card.CardCollection;
 import forge.game.card.CardFactory;
 import forge.game.card.token.TokenInfo;
 import forge.game.phase.PhaseType;
@@ -225,6 +226,10 @@ public final class LenientGameCopier extends GameCopier {
     private final List<String> damageLkiLost = new ArrayList<>();
     /** D500: the original last-known cards no copy could be made of, with the exception's class. */
     private final Map<Card, String> failures = new IdentityHashMap<>();
+    /** D544: whether {@link #makeCopy} carries the stack ({@link #carryStack(boolean)}); off, a copy is what it was. */
+    private boolean carryStack;
+    /** D544: each live stack item's spell ability, by identity, to the one on the copy's stack. */
+    private final Map<SpellAbility, SpellAbility> stackMap = new IdentityHashMap<>();
     /**
      * D497: {@code Card.paperCard}, the field {@link #carryPaperCard} writes
      * (null when this engine has no such field of type {@code IPaperCard}).
@@ -366,6 +371,9 @@ public final class LenientGameCopier extends GameCopier {
             copying = false;
         }
         carry(copy);
+        if (carryStack) {
+            carryStackItems(copy);   // D544: only when the search asks, so every other copy is what it was
+        }
         return copy;
     }
 
@@ -728,6 +736,14 @@ public final class LenientGameCopier extends GameCopier {
 
     @Override
     public GameObject find(final GameObject o) {
+        if (o instanceof SpellAbility && !stackMap.isEmpty()) {
+            // D544: a spell or ability on the live stack (a counter's target) is the carried item; anything else
+            // throws below, as it always did
+            final SpellAbility m = stackMap.get(o);
+            if (m != null) {
+                return m;
+            }
+        }
         if (copying && o instanceof Card) {
             final Card c = (Card) o;
             final ZoneType z = c.getZone() == null ? null : c.getZone().getZoneType();
@@ -760,5 +776,470 @@ public final class LenientGameCopier extends GameCopier {
             unmappedNames.add(k.getName() + "@" + where);
             return new Card(k.getId(), k.getPaperCard(), getCopiedGame());
         });
+    }
+
+    // ==================================================================
+    // D544: the stack carry
+    // ==================================================================
+
+    /** D544: the cast and target triggers held while the carry pushes an item (they fired in the live game already). */
+    private static final TriggerType[] HELD = {TriggerType.SpellCast, TriggerType.SpellAbilityCast, TriggerType.AbilityCast,
+            TriggerType.SpellCastOrCopy, TriggerType.SpellCopy, TriggerType.SpellAbilityCopy, TriggerType.BecomesTarget,
+            TriggerType.BecomesTargetOnce, TriggerType.Crewed, TriggerType.BecomesCrewed, TriggerType.Saddled,
+            TriggerType.BecomesSaddled, TriggerType.Stationed, TriggerType.Cycled, TriggerType.Waterbend};
+
+    /**
+     * D544: the stack items' effects that read the mana spent on them -- a value the carry does not rebuild (a
+     * rebuilt item has paid no mana, and the live item's {@code Mana} records name the live game's players).  A
+     * text scan of the source's SVars and every part's parameters; a hit refuses the window ({@code manaSpent}).
+     */
+    private static final java.util.regex.Pattern MANA_SPENT = java.util.regex.Pattern.compile(
+            "(?i)converge|adamant|sunburst|manaspent|colorsspent|spentmana|manafrom|snowmana|castmanaspent|expend");
+
+    /**
+     * D544: the stack carry is refused for this window; {@link #reason} is the counter's suffix
+     * ({@code search.p.stackwin.refused.<reason>}).  Thrown out of {@link #makeCopy} only when the carry was asked.
+     */
+    public static final class StackRefused extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        public final String reason;
+
+        StackRefused(final String reason, final String detail) {
+            super("stack carry refused (" + reason + "): " + detail);
+            this.reason = reason;
+        }
+    }
+
+    /**
+     * D544: carry the live stack onto every copy this copier makes (the search's stack windows only, under
+     * {@code stackwin=1}).  Off by default: a copy is then exactly what it was, a non-empty stack included.
+     */
+    public LenientGameCopier carryStack(final boolean on) {
+        this.carryStack = on;
+        return this;
+    }
+
+    /** D544: the copy's item for a live stack item's spell ability (null when the stack was not carried or it is not there). */
+    public SpellAbility stackItemOnCopy(final SpellAbility live) {
+        return stackMap.get(live);
+    }
+
+    /**
+     * D544: why the live stack cannot be carried at all, read on the live game before any copy (null: it may be).
+     * Simultaneous stack entries waiting to be ordered ({@code waiting}), a frozen stack ({@code frozen}), a stack
+     * that is resolving ({@code resolving}), a split second item ({@code splitSecond}), any face-down item -- a
+     * face-down spell or an ability of a face-down card: a copy would rebuild it face up from its paper card, and a
+     * rollout must never see a face the seat cannot ({@code faceDown}) -- a copied spell, which has no zone to rebuild
+     * it from ({@code copied}), and a spliced spell ({@code splice}).
+     */
+    public static String stackRefusal(final Game g) {
+        final forge.game.zone.MagicStack st = g.getStack();
+        if (st.hasSimultaneousStackEntries()) {
+            return "waiting";
+        }
+        if (st.isFrozen()) {
+            return "frozen";
+        }
+        if (st.isResolving()) {
+            return "resolving";
+        }
+        if (st.isSplitSecondOnStack()) {
+            return "splitSecond";
+        }
+        for (final forge.game.spellability.SpellAbilityStackInstance si : st) {
+            final SpellAbility sa = si.getSpellAbility();
+            final Card src = si.getSourceCard();
+            if (sa == null || src == null || si.getActivatingPlayer() == null) {
+                return "unmappable";
+            }
+            if (src.isFaceDown() || sa.isCastFaceDown()) {
+                return "faceDown";
+            }
+            if (si.isSpell() && (src.isCopiedSpell() || sa.isCopied())) {
+                return "copied";
+            }
+            if (sa.getSplicedCards() != null && !sa.getSplicedCards().isEmpty()) {
+                return "splice";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * D544: the stack as a key -- each item's source id, controller id and kind, top first -- for the opponent's
+     * conditional pass ({@code RolloutController.Forced}) and the retry guard.
+     */
+    public static String stackKey(final Game g) {
+        final StringBuilder sb = new StringBuilder();
+        for (final forge.game.spellability.SpellAbilityStackInstance si : g.getStack()) {
+            sb.append(si.isSpell() ? 's' : si.isTrigger() ? 't' : 'a')
+                    .append(si.getSourceCard() == null ? -1 : si.getSourceCard().getId()).append('/')
+                    .append(si.getActivatingPlayer() == null ? -1 : si.getActivatingPlayer().getId()).append(';');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * D544: rebuild the live stack on {@code copy}, bottom first, each item as {@link #rebuildItem} makes it, pushed by
+     * {@code MagicStack.add} with {@link #HELD}'s triggers suppressed (it is the only public way onto the stack; the
+     * cast happened in the live game, so its triggers must not fire again), and mapped in {@link #stackMap}; then
+     * {@link #verifyStack}.  Anything that cannot be rebuilt faithfully throws {@link StackRefused}: the window is
+     * refused, never guessed.
+     */
+    private void carryStackItems(final Game copy) {
+        stackMap.clear();
+        final String pre = stackRefusal(orig);
+        if (pre != null) {
+            throw new StackRefused(pre, "the live stack");
+        }
+        final List<forge.game.spellability.SpellAbilityStackInstance> items = new ArrayList<>();
+        for (final forge.game.spellability.SpellAbilityStackInstance si : orig.getStack()) {
+            items.add(0, si);   // the stack iterates top first; the carry pushes bottom first
+        }
+        final TriggerHandler th = copy.getTriggerHandler();
+        final List<TriggerType> held = new ArrayList<>();
+        for (final TriggerType t : HELD) {
+            if (!th.isTriggerSuppressed(t)) {
+                th.suppressMode(t);
+                held.add(t);
+            }
+        }
+        try {
+            for (final forge.game.spellability.SpellAbilityStackInstance si : items) {
+                final SpellAbility n = rebuildItem(copy, si);
+                final int before = copy.getStack().size();
+                copy.getStack().add(n);
+                if (copy.getStack().size() != before + 1) {
+                    // MagicStack.add returns without a push when the item has no legal target ("failed to target")
+                    throw new StackRefused("push", si.getSourceCard().getName());
+                }
+                stackMap.put(si.getSpellAbility(), copy.getStack().peekAbility());
+            }
+        } catch (final StackRefused e) {
+            stackMap.clear();
+            throw e;
+        } catch (final RuntimeException e) {
+            stackMap.clear();
+            throw new StackRefused("unmappable", String.valueOf(e));
+        } finally {
+            for (final TriggerType t : held) {
+                th.clearSuppression(t);
+            }
+        }
+        verifyStack(copy);
+    }
+
+    /** D544: one live stack item rebuilt on {@code copy}, not yet pushed. */
+    private SpellAbility rebuildItem(final Game copy, final forge.game.spellability.SpellAbilityStackInstance si) {
+        final SpellAbility sa = si.getSpellAbility();
+        final Card src = si.getSourceCard();
+        final Player act = playerOnCopy(si.getActivatingPlayer());
+        final Card host = cardOnCopy(copy, src);
+        if (act == null || host == null) {
+            throw new StackRefused("unmappable", "the source or controller of " + src.getName());
+        }
+        if (readsManaSpent(src, sa)) {
+            throw new StackRefused("manaSpent", src.getName());
+        }
+        for (final forge.game.mana.Mana m : sa.getPayingMana()) {
+            if (m.addsNoCounterMagic(sa) || m.addsCounters(sa) || m.addsKeywords(sa) || m.triggersWhenSpent()) {
+                throw new StackRefused("manaEffects", src.getName());
+            }
+        }
+        final SpellAbility n;
+        if (si.isTrigger()) {
+            n = rebuildTrigger(copy, sa, src, host, act);
+        } else {
+            if (sa.isTrigger() || sa.isWrapper()) {
+                throw new StackRefused("unmappable", "an item of unknown kind from " + src.getName());
+            }
+            try {
+                n = SearchPolicy.mapSaOn(this, sa, act, host);
+            } catch (final RuntimeException e) {
+                throw new StackRefused("unmappable", src.getName() + ": " + e.getMessage());
+            }
+            if (sa.getChosenList() != null) {
+                // a modal item: Forge's cast appends a clone of each chosen mode to the spell (CharmEffect.chainAbilities)
+                // and aims the clones, so the copy gets the same chain and the live chain's targets, part by part
+                forge.game.ability.effects.CharmEffect.chainAbilities(n, new ArrayList<>(n.getChosenList()));
+                copyTargetsOnto(sa, n, src);
+            }
+            if (n.getMayPlay() != null && n.getMayPlay().hasParam("ReplaceGraveyard")) {
+                // MagicStack.add would make the may-play's replacement effect again beside the copied one
+                throw new StackRefused("mayPlay", src.getName());
+            }
+        }
+        carryPaid(copy, sa, n);
+        if (si.isSpell()) {
+            final forge.game.zone.Zone from = src.getCastFrom();
+            if (from != null) {
+                final forge.game.zone.Zone m = zoneOnCopy(copy, from);
+                if (m == null) {
+                    throw new StackRefused("castFrom", src.getName());
+                }
+                host.setCastFrom(m);
+            }
+            if (src.getCastSA() != null) {
+                host.setCastSA(n);   // what "if it was kicked" and the like read once it resolves
+            }
+        }
+        return n;
+    }
+
+    /** D544: the copy's card for a live card: the copy of the same object, else the copy's card with its id. */
+    private Card cardOnCopy(final Game copy, final Card c) {
+        final Card byId = copy.findById(c.getId());   // the copier keeps ids; a last-known object has its card's
+        if (byId != null) {
+            return byId;
+        }
+        try {
+            final GameObject m = find(c);
+            return m instanceof Card ? (Card) m : null;
+        } catch (final RuntimeException e) {
+            return null;
+        }
+    }
+
+    /** D544: the source's SVars and every part's parameters name a value read from the mana spent ({@link #MANA_SPENT}). */
+    private static boolean readsManaSpent(final Card src, final SpellAbility sa) {
+        for (final String v : src.getSVars().values()) {
+            if (v != null && MANA_SPENT.matcher(v).find()) {
+                return true;
+            }
+        }
+        final SpellAbility root = sa instanceof forge.game.trigger.WrappedAbility
+                ? ((forge.game.trigger.WrappedAbility) sa).getWrappedAbility() : sa;
+        for (SpellAbility s = root; s != null; s = s.getSubAbility()) {
+            for (final String v : s.getMapParams().values()) {
+                if (v != null && MANA_SPENT.matcher(v).find()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * D544: a triggered ability rebuilt as Forge's {@code TriggerHandler} builds one: the copy's trigger (the same
+     * mode and description on the copy's source, and the same place among its triggers when that is ambiguous), its
+     * ability copied for the controller, the triggering objects mapped, X and the optional flag carried, the targets
+     * mapped, wrapped with the decider mapped.  A trigger the source does not carry itself (a delayed trigger, one a
+     * spell spawned, one with remembered objects) and a modal one are refused.
+     */
+    private SpellAbility rebuildTrigger(final Game copy, final SpellAbility sa, final Card src, final Card host, final Player act) {
+        if (!(sa instanceof forge.game.trigger.WrappedAbility)) {
+            throw new StackRefused("trigger", src.getName());
+        }
+        final forge.game.trigger.WrappedAbility w = (forge.game.trigger.WrappedAbility) sa;
+        final Trigger t = w.getTrigger();
+        final SpellAbility innerLive = w.getWrappedAbility();
+        if (t == null || innerLive == null || t.getSpawningAbility() != null || !t.getTriggerRemembered().isEmpty()) {
+            throw new StackRefused("trigger", src.getName());
+        }
+        if (innerLive.getChosenList() != null) {
+            throw new StackRefused("modes", src.getName());
+        }
+        final Trigger tc = matchTrigger(src, host, t);
+        if (tc == null) {
+            throw new StackRefused("trigger", src.getName() + ": " + t);
+        }
+        final SpellAbility inner = tc.ensureAbility().copy(host, act, false);
+        inner.setTrigger(tc);
+        inner.setTriggeringObjects(mapTriggeringObjects(copy, innerLive.getTriggeringObjects(), src));
+        inner.setXManaCostPaid(innerLive.getXManaCostPaid());
+        if (innerLive.isOptionalTrigger()) {
+            inner.setOptionalTrigger(true);
+        }
+        copyTargetsOnto(innerLive, inner, src);
+        final Player decider = w.getDecider() == null ? null : playerOnCopy(w.getDecider());
+        if (w.getDecider() != null && decider == null) {
+            throw new StackRefused("trigger", src.getName() + ": its decider");
+        }
+        final forge.game.trigger.WrappedAbility n = new forge.game.trigger.WrappedAbility(tc, inner, decider);
+        n.setActivatingPlayer(act);
+        return n;
+    }
+
+    /** D544: the copy's trigger for {@code t}: one of {@code host}'s with its mode and description; by place when several. */
+    private static Trigger matchTrigger(final Card src, final Card host, final Trigger t) {
+        final List<Trigger> copyTs = new ArrayList<>(host.getTriggers());
+        final List<Trigger> same = new ArrayList<>();
+        for (final Trigger x : copyTs) {
+            if (x.getMode() == t.getMode() && String.valueOf(x).equals(String.valueOf(t))) {
+                same.add(x);
+            }
+        }
+        if (same.size() == 1) {
+            return same.get(0);
+        }
+        if (same.size() > 1) {
+            final int at = new ArrayList<>(src.getTriggers()).indexOf(t);
+            if (at >= 0 && at < copyTs.size() && same.contains(copyTs.get(at))) {
+                return copyTs.get(at);
+            }
+        }
+        return null;
+    }
+
+    /** D544: a trigger's triggering objects on the copy; a value the copy cannot hold faithfully refuses the window. */
+    private Map<forge.game.ability.AbilityKey, Object> mapTriggeringObjects(final Game copy,
+            final Map<forge.game.ability.AbilityKey, Object> live, final Card src) {
+        final Map<forge.game.ability.AbilityKey, Object> out = new HashMap<>();
+        for (final Map.Entry<forge.game.ability.AbilityKey, Object> e : live.entrySet()) {
+            final Object v = e.getValue();
+            if (v == null) {
+                continue;
+            }
+            if (v instanceof Card) {
+                out.put(e.getKey(), sameCardOnCopy(copy, (Card) v, "triggering", src));
+            } else if (v instanceof Player) {
+                final Player p = playerOnCopy((Player) v);
+                if (p == null) {
+                    throw new StackRefused("triggering", src.getName() + ": " + e.getKey());
+                }
+                out.put(e.getKey(), p);
+            } else if (v instanceof SpellAbility) {
+                final SpellAbility m = stackMap.get(v);
+                if (m == null) {
+                    throw new StackRefused("triggering", src.getName() + ": " + e.getKey() + " is not on the stack");
+                }
+                out.put(e.getKey(), m);
+            } else if (v instanceof CardCollection) {
+                final CardCollection cc = new CardCollection();
+                for (final Card c : (CardCollection) v) {
+                    cc.add(sameCardOnCopy(copy, c, "triggering", src));
+                }
+                out.put(e.getKey(), cc);
+            } else if (v instanceof Number || v instanceof String || v instanceof Boolean || v instanceof Enum) {
+                out.put(e.getKey(), v);
+            } else {
+                throw new StackRefused("triggering", src.getName() + ": " + e.getKey() + " (" + v.getClass().getSimpleName() + ")");
+            }
+        }
+        return out;
+    }
+
+    /**
+     * D544: the copy's card standing for {@code c}, a live card or a last-known one: the copy's card with its id when
+     * its name, power, toughness and mana value read the same as {@code c}'s, else a last-known copy of it that does;
+     * otherwise the value is not the copy's to give, and the window is refused ({@code why}).
+     */
+    private Card sameCardOnCopy(final Game copy, final Card c, final String why, final Card src) {
+        final Card m = cardOnCopy(copy, c);
+        if (m == null) {
+            throw new StackRefused(why, src.getName() + ": " + c.getName() + " is not on the copy");
+        }
+        if (readsSame(c, m)) {
+            return m;
+        }
+        throw new StackRefused(why, src.getName() + ": " + c.getName() + " reads differently on the copy");
+    }
+
+    private static boolean readsSame(final Card a, final Card b) {
+        return a.getName().equals(b.getName()) && a.getNetPower() == b.getNetPower() && a.getNetToughness() == b.getNetToughness()
+                && a.getCMC() == b.getCMC() && a.getId() == b.getId();
+    }
+
+    /** D544: each targeting part's targets, found on the copy (a stack item through {@link #stackMap}). */
+    private void copyTargetsOnto(final SpellAbility from, final SpellAbility to, final Card src) {
+        SpellAbility a = from;
+        SpellAbility b = to;
+        while (a != null && b != null) {
+            if (a.usesTargeting()) {
+                b.resetTargets();
+                for (final GameObject t : a.getTargets()) {
+                    final GameObject m;
+                    try {
+                        m = find(t);
+                    } catch (final RuntimeException e) {
+                        throw new StackRefused("unmappable", src.getName() + ": its target " + t);
+                    }
+                    b.getTargets().add(m);
+                    if (a.isDividedAsYouChoose()) {
+                        b.addDividedAllocation(m, a.getDividedValue(t));
+                    }
+                }
+            }
+            a = a.getSubAbility();
+            b = b.getSubAbility();
+        }
+        if (a != null || b != null) {
+            throw new StackRefused("unmappable", src.getName() + ": its parts differ on the copy");
+        }
+    }
+
+    /**
+     * D544: the cards paid for the item (sacrificed, exiled, discarded, tapped: {@code getPaidHash}), each the copy's
+     * card that reads as the paid one did ({@link #sameCardOnCopy}); a paid card the copy cannot stand for refuses
+     * the window ({@code paid}).
+     */
+    private void carryPaid(final Game copy, final SpellAbility live, final SpellAbility n) {
+        final SpellAbility from = live instanceof forge.game.trigger.WrappedAbility
+                ? ((forge.game.trigger.WrappedAbility) live).getWrappedAbility() : live;
+        final SpellAbility to = n instanceof forge.game.trigger.WrappedAbility
+                ? ((forge.game.trigger.WrappedAbility) n).getWrappedAbility() : n;
+        final com.google.common.collect.TreeBasedTable<String, Boolean, CardCollection> paid = from.getPaidHash();
+        if (paid == null || paid.isEmpty()) {
+            return;
+        }
+        final com.google.common.collect.TreeBasedTable<String, Boolean, CardCollection> out =
+                com.google.common.collect.TreeBasedTable.create();
+        for (final com.google.common.collect.Table.Cell<String, Boolean, CardCollection> cell : paid.cellSet()) {
+            final CardCollection cc = new CardCollection();
+            for (final Card c : cell.getValue()) {
+                cc.add(sameCardOnCopy(copy, c, "paid", from.getHostCard()));
+            }
+            out.put(cell.getRowKey(), cell.getColumnKey(), cc);
+        }
+        to.setPaidHash(out);
+    }
+
+    /**
+     * D544: the carried stack against the live one, item by item (top first): the source card's id, the controller's
+     * id, the kind, every target's id (a stack item's by its source's), X, and the paid cards' count.  Any mismatch
+     * refuses the window ({@code verify}).
+     */
+    private void verifyStack(final Game copy) {
+        final List<String> a = stackShape(orig.getStack());
+        final List<String> b = stackShape(copy.getStack());
+        if (!a.equals(b)) {
+            stackMap.clear();
+            throw new StackRefused("verify", "live " + a + " copy " + b);
+        }
+    }
+
+    /** D544: {@link #verifyStack}'s view of a stack (ids only, top first). */
+    static List<String> stackShape(final forge.game.zone.MagicStack st) {
+        final List<String> out = new ArrayList<>();
+        for (final forge.game.spellability.SpellAbilityStackInstance si : st) {
+            final StringBuilder sb = new StringBuilder();
+            sb.append(si.isSpell() ? 's' : si.isTrigger() ? 't' : 'a')
+                    .append(si.getSourceCard() == null ? -1 : si.getSourceCard().getId()).append(" by ")
+                    .append(si.getActivatingPlayer() == null ? -1 : si.getActivatingPlayer().getId());
+            final SpellAbility sa = si.getSpellAbility();
+            final SpellAbility root = sa instanceof forge.game.trigger.WrappedAbility
+                    ? ((forge.game.trigger.WrappedAbility) sa).getWrappedAbility() : sa;
+            sb.append(" ->");
+            for (SpellAbility s = root; s != null; s = s.getSubAbility()) {
+                if (!s.usesTargeting()) {
+                    continue;
+                }
+                for (final GameObject t : s.getTargets()) {
+                    sb.append(' ').append(t instanceof Card ? "c" + ((Card) t).getId() : t instanceof Player ? "p" + ((Player) t).getId()
+                            : t instanceof SpellAbility && ((SpellAbility) t).getHostCard() != null
+                            ? "s" + ((SpellAbility) t).getHostCard().getId() : "?");
+                }
+            }
+            sb.append(" x").append(root.getXManaCostPaid());
+            int paid = 0;
+            if (root.getPaidHash() != null) {
+                for (final CardCollection cc : root.getPaidHash().values()) {
+                    paid += cc.size();
+                }
+            }
+            sb.append(" paid").append(paid);
+            out.add(sb.toString());
+        }
+        return out;
     }
 }
