@@ -163,6 +163,21 @@ import java.util.Locale;
  *     legal, Forge's land against each other-named land (no pass, no holding),
  *     instead of leaving the land drop to Forge.</li>
  * </ul>
+ *
+ * <p>D544's three, likewise off by default and printed only when on:
+ * <ul>
+ * <li>{@code stackwin=1} -- a window with the opponent's item on top of the
+ *     stack and nothing waiting is searched, the stack carried onto every copy
+ *     ({@link LenientGameCopier#carryStack}); a stack the carry cannot rebuild
+ *     faithfully refuses the window, which is then Forge's;</li>
+ * <li>{@code passwin=1} -- the opponent's declare-attackers step (attackers
+ *     declared), its end step and the seat's own declare-blockers step (blocks
+ *     declared), on an empty stack, where Forge passes: searched when the
+ *     widened listing gives an aimed play;</li>
+ * <li>{@code dactiv=1} -- in the own-main windows, activated abilities Forge
+ *     declines that are sorcery-speed (equip, loyalty), aimed by Forge's forced
+ *     targeting, are candidates.</li>
+ * </ul>
  */
 public final class SearchConfig {
 
@@ -239,6 +254,12 @@ public final class SearchConfig {
     public final boolean instant;
     /** D540: Forge's land drop against each legal land of another name. */
     public final boolean lands;
+    /** D544: the stack windows -- the opponent's item on top -- are searched, the stack carried onto each copy. */
+    public final boolean stackwin;
+    /** D544: three empty-stack steps where Forge passes are searched when an aimed play is listed. */
+    public final boolean passwin;
+    /** D544: sorcery-speed activations Forge declines (equip, loyalty) are candidates in the own-main windows. */
+    public final boolean dactiv;
 
     /** D417's defaults. */
     public static final int MULL_MS = 6000;
@@ -323,6 +344,9 @@ public final class SearchConfig {
         this.declined = false;
         this.instant = false;
         this.lands = false;
+        this.stackwin = false;
+        this.passwin = false;
+        this.dactiv = false;
     }
 
     /**
@@ -465,6 +489,9 @@ public final class SearchConfig {
         this.declined = base.declined;
         this.instant = base.instant;
         this.lands = base.lands;
+        this.stackwin = base.stackwin;
+        this.passwin = base.passwin;
+        this.dactiv = base.dactiv;
     }
 
     /** D540: a copy of {@code base} with the three candidate switches given; every other field is {@code base}'s. */
@@ -500,6 +527,59 @@ public final class SearchConfig {
         this.declined = declined;
         this.instant = instant;
         this.lands = lands;
+        this.stackwin = base.stackwin;
+        this.passwin = base.passwin;
+        this.dactiv = base.dactiv;
+    }
+
+    /** D544: a copy of {@code base} with the three window switches given; every other field is {@code base}'s. */
+    private SearchConfig(final SearchConfig base, final boolean stackwin, final boolean passwin, final boolean dactiv,
+                         final boolean wide) {
+        this.budgetMs = base.budgetMs;
+        this.maxCandidates = base.maxCandidates;
+        this.horizonTurns = base.horizonTurns;
+        this.minRounds = base.minRounds;
+        this.margin = base.margin;
+        this.maxRounds = base.maxRounds;
+        this.priority = base.priority;
+        this.attacks = base.attacks;
+        this.blocks = base.blocks;
+        this.seed = base.seed;
+        this.attackTurns = base.attackTurns;
+        this.lcb = base.lcb;
+        this.z = base.z;
+        this.untapped = base.untapped;
+        this.oracle = base.oracle;
+        this.anytime = base.anytime;
+        this.rankPrior = base.rankPrior;
+        this.generate = base.generate;
+        this.prior = base.prior;
+        this.evalModel = base.evalModel;
+        this.rollout = base.rollout;
+        this.leafModel = base.leafModel;
+        this.mull = base.mull;
+        this.mullMs = base.mullMs;
+        this.mullTurns = base.mullTurns;
+        this.targets = base.targets;
+        this.distillModel = base.distillModel;
+        this.observe = base.observe;
+        this.declined = base.declined;
+        this.instant = base.instant;
+        this.lands = base.lands;
+        this.stackwin = stackwin;
+        this.passwin = passwin;
+        this.dactiv = dactiv;
+    }
+
+    /**
+     * D544: this config with the wide windows as given ({@code stackwin=1}, {@code passwin=1}, {@code dactiv=1}); all
+     * three off is the config as it was.
+     */
+    public SearchConfig withWindows(final boolean stackwin, final boolean passwin, final boolean dactiv) {
+        if (stackwin == this.stackwin && passwin == this.passwin && dactiv == this.dactiv) {
+            return this;
+        }
+        return new SearchConfig(this, stackwin, passwin, dactiv, true);
     }
 
     /**
@@ -663,6 +743,9 @@ public final class SearchConfig {
         boolean declined = false;   // D540
         boolean instant = false;
         boolean lands = false;
+        boolean stackwin = false;   // D544
+        boolean passwin = false;
+        boolean dactiv = false;
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -709,10 +792,13 @@ public final class SearchConfig {
                 case "declined": declined = bit("declined", p[1]); break;   // D540: declined casts, aimed
                 case "instant": instant = bit("instant", p[1]); break;   // D540: instant-speed windows Forge plays in
                 case "lands": lands = bit("lands", p[1]); break;   // D540: the land drop's other-named lands
+                case "stackwin": stackwin = bit("stackwin", p[1]); break;   // D544: the stack windows, the stack carried
+                case "passwin": passwin = bit("passwin", p[1]); break;   // D544: three steps Forge passes in
+                case "dactiv": dactiv = bit("dactiv", p[1]); break;   // D544: declined sorcery-speed activations
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
                         + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets, distill,"
-                        + " observe, declined, instant, lands)");
+                        + " observe, declined, instant, lands, stackwin, passwin, dactiv)");
                 }
             }
         }
@@ -729,7 +815,7 @@ public final class SearchConfig {
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
                 "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf)
                 .withDecisions(mull, mullMs, mullTurns, targets).withDistill(distill).withObserve(observe)
-                .withCandidates(declined, instant, lands);
+                .withCandidates(declined, instant, lands).withWindows(stackwin, passwin, dactiv);
         // gen is read only under rank=prior (and validated there).
     }
 
@@ -796,6 +882,16 @@ public final class SearchConfig {
         }
         if (lands) {
             sb.append(",lands=1");
+        }
+        // D544's, likewise
+        if (stackwin) {
+            sb.append(",stackwin=1");
+        }
+        if (passwin) {
+            sb.append(",passwin=1");
+        }
+        if (dactiv) {
+            sb.append(",dactiv=1");
         }
         return sb.toString();
     }

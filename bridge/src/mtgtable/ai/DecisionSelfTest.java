@@ -151,6 +151,7 @@ public final class DecisionSelfTest {
         liveSeatDeclinedInstant();
         liveSeatNoBlock();
         searchCandidates();
+        wideWindows();
         rolloutRandom();
         rolloutRandomV3();
         rolloutRandomV4();
@@ -951,6 +952,70 @@ public final class DecisionSelfTest {
                 "D540: off in parse()'s defaults; in the live parse declined and instant on since D546, lands off");
         check(SearchConfig.parseLive("lands=1").lands && SearchConfig.parseLive("lands=1").toString().equals(live.toString() + ",lands=1"),
                 "D540: a live seat may name a key (no measurement-only refusal): " + SearchConfig.parseLive("lands=1"));
+    }
+
+    /**
+     * D544: {@code stackwin=1}, {@code passwin=1} and {@code dactiv=1}, each a key of its own: each differs from its base
+     * in its one field, prints the base's text plus the key, round-trips, and is off in {@link SearchConfig#parse}'s
+     * defaults, in {@link SearchConfig#LIVE_DEFAULTS} and in the live parse.  The union player's text is
+     * search-v3-declined-instant's plus the three, in D544's order.  Then the opponent's conditional pass
+     * ({@link RolloutController.Forced#takePass(String)}): given once, only on the stack it was armed on, disarmed
+     * either way, and never on a controller nothing armed.  A refusal's detail (the skeptic's read): ids and words kept,
+     * anything else replaced by the reason.  The behaviour is the ai-bench selftest's (engine).
+     */
+    private static void wideWindows() {
+        final String v3Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1";
+        final String diText = v3Text + ",declined=1,instant=1";
+        final SearchConfig v3 = SearchConfig.parse(v3Text);
+        final SearchConfig di = SearchConfig.parse(diText);
+        check(!v3.stackwin && !v3.passwin && !v3.dactiv && !di.stackwin && !di.passwin && !di.dactiv,
+                "D544: search-v3 and search-v3-declined-instant widen no window");
+        for (final String k : List.of("stackwin", "passwin", "dactiv")) {
+            final SearchConfig arm = SearchConfig.parse(diText + "," + k + "=1");
+            check(arm.toString().equals(di.toString() + "," + k + "=1"), "D544: " + k + "=1 prints the base's text plus the key: " + arm);
+            check(SearchConfig.parse(arm.toString()).toString().equals(arm.toString()), "D544: " + k + "=1 round-trips");
+            check(SearchConfig.parse(k + "=1," + diText).toString().equals(arm.toString()), "D544: " + k + "=1: key order does not matter");
+            check(SearchConfig.parse(diText + "," + k + "=0").toString().equals(di.toString()), "D544: " + k + "=0 is the base");
+            configOnly("D544: " + k + "=1 against search-v3-declined-instant", di, arm, List.of(k));
+            boolean threw = false;
+            try {
+                SearchConfig.parse(diText + "," + k + "=2");
+            } catch (final IllegalArgumentException e) {
+                threw = true;
+            }
+            check(threw, "D544: " + k + "= takes 0 or 1");
+            check(!SearchConfig.LIVE_DEFAULTS.contains(k), "D544: the live defaults do not name " + k);
+        }
+        final SearchConfig wide = SearchConfig.parse(diText + ",dactiv=1,passwin=1,stackwin=1");
+        check(wide.toString().equals(v3.toString() + ",declined=1,instant=1,stackwin=1,passwin=1,dactiv=1"),
+                "D544: the union player's text, in one order: " + wide);
+        configOnly("D544: the union against search-v3-declined-instant", di, wide, List.of("stackwin", "passwin", "dactiv"));
+        final SearchConfig mixed = SearchConfig.parse(v3Text + ",stackwin=1,targets=1,mull=1,observe=1,lands=1");
+        check(mixed.stackwin && mixed.targets && mixed.mull && mixed.observe && mixed.lands,
+                "D544: stackwin=1 survives the other switches' copies");
+        final SearchConfig live = SearchConfig.parseLive("");
+        final SearchConfig bench = SearchConfig.parse("");
+        check(!live.stackwin && !live.passwin && !live.dactiv && !bench.stackwin && !bench.passwin && !bench.dactiv,
+                "D544: off in parse()'s defaults and in the live parse");
+
+        final RolloutController.Forced f = new RolloutController.Forced();
+        check(!f.takePass("s1/1;"), "D544: nothing armed, no conditional pass");
+        f.passWhile("s1/1;");
+        check(f.takePass("s1/1;") && !f.takePass("s1/1;"), "D544: the conditional pass is given once, on the stack it was armed on");
+        f.passWhile("s1/1;");
+        check(!f.takePass("s9/1;s1/1;") && !f.takePass("s1/1;"),
+                "D544: a changed stack gives the opponent its own answer, and the pass is disarmed");
+        f.priority(null);
+        f.passWhile("");
+        check(f.takePass("") && f.unanswered(), "D544: the conditional pass never takes a forced answer armed beside it");
+
+        // the skeptic's read, finding 4b: a refusal's detail is ids and reason words; any other character replaces it
+        final LenientGameCopier.StackRefused clean = new LenientGameCopier.StackRefused("stale", "card 12: a target");
+        check("stale".equals(clean.reason) && "card 12: a target".equals(clean.detail) && clean.getMessage().endsWith("card 12: a target"),
+                "D544: a refusal's detail of ids and words is kept: " + clean.getMessage());
+        final LenientGameCopier.StackRefused dirty = new LenientGameCopier.StackRefused("verify", "live [s1 by 2 -> c3] copy []");
+        check("refused verify".equals(dirty.detail) && !dirty.getMessage().contains("["),
+                "D544: a refusal's detail with any other character is replaced by its reason: " + dirty.getMessage());
     }
 
     /**
