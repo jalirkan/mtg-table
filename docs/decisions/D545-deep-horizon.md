@@ -39,8 +39,11 @@ takes D545 (D200: a reserved number is not reused).*
   `declined=1` and `instant=1`) read SMALL GAIN against the live seat twice: J215 on the confirm set, +6.9 Elo [+1.4,
   +12.5], and J216 on the dev set, +8.3 [+2.4, +14.1] (score 0.5119 [0.5034, 0.5203], pair standard error
   0.0043192); pooled +7.6 [+3.5, +11.7]. D543 point 6's recommendation to adopt it STANDS, carried by J216 alone, and
-  the next candidate-side lane is built on it; the live seat is still `search-v2-no-b` (`59505e241363`) until the
-  owner answers.
+  the next candidate-side lane is built on it. **The owner adopted it on 2026-11-13**: a separate lane, D546
+  (unmerged, merging after this one), makes `af6771947a25` the live seat as search-v4. B in this match is that
+  config. This lane's merge, J218's pin, carries main `97122947c`'s `bridge/src`, where the live seat is still
+  `search-v2-no-b` (`59505e241363`); the match names B by its ladder config, so it plays the same whichever lane has
+  merged.
 - **Positive 1,200-game points have shrunk before.** Three earlier positive 1,200-game points came back at about +2
   to +3 when 4,800 games read them again (targets, the evaluator leaf, routlets; D519 point 8: routlets +6.9 at 1,200,
   +2.9 at 4,800; D543's *Context*). J212's two points were each the arm that happened to read positive, on the deck
@@ -70,7 +73,8 @@ takes D545 (D200: a reserved number is not reused).*
    games is its.
 2. **The match: one fixed 4,800-game match** (D398: 2,400 mirrored pairs, 600 batches of 8, no stopping rule), alone
    (D521), on the **dev set** (`--pairs tools/ai-bench/pairs-dev.txt`), A = `search-v3-declined-instant-t1-x3`
-   against B = `search-v3-declined-instant` (`af6771947a25`, D543 point 6's base for the next candidate-side lane),
+   against B = `search-v3-declined-instant` (`af6771947a25`, D543 point 6's base for the next candidate-side lane
+   and the config the owner adopted on 2026-11-13, which D546 makes the live seat after this lane's merge),
    under `--host j218` in a ladder folder of its own, `var/j218-ladder`, emptied by its step. `hostBase('j218')` is
    655,000,000 (FNV-1a as `tools/ai-ladder/schedule.ts` computes it, recomputed on the lane beside `j215` →
    519,000,000, `j216` → 622,000,000 and `j217` → 725,000,000), so the match is dealt **blocks
@@ -117,17 +121,18 @@ takes D545 (D200: a reserved number is not reused).*
      horizon track closes at practical clocks**: no arm deepening the Forge rollouts at three times the clock or less
      is played again without a new decision saying what is different (a cheaper rollout, a different leaf). It does
      not say the horizon is worth nothing.
-   - **No reading changes the live seat**: `SearchConfig.LIVE_DEFAULTS` stays `what=pa,anytime=1`, and the job says
+   - **No reading changes the live seat**: this job moves no seat. The live seat is what D546 makes it (B's config,
+     as search-v4); a candidate from this match is a new seat-queue row under its own decision, and the job says
      so.
 6. **What a reading does not say.** Not which depth carried it — the priority rollouts' or the attacks' — and not
    how much is the clock: the 4.5 s is every kind's budget (`SearchPolicy.budgetFor`), and four times the clock at
    `turns=0` read +1.7 [−6.7, +10.2] (J194), so a gain from the clock alone is not expected and is not excluded. Not
-   anything against the live seat: B is the pair, so the match measures depth on top of D541's two keys, and adds
+   anything against `search-v2-no-b`: B is the pair, so the match measures depth on top of D541's two keys, and adds
    nothing to J215's or J216's numbers. Not anything on the confirm set, nor anything beyond these 30 dev deck pairs
    of six cubes and this one opponent. Nothing is read against J212's points.
 7. **Never pooled.** J212's 1,200 games per arm are other players against another opponent on other deals and stay
    outside this match; they are reported beside it as description, in their own rows, and never added in (D398;
-   D519's Rejected). J215 and J216 are the pair against the live seat and are never pooled with it either.
+   D519's Rejected). J215 and J216 are the pair against `search-v2-no-b` and are never pooled with it either.
 8. **Beside the reading, as description only:** each side's searched decisions by kind and ms a searched decision,
    overall and by kind; search seconds a game and their ratio; rollouts and complete rounds a searched decision
    (counted over all kinds together, as the counters keep them); the share decided on fewer than 2 paired rounds
@@ -137,7 +142,7 @@ takes D545 (D200: a reserved number is not reused).*
    pair; and J212's three rows as they were.
 9. **The pilot, before the match**: the build with the decision self-test at 0 failures and 472 checks (no bridge
    source changed since D540's merge); the ai-bench self-test; the ladder test; six players at their hashes and seat
-   configs (the anchor, the live seat, the pair, the new player and J212's `search-v2-t1-x3` and `search-v2-a1`);
+   configs (the anchor, `search-v2-no-b`, the pair, the new player and J212's `search-v2-t1-x3` and `search-v2-a1`);
    the code since D543's merge changed under `bridge/src`, `tools/ai-ladder` and `tools/ai-bench` in `players.json`
    alone, by this one player; `hostBase('j218')` 655,000,000 and the pilot host's 87,000,000; the job's readers
    tested on synthetic files; a 4-game ladder match of A against B under `--host j218-pilot` on the dev set and a
@@ -165,7 +170,8 @@ takes D545 (D200: a reserved number is not reused).*
     (the runner sets no ceiling on a step's `timeout:`); a match that reaches its own stop is `complete: false` and
     gets no reading. It holds the machine alone for most of a day.
 
-**Under D509: the atlas's seat and the live seat are unchanged.** This lane changes no file under `bridge/src`,
+**Under D509: the atlas's seat and the live seat are unchanged by this lane** (D546 moves the live seat, in its own
+lane). This lane changes no file under `bridge/src`,
 `tools/ai-bench` or the ladder's code: one player appended to `tools/ai-ladder/players.json`, a test, the ladder
 guide's line, PLAN's rows and this file. The atlas's seat and `SearchConfig.LIVE_DEFAULTS` read none of them.
 
@@ -209,8 +215,8 @@ candidate for the owner's decision and not an adoption.
   the base's evidence a decision, not three times the evidence.
 - **The confirm set.** J212's points were read there, and every search night since D398 chose its arm there; the dev
   set has never seen a deeper horizon.
-- **Against the live seat.** D543 point 6 builds the next candidate-side lane on the pair while the recommendation
-  stands; a match against `search-v2-no-b` would read depth and D541's keys at once.
+- **Against `search-v2-no-b`.** The owner adopted the pair on 2026-11-13 and D546 makes it the live seat; a match
+  against `search-v2-no-b` would read depth and D541's keys at once.
 - **A 1,200-game screen first.** It would repeat J212's shape (±11 Elo, every interval holding 0) at a quarter of a
   day of the machine; the positive points exist, and what they lack is resolution.
 - **Pooling J212's games.** Other players, another opponent, other deals, the games that chose this player.
