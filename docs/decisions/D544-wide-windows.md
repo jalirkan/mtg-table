@@ -176,8 +176,10 @@ the merge pending; unplayed. J217 plays it.**
       directly, the union's base against itself plus the keys.
     - **WITHDRAWN or OPEN: B = the live seat `search-v2-no-b` (`59505e241363`).** The match measures the union against
       the live seat, the two D541 keys included.
-    The job carries both forms of the match line, one commented out; the coordinator resolves it from J216's read
-    before the job is posted, and the job's verdict reads B from the resolved line. Nothing below changes with B but
+    The job carries both forms of B, in its pilot's B block and in its match step, each commented out under a sentinel
+    that stops the pilot until one is uncommented (`drafts/J217-wide-windows.md`); the coordinator resolves both from
+    J216's read before the job is posted, the match step refuses to play when they disagree, and the verdict reads B
+    from the pilot's resolved `b.json`. Nothing below changes with B but
     the completeness part on B's counters (point 12).
 11. **The match: one fixed 4,800-game match** (D398: 2,400 mirrored pairs, 600 batches of 8, no stopping rule) on the
     confirm set (`tools/ai-bench/pairs-confirm.txt`), A = `search-v3-wide` against point 10's B, under `--host j217`
