@@ -10,7 +10,7 @@ ladder's own `resolvePlayer` and confirmed by `./tools/ai-ladder.sh list` on the
 next` printed D544 on this lane: D544 is reserved by the unmerged lane `pc/d544-wide-windows` (J217), so this file
 takes D545 (D200: a reserved number is not reused).*
 
-**Status: registered; built and self-tested on the lane (*Verification*); unplayed. J218 plays it.**
+**Status: registered; built and self-tested on the lane, its pilot dry-run passed the gate (*Verification*); unplayed. J218 plays it.**
 
 **2026-11-13**
 
@@ -237,8 +237,46 @@ candidate for the owner's decision and not an adoption.
   checkouts and the job files on 2026-11-13; the job's block reader checks the match's own folder only.
 - One opponent and one deck set: the pair and the dev set's 30 deck pairs.
 
-**Verification (the lane, 2026-11-13, at `97122947c` with this lane on top):** *(written from what was run; see
-below)*
+**Verification (the lane, 2026-11-13, at `97122947c` with this lane on top; run after the PC session's local
+exposure run ended, the lab `idle [] []`):**
+
+- `./tools/check-forge.sh`: the pinned jar, `3c0a7c38…8e5dd9`. `./bridge/build.sh`: build OK; the lint's self-test
+  33 rules, 79 firing cases, 93 checks; the lint 97 files under `bridge/src` and 4 under `tools/`; **decision
+  self-test 472 checks, 0 failures** (D540's count: nothing under `bridge/src` changed).
+- `./tools/ai-ladder.sh list`: `search-v3-declined-instant-t1-x3` at `9aeacaff9142` with point 1's seat config; the
+  other 52 players' names, hashes and seat configs identical to those main's `players.json` resolves to (compared
+  line for line by the ladder's own `resolvePlayer`).
+- `node --test web/test/ai-ladder.test.ts` 57 of 57 (D545's case added); `web/test/claude-md.test.ts` 5 of 5; `node
+  tools/decisions.mjs check` OK (458 decisions; it prints next D546, as D544's number is reserved by its own lane and
+  this file now holds D545); `./tools/public-check.sh` OK.
+- The draft's readers, run alone on the lane: the exposure reader 5 of 5, the verdict 50 of 50, the recording reader
+  15 of 15, the block, rollout and gate readers each ok. `./tools/runner.sh check` on the draft (`pc-jobs`
+  `drafts/J218-deep-horizon.md`, its `repos:` sha a placeholder of 40 zeros for the merge commit): `lint: clean`,
+  `machine-checked`; the pilot 7 blocks and 50 checks, the commands 2 blocks and 25 checks.
+- **J218's pilot, dry-run at this lane's head `90b492aee`** (a scratch copy of the draft pinned to it;
+  `./tools/runner.sh dry-run --root <this worktree> --pilot-only --max-seconds 7200 --workers 6`, sandboxed, run
+  twice, the second with `--keep` to read its files; another agent was running single-JVM self-tests in its own
+  worktree at the same time): every block exit 0 (the build and the self-tests 40 s and 39 s; the 4-game ladder match
+  272 s and 259 s; the 4-game recorded run 120 s and 140 s); **49 of the 50 pilot checks pass both times**, the one
+  that fails being `merged == 1` (the lane is not on `origin/main`). The ai-bench self-test 352 checks, 0 failures;
+  the ladder test 57 of 57; the six players at their hashes; against `97122947c` only `players.json` changed, 2 lines
+  in and 1 out, by this one player; `hostBase('j218')` 655,000,000, the pilot host 87,000,000, the dev set 30 pairs at
+  exactly 40 batches each. **The gate passed** (`play` 1; the second run's files): 8 games, no error or timeout; **0
+  of A's 172 searched decisions short of two rounds** (88 in the ladder games, 84 recorded); A's recorded searched
+  decisions all at horizon 1 (65 priority, 19 attacks, none at another horizon); A's ms of play a finished rollout
+  89.2 against B's 32.9 in the ladder games (**×2.71**; J212's `t1-x3` ×2.49); no retry (A's `declined` 2.5 and
+  `instant` 1.75 windows a game in the ladder games, B's 2.75 and 1.25). In the 4 ladder games (pair
+  `fair-fight-900000000`): A searched 47.3 s a game against B's 15.3 (**×3.09**), 2,150 against 658 ms a searched
+  decision (A's priority 2,059, attacks 2,443), 23.1 against 18.2 rollouts a decision, A 8.97 complete rounds a
+  decision, no budget fallback on either side; both searched priority and attacks and no block, both sides' lands
+  counters 0. In the recorded games A's searched priority decisions were 58 in its own main phase, 7 in an
+  empty-stack instant-speed window and 0 in a land window, none on a stack. **The longest of the 8 games ran 89 s**
+  (ladder) and 85 s (recorded), far inside the 1,800 s timeout.
+- **What the pilot says about the time** (description; point 10 is unchanged): at the pilot's ×3.09 on J216's 22.2 s
+  for B, A would search about 69 s a game, both sides about 91 s, about 17.8 h by the fit, about 20.8 h with
+  `t1-x3`'s 17% excess, and about 24.2 h at 6 workers with it, still under the match's 26 h stop. One deck pair and 4
+  games; the match measures it.
+- Not run on the lane: the full gate (the coordinator's, at the merge).
 
 **Follow-up.** J218 plays the match at this lane's merge; its `report.md` carries the reading and the description,
 and `summary.md` (the PC session) words them. A SHOWN or SMALL GAIN goes to the owner as a seat-queue row under its
