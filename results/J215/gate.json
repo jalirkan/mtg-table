@@ -1,0 +1,17 @@
+{
+ "written": 1,
+ "play": 1,
+ "reason": null,
+ "ladderGames": 4,
+ "benchGames": 4,
+ "games": 8,
+ "errorsTimeouts": 0,
+ "ladderDeclinedWindows": 27,
+ "benchDeclinedWindows": 17,
+ "declinedWindows": 44,
+ "ladderInstantWindows": 13,
+ "benchInstantWindows": 8,
+ "instantWindows": 21,
+ "retry": 0,
+ "retryPerGame": 0
+}
