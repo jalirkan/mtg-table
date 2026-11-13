@@ -1,0 +1,1496 @@
+mtg-table: D542's deepen settled comparisons (deepen=<z>, deepmix=1), the lane's code as it was
+built and piloted. A SAVED PATCH, NOT A CHANGE: nothing in the tree applies it.
+
+    Status:  NOT APPLIED, NOT PLAYED. D542 point 11's pilot chose no player
+             (1, 0, 1, 0, 1, 1 changed verdicts in 24 games each against a bar
+             of 12), so its match was not played and the track is closed;
+             docs/decisions/D542-deepen-settled.md is the record. The lane was
+             never merged; branch pc/d542-deepen at 821ac7c70 is kept locally.
+
+    Diffed:  git diff 1eaa00d30...821ac7c70 -- bridge tools web
+             (main at D541's merge ... the lane's head). The lane's text files
+             are not in it: its decision (now on main, rewritten as closed),
+             PLAN's rows, the ladder guide's line, the architecture note and
+             docs/protocol.md's amendment M83 (the record's deep keys), which
+             exists only on the branch.
+
+    What it holds: SearchConfig's two keys, SearchPolicy.searchDeepen, Anytime's
+             pure functions, the decision record's deep keys (Decision,
+             Decisions), DecisionSelfTest.deepenSettled, AiBench's five engine
+             scenarios, the six ladder players (players.json, kinds.ts), their
+             ladder test and check-redaction.mjs's admission of the deep keys.
+
+    Verified at 821ac7c70 (2026-11-12, the lane's build gap, against the
+             pinned 2.0.14 jar): bridge/build.sh OK (lint self-test 33 rules,
+             79 firing cases; decision self-test 544 checks, 0 failures);
+             ai-bench self-test 360 checks, 0 failures, 8 of them D542's;
+             web/test/ai-ladder.test.ts 57 of 57; the six hashes as registered;
+             cubelab.sh seat-identity all 4 games the golden's. The full gate
+             and a review of the compiled lane were never run.
+
+    To use it: check out 1eaa00d30 (or a tree whose touched files still match),
+             then git apply this file; git apply skips this header.
+
+diff --git a/bridge/src/mtgtable/ai/Anytime.java b/bridge/src/mtgtable/ai/Anytime.java
+index 0c1a20bb2..063e71ab1 100644
+--- a/bridge/src/mtgtable/ai/Anytime.java
++++ b/bridge/src/mtgtable/ai/Anytime.java
+@@ -186,6 +186,184 @@ public final class Anytime {
+         return most;
+     }
+ 
++    // ------------------------------------------------------------------
++    // D542: deepen settled comparisons (deepen=<z>), pure as the rest
++    // ------------------------------------------------------------------
++
++    /** D542: a deepened comparison's verdict -- not deepened, deepened with no verdict, a veto, a promotion. */
++    public static final int DEEP_NONE = 0;
++    public static final int DEEP_HELD = 1;
++    public static final int DEEP_VETO = 2;
++    public static final int DEEP_PROMOTE = 3;
++
++    /** D542: the fewest deep paired rounds a deep verdict is read on (fewer, and the shallow verdict stands). */
++    public static final int DEEP_MIN = 3;
++
++    /** D542: the record's word for a deep verdict ({@code null} for {@link #DEEP_NONE}). */
++    public static String deepWord(final int v) {
++        return v == DEEP_VETO ? "veto" : v == DEEP_PROMOTE ? "promote" : v == DEEP_HELD ? "held" : null;
++    }
++
++    /**
++     * D542: whether candidate {@code i}'s comparison with Forge's answer (0) is
++     * settled -- scored in at least {@code from} rounds with Forge's, and every one
++     * of those rounds' differences {@code row[i] - row[0]} exactly the same, which is
++     * a paired standard error of exactly 0 without the rounding of computing one.
++     * Further rounds at this horizon re-measure the same number (D540's Context).
++     */
++    public static boolean settled(final List<double[]> leaves, final int i, final int from) {
++        int n = 0;
++        double first = 0;
++        for (final double[] row : leaves) {
++            if (Double.isNaN(row[i]) || Double.isNaN(row[0])) {
++                continue;
++            }
++            final double d = row[i] - row[0];
++            if (n == 0) {
++                first = d;
++            } else if (d != first) {
++                return false;
++            }
++            n++;
++        }
++        return n >= from;
++    }
++
++    /**
++     * D542: the verdict on one deepened comparison, from its shallow paired
++     * difference {@code shallowDiff} to Forge's answer and {@code deep}, its deep
++     * paired difference as {@link #pairedDiff} gives it ({mean, se, n}; null with no
++     * deep pair).  Conservative both ways, with {@code z} the key's value:
++     * <ul>
++     * <li>a shallow winner ({@code shallowDiff > margin}) is VETOED when
++     *     {@code mean + z·se < 0};</li>
++     * <li>a near-tie ({@code -margin <= shallowDiff <= margin}) is PROMOTED when
++     *     {@code mean - z·se > margin};</li>
++     * <li>otherwise, or with fewer than {@link #DEEP_MIN} deep pairs, or an se that
++     *     is not a number, it is HELD: the shallow verdict stands.</li>
++     * </ul>
++     * A deep se of exactly 0 over {@link #DEEP_MIN} or more pairs is a legitimate
++     * reading (every deep pair answered alike, as most shallow ones do): the bound
++     * is then the plain mean, against 0 or the margin.  A comparison below
++     * {@code -margin} is never deepened; asked anyway, it is HELD.
++     */
++    public static int deepVerdict(final double shallowDiff, final double[] deep, final int margin, final double z) {
++        if (deep == null || deep[2] < DEEP_MIN || Double.isNaN(deep[0]) || Double.isNaN(deep[1])) {
++            return DEEP_HELD;
++        }
++        if (shallowDiff > margin) {
++            return deep[0] + z * deep[1] < 0 ? DEEP_VETO : DEEP_HELD;
++        }
++        if (shallowDiff >= -margin) {
++            return deep[0] - z * deep[1] > margin ? DEEP_PROMOTE : DEEP_HELD;
++        }
++        return DEEP_HELD;
++    }
++
++    /**
++     * D542: the index played (0 = Forge's) with the deep verdicts in hand.  First the
++     * shallow rule exactly as {@link #best} and the margin rule give it: its pick
++     * overrules Forge's answer when its shallow difference is above {@code margin} and
++     * it was not VETOED.  After a veto the play goes to Forge's answer or a promotion,
++     * never to the vetoed pick's runner-up: the runner-up has no deep evidence of its
++     * own (a settled one was retired by the race the round it settled; an unsettled one
++     * was never deepened) and usually shares the pick's flaw, and Forge's answer is the
++     * baseline the whole search is measured against.  Only where the shallow rule keeps
++     * Forge's answer, or after a veto, may a promotion act: the promoted alternative with
++     * the highest deep mean (the lower index on a tie), whether or not the race retired
++     * it at its own horizon.  So a vetoed alternative is never played, a promotion never
++     * displaces a shallow winner depth did not contradict, and with no veto and no
++     * promotion this is the shallow rule's verdict on the same shallow evidence.
++     */
++    public static int deepChoice(final boolean[] active, final List<double[]> leaves, final double[] diff, final int rounds,
++                                 final int margin, final int[] verdict, final double[] deepMean) {
++        final int best = best(active, leaves, diff, rounds);
++        if (best > 0 && diff[best] > margin && verdict[best] != DEEP_VETO) {
++            return best;
++        }
++        int promo = 0;
++        for (int i = 1; i < verdict.length; i++) {
++            if (verdict[i] == DEEP_PROMOTE && (promo == 0 || deepMean[i] > deepMean[promo])) {
++                promo = i;
++            }
++        }
++        return promo;
++    }
++
++    /** D542: shallow work is left -- fewer than {@code maxRounds} complete rounds and an active alternative not settled. */
++    public static boolean shallowLeft(final boolean[] active, final boolean[] settled, final int complete, final int maxRounds) {
++        if (complete >= maxRounds) {
++            return false;
++        }
++        for (int i = 1; i < active.length; i++) {
++            if (active[i] && !settled[i]) {
++                return true;
++            }
++        }
++        return false;
++    }
++
++    /**
++     * D542: this decision state's deep legs, Forge's answer (0) not included -- only where the verdict can still move.
++     * Under {@link #deepChoice} only the shallow best's veto matters, and a promotion acts only when the shallow rule
++     * keeps Forge's answer.  So, with {@code b} the shallow best over the active alternatives ({@link #best} on their
++     * paired differences, {@code rounds} the evidence it needs): (a) if {@code b} is a winner above {@code margin} and
++     * not deepened, no deep legs at all (it cannot be vetoed and nothing can be promoted over it); (b) if {@code b} is
++     * a deepened winner, {@code b} first, then the deepened near-ties ({@code -margin <= diff <= margin}, active or
++     * retired) best-first, since their promotion matters if {@code b} is vetoed, which is unknown until the end; (c)
++     * with no winner above the margin, the deepened near-ties best-first; (d) any other settled winner gets no leg.
++     * A comparison marked {@code done} gets none.  Pure, and recomputed from the current rounds every time it is
++     * asked, so under {@code deepmix=1} a shallow best that changes between rounds changes the legs with it.
++     */
++    public static List<Integer> deepLegs(final boolean[] deepened, final boolean[] done, final boolean[] active,
++                                         final List<double[]> leaves, final int margin, final int rounds) {
++        final int k = deepened.length;
++        final double[] diff = new double[k];
++        for (int i = 1; i < k; i++) {
++            diff[i] = standing(leaves, i);
++        }
++        final int b = best(active, leaves, diff, rounds);
++        final boolean winner = b > 0 && diff[b] > margin;
++        final List<Integer> legs = new ArrayList<>();
++        if (winner && !deepened[b]) {
++            return legs;   // (a)
++        }
++        if (winner && !done[b]) {
++            legs.add(b);   // (b): the veto is checked on what would be played
++        }
++        final List<Integer> ties = new ArrayList<>();
++        for (int i = 1; i < k; i++) {
++            if (deepened[i] && !done[i] && diff[i] >= -margin && diff[i] <= margin) {
++                ties.add(i);   // (b), (c): near-ties, active or retired
++            }
++        }
++        ties.sort((x, y) -> Double.compare(diff[y], diff[x]));
++        legs.addAll(ties);
++        return legs;
++    }
++
++    /** D542: whether this round runs deep legs -- only when no shallow work is left, unless {@code deepmix=1}. */
++    public static boolean deepThisRound(final boolean shallowLeft, final boolean deepmix) {
++        return deepmix || !shallowLeft;
++    }
++
++    /**
++     * D542: a decision starved of depth -- at least one comparison wanted deep legs ({@code wanted}) and every one of
++     * them ended with fewer than {@link #DEEP_MIN} deep pairs with Forge's answer.
++     */
++    public static boolean starved(final boolean[] wanted, final List<double[]> deep) {
++        boolean any = false;
++        for (int i = 1; i < wanted.length; i++) {
++            if (wanted[i]) {
++                any = true;
++                if (paired(deep, i) >= DEEP_MIN) {
++                    return false;
++                }
++            }
++        }
++        return any;
++    }
++
+     /**
+      * The verdict's candidate: among the active alternatives with at least
+      * {@code min(rounds, most)} paired rounds, the highest paired difference
+diff --git a/bridge/src/mtgtable/ai/Decision.java b/bridge/src/mtgtable/ai/Decision.java
+index 137e0d258..2c9efb564 100644
+--- a/bridge/src/mtgtable/ai/Decision.java
++++ b/bridge/src/mtgtable/ai/Decision.java
+@@ -165,6 +165,22 @@ public final class Decision {
+         public String fallback;
+         /** The search's answer replaced Forge's. */
+         public boolean overrode;
++        /**
++         * D542 ({@code deepen=<z>}, protocol amendment M83): the z (0 = off: none of the deep keys is written);
++         * per option, its deep verdict word ({@code held}, {@code veto}, {@code promote}; null = not deepened),
++         * its deep paired rounds with Forge's answer, and its deep paired difference with that difference's
++         * standard error; the deep rounds Forge's deep leg finished; the deep rollouts that finished ({@code playouts}
++         * stays the shallow ones); and the option the shallow rule alone
++         * would have played.
++         */
++        public double deepen;
++        public final List<String> deepVerdict = new ArrayList<>();
++        public final List<Integer> deepN = new ArrayList<>();
++        public final List<Double> deepDiff = new ArrayList<>();
++        public final List<Double> deepSeDiff = new ArrayList<>();
++        public int deepRounds;
++        public int deepPlayouts;
++        public int shallowChosen = -1;
+     }
+ 
+     /** The {@code dir:"ai"}, {@code type:"decision"} body (protocol amendment M55). */
+@@ -234,6 +250,12 @@ public final class Decision {
+                 if (!Double.isNaN(pr)) {
+                     o.n("prior", round(pr, 1));
+                 }
++                // D542 (M83): a deepened option's deep evidence, only with the key on and only on that option
++                final String dv = s.deepen > 0 && i < s.deepVerdict.size() ? s.deepVerdict.get(i) : null;
++                if (dv != null) {
++                    o.n("deep", dv).n("deepN", i < s.deepN.size() ? (long) s.deepN.get(i) : 0L).n("deepDiff", round(get(s.deepDiff, i), 1))
++                            .n("deepSeDiff", round(get(s.deepSeDiff, i), 1));
++                }
+                 o.end();
+             }
+             o.end();
+@@ -246,6 +268,10 @@ public final class Decision {
+             if (s.generated > 0) {
+                 o.n("generated", s.generated);
+             }
++            if (s.deepen > 0) {   // D542 (M83)
++                o.n("deepen", s.deepen).n("deepRounds", s.deepRounds).n("deepPlayouts", s.deepPlayouts)
++                        .n("shallowChosen", s.shallowChosen);
++            }
+             o.n("ms", s.ms).n("budgetMs", s.budgetMs).n("timedOut", s.timedOut)
+                     .n("overrode", s.overrode);
+             if (s.fallback == null) {
+diff --git a/bridge/src/mtgtable/ai/DecisionSelfTest.java b/bridge/src/mtgtable/ai/DecisionSelfTest.java
+index e0379a5aa..4a92552d8 100644
+--- a/bridge/src/mtgtable/ai/DecisionSelfTest.java
++++ b/bridge/src/mtgtable/ai/DecisionSelfTest.java
+@@ -150,6 +150,7 @@ public final class DecisionSelfTest {
+         horizonArms();
+         liveSeatNoBlock();
+         searchCandidates();
++        deepenSettled();
+         rolloutRandom();
+         rolloutRandomV3();
+         rolloutRandomV4();
+@@ -896,6 +897,233 @@ public final class DecisionSelfTest {
+                 "D540: a live seat may name a key (no measurement-only refusal): " + SearchConfig.parseLive("lands=1"));
+     }
+ 
++    /**
++     * D542: {@code deepen=<z>}, without the engine.  (1) The key: off by default, in
++     * {@link SearchConfig#parse}'s defaults, in {@link SearchConfig#LIVE_DEFAULTS} and in the
++     * live parse; each of the three ladder players' seat configs differs from search-v3's
++     * (search-v2-no-b's) in the field {@code deepen} alone (by reflection), prints search-v3's
++     * text plus {@code ,deepen=<z>}, round-trips, and deepens p, a and b but never m, k or t;
++     * {@code deepen=0} is search-v3; a z out of range, a deepen without {@code anytime=1} and one
++     * with {@code override=lcb} are refused; {@code deepmix=1} on each z differs from search-v3 in
++     * {@code deepen} and {@code deepmix} alone, and is refused without {@code deepen}.  (2) The settled test ({@link Anytime#settled}) on
++     * hand-built rounds.  (3) The deep verdict ({@link Anytime#deepVerdict}) on numbers: a veto,
++     * a promotion, neither, fewer than {@link Anytime#DEEP_MIN} deep pairs, an se of exactly 0,
++     * the margin's edges and the three z values.  (4) The choice ({@link Anytime#deepChoice}):
++     * with no veto and no promotion it is the shallow rule's verdict; a vetoed alternative is never
++     * played and after a veto the play is Forge's answer or a promotion, never the runner-up;
++     * a promotion acts only where the shallow rule keeps Forge's answer -- on active sets the
++     * loop can produce (a settled alternative that trails the leader is retired the round it
++     * settles).  (5) The record: the deep keys (M83) are written only with the key on, and only on
++     * a deepened option.  (6) The schedule, engine-free: shallow work left, the deep legs waiting
++     * for it with {@code deepmix} off and not with it on, which comparisons get a deep leg and in
++     * what order (the shallow best's cases (a) to (d) of {@link Anytime#deepLegs}), and the starved test.  The search itself is the ai-bench selftest's
++     * ({@code AiBench.deepenScenarios}, engine).
++     */
++    private static void deepenSettled() {
++        final String v3Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1";
++        final SearchConfig v3 = SearchConfig.parse(v3Text);
++        check(v3.deepen == 0 && SearchConfig.parse("").deepen == 0 && SearchConfig.parseLive("").deepen == 0
++                && !SearchConfig.LIVE_DEFAULTS.contains("deepen"), "D542: deepen is off in parse(), in search-v3 and in the live seat");
++        check(!v3.deepens("p") && !v3.deepens("a") && !v3.deepens("b"), "D542: search-v3 deepens no kind");
++        for (final String z : List.of("2", "1.5", "1")) {
++            final String seat = "Default+outlets+search:" + v3Text + ",deepen=" + z;   // the ladder's seat config (players.json)
++            final SearchConfig arm = SearchConfig.parse(seat.substring(seat.indexOf("+search:") + 8));
++            check(arm.deepen == Double.parseDouble(z), "D542: deepen=" + z + " sets the field (" + arm.deepen + ")");
++            check(arm.toString().equals(v3.toString() + ",deepen=" + z), "D542: deepen=" + z + " prints search-v3's text plus the key: " + arm);
++            check(SearchConfig.parse(arm.toString()).toString().equals(arm.toString()), "D542: deepen=" + z + " round-trips");
++            check(SearchConfig.parse("deepen=" + z + "," + v3Text).toString().equals(arm.toString()), "D542: deepen=" + z + ": key order does not matter");
++            configOnly("D542: deepen=" + z + " against search-v3", v3, arm, List.of("deepen"));
++            check(arm.deepens("p") && arm.deepens("a") && arm.deepens("b") && !arm.deepens("m") && !arm.deepens("k") && !arm.deepens("t"),
++                    "D542: deepen=" + z + " deepens p, a and b, never the opening hand or the target search");
++            final SearchConfig mix = SearchConfig.parse(v3Text + ",deepen=" + z + ",deepmix=1");
++            check(!arm.deepmix && mix.deepmix && mix.toString().equals(v3.toString() + ",deepen=" + z + ",deepmix=1")
++                            && SearchConfig.parse(mix.toString()).toString().equals(mix.toString())
++                            && SearchConfig.parse("deepmix=1," + v3Text + ",deepen=" + z).toString().equals(mix.toString()),
++                    "D542: deepen=" + z + ",deepmix=1 prints search-v3's text plus both keys, round-trips, in any order: " + mix);
++            configOnly("D542: deepen=" + z + ",deepmix=1 against search-v3", v3, mix, List.of("deepen", "deepmix"));
++        }
++        check(!v3.deepmix && !SearchConfig.parseLive("").deepmix && !SearchConfig.LIVE_DEFAULTS.contains("deepmix")
++                && SearchConfig.parse(v3Text + ",deepen=2,deepmix=0").toString().equals(v3.toString() + ",deepen=2"),
++                "D542: deepmix is off by default and deepmix=0 prints nothing");
++        check(SearchConfig.parse(v3Text + ",deepen=0").toString().equals(v3.toString()), "D542: deepen=0 is search-v3");
++        for (final String bad : List.of(v3Text + ",deepen=-1", v3Text + ",deepen=6", v3Text + ",deepen=NaN", "what=pa,deepen=2",
++                v3Text + ",override=lcb,deepen=2", v3Text + ",deepen=x", v3Text + ",deepmix=1", v3Text + ",deepen=0,deepmix=1",
++                v3Text + ",deepen=2,deepmix=2")) {
++            boolean threw = false;
++            try {
++                SearchConfig.parse(bad);
++            } catch (final IllegalArgumentException e) {   // NumberFormatException is one
++                threw = true;
++            }
++            check(threw, "D542: refused: " + bad);
++        }
++        final SearchConfig mixed = SearchConfig.parse(v3Text + ",deepen=2,declined=1,targets=1");
++        check(mixed.deepen == 2 && mixed.declined && mixed.targets, "D542: deepen survives the other switches' copies");
++        check(SearchConfig.parseLive("deepen=1.5").deepen == 1.5
++                && SearchConfig.parseLive("deepen=1.5").toString().equals(SearchConfig.parseLive("").toString() + ",deepen=1.5"),
++                "D542: a live seat may name it (it reads nothing hidden)");
++
++        // (2) settled: every paired difference the same over at least RACE_FROM rounds
++        final double nan = Double.NaN;
++        final List<double[]> tie = List.of(new double[] {100, 100, 120}, new double[] {90, 90, 110}, new double[] {80, 80, 100});
++        check(Anytime.settled(tie, 1, Anytime.RACE_FROM) && Anytime.settled(tie, 2, Anytime.RACE_FROM),
++                "D542: three rounds alike (a tie, and a +20) are settled");
++        check(!Anytime.settled(tie.subList(0, 2), 2, Anytime.RACE_FROM), "D542: two rounds are not settled (RACE_FROM is 3)");
++        final double[] pd = Anytime.pairedDiff(tie, 2, 0);
++        check(pd != null && pd[0] == 20 && pd[1] == 0 && pd[2] == 3, "D542: a settled pair's paired se is exactly 0");
++        final List<double[]> moved = List.of(new double[] {100, 100, 120}, new double[] {90, 90, 110}, new double[] {80, 80, 101});
++        check(!Anytime.settled(moved, 2, Anytime.RACE_FROM) && Anytime.settled(moved, 1, Anytime.RACE_FROM),
++                "D542: one round differing by a point is not settled");
++        final List<double[]> holes = List.of(new double[] {100, nan, 120}, new double[] {90, 95, 110}, new double[] {nan, 70, 100},
++                new double[] {80, 85, 100}, new double[] {70, 75, 90});
++        check(Anytime.settled(holes, 1, Anytime.RACE_FROM) && !Anytime.settled(holes, 2, 5) && Anytime.settled(holes, 2, 4),
++                "D542: only rounds scored for both count (a NaN on either side is no round)");
++
++        // (3) the deep verdict, margin 20
++        final int m = 20;
++        check(Anytime.deepVerdict(32, new double[] {-50, 10, 3}, m, 2) == Anytime.DEEP_VETO,
++                "D542: a shallow winner whose deep mean + z·se is below 0 is vetoed (-50 + 2·10)");
++        check(Anytime.deepVerdict(32, new double[] {-10, 10, 3}, m, 2) == Anytime.DEEP_HELD,
++                "D542: ... and held when the bound reaches 0 (-10 + 2·10 = 10)");
++        check(Anytime.deepVerdict(0, new double[] {60, 15, 4}, m, 2) == Anytime.DEEP_PROMOTE,
++                "D542: a tie whose deep mean - z·se clears the margin is promoted (60 - 2·15 = 30)");
++        check(Anytime.deepVerdict(0, new double[] {45, 15, 4}, m, 2) == Anytime.DEEP_HELD,
++                "D542: ... and held when it does not (45 - 30 = 15)");
++        check(Anytime.deepVerdict(0, new double[] {500, 0, 2}, m, 2) == Anytime.DEEP_HELD
++                && Anytime.deepVerdict(32, new double[] {-500, 0, 2}, m, 2) == Anytime.DEEP_HELD
++                && Anytime.deepVerdict(0, null, m, 2) == Anytime.DEEP_HELD,
++                "D542: fewer than DEEP_MIN (3) deep pairs, or none: the shallow verdict stands");
++        check(Anytime.deepVerdict(32, new double[] {-1, 0, 3}, m, 2) == Anytime.DEEP_VETO
++                && Anytime.deepVerdict(32, new double[] {0, 0, 3}, m, 2) == Anytime.DEEP_HELD
++                && Anytime.deepVerdict(0, new double[] {21, 0, 3}, m, 2) == Anytime.DEEP_PROMOTE
++                && Anytime.deepVerdict(0, new double[] {20, 0, 3}, m, 2) == Anytime.DEEP_HELD,
++                "D542: a deep se of exactly 0 over 3 pairs reads the plain mean against 0 and against the margin (strictly)");
++        check(Anytime.deepVerdict(32, new double[] {-50, nan, 3}, m, 2) == Anytime.DEEP_HELD, "D542: an se that is not a number holds");
++        check(Anytime.deepVerdict(20, new double[] {-500, 0, 5}, m, 2) == Anytime.DEEP_HELD
++                && Anytime.deepVerdict(20, new double[] {50, 0, 5}, m, 2) == Anytime.DEEP_PROMOTE
++                && Anytime.deepVerdict(-20, new double[] {50, 0, 5}, m, 2) == Anytime.DEEP_PROMOTE
++                && Anytime.deepVerdict(-21, new double[] {500, 0, 5}, m, 2) == Anytime.DEEP_HELD,
++                "D542: the margin's edges: +20 and -20 are near-ties (promotable, never vetoed); below -20 is never judged");
++        check(Anytime.deepVerdict(0, new double[] {40, 10, 3}, m, 2) == Anytime.DEEP_HELD
++                && Anytime.deepVerdict(0, new double[] {40, 10, 3}, m, 1.5) == Anytime.DEEP_PROMOTE
++                && Anytime.deepVerdict(0, new double[] {40, 10, 3}, m, 1) == Anytime.DEEP_PROMOTE
++                && Anytime.deepVerdict(32, new double[] {-15, 10, 3}, m, 2) == Anytime.DEEP_HELD
++                && Anytime.deepVerdict(32, new double[] {-15, 10, 3}, m, 1.5) == Anytime.DEEP_HELD
++                && Anytime.deepVerdict(32, new double[] {-15, 10, 3}, m, 1) == Anytime.DEEP_VETO,
++                "D542: the smaller z, the more verdicts (40 ± z·10 against 20; -15 + z·10 against 0)");
++
++        // (4) the choice, on sets the loop produces after round 3: Forge's answer (0); A a settled +32, the leader; B a
++        // settled tie, which trails A with an se of 0 and so is retired the round it settles; C an unsettled +26.7 (its
++        // rounds 20, 30, 30), which the race keeps (C - A is -5.3 with an se of 3.3)
++        final List<double[]> lv = List.of(new double[] {100, 132, 100, 120}, new double[] {90, 122, 90, 120},
++                new double[] {80, 112, 80, 110});
++        final double[] diff = rpDiff(lv, 4);
++        final boolean[] live = {true, true, false, true};
++        final boolean[] liveNoC = {true, true, false, false};
++        final int[] none = new int[4];
++        final double[] noMean = {nan, nan, nan, nan};
++        check(Anytime.best(live, lv, diff, 2) == 1 && Anytime.deepChoice(live, lv, diff, 2, m, none, noMean) == 1,
++                "D542: no veto, no promotion: the shallow rule's verdict (A, +32 over the margin; C at " + diff[3] + ")");
++        check(Anytime.deepChoice(live, lv, diff, 2, m, new int[] {0, Anytime.DEEP_VETO, Anytime.DEEP_HELD, 0}, noMean) == 0,
++                "D542: A vetoed: Forge's answer, not C, the unsettled runner-up still active at +" + diff[3]
++                        + " (no deep evidence of its own)");
++        check(Anytime.deepChoice(liveNoC, lv, diff, 2, m, new int[] {0, Anytime.DEEP_VETO, Anytime.DEEP_HELD, 0}, noMean) == 0,
++                "D542: A vetoed, every runner-up retired: Forge's answer");
++        check(Anytime.deepChoice(live, lv, diff, 2, m, new int[] {0, Anytime.DEEP_VETO, Anytime.DEEP_PROMOTE, 0},
++                new double[] {nan, -90, 45, nan}) == 2, "D542: A vetoed, B (retired) promoted: B");
++        check(Anytime.deepChoice(live, lv, diff, 2, m, new int[] {0, Anytime.DEEP_HELD, Anytime.DEEP_PROMOTE, 0},
++                new double[] {nan, 10, 45, nan}) == 1, "D542: a promotion never displaces a shallow winner depth did not contradict");
++        // near-ties: B a settled tie and D a settled -5 trail C, a settled +5, and are retired; C is active
++        final List<double[]> ties = List.of(new double[] {100, 100, 105, 95}, new double[] {90, 90, 95, 85},
++                new double[] {80, 80, 85, 75});
++        final double[] tdiff = rpDiff(ties, 4);
++        final boolean[] tAct = {true, false, true, false};
++        check(Anytime.deepChoice(tAct, ties, tdiff, 2, m, new int[] {0, Anytime.DEEP_PROMOTE, Anytime.DEEP_PROMOTE, 0},
++                new double[] {nan, 30, 50, nan}) == 2
++                && Anytime.deepChoice(tAct, ties, tdiff, 2, m, new int[] {0, Anytime.DEEP_PROMOTE, Anytime.DEEP_PROMOTE, 0},
++                new double[] {nan, 50, 50, nan}) == 1,
++                "D542: among promotions the highest deep mean, the lower index on a tie");
++        check(Anytime.deepChoice(tAct, ties, tdiff, 2, m, new int[] {0, Anytime.DEEP_PROMOTE, 0, 0}, new double[] {nan, 50, nan, nan}) == 1,
++                "D542: a promoted alternative the race retired at its own horizon may still be played");
++        check(Anytime.deepChoice(tAct, ties, tdiff, 2, m, none, noMean) == 0 && Anytime.best(tAct, ties, tdiff, 2) == 2,
++                "D542: near-ties with no verdict keep Forge's answer, as the shallow rule does (best +5 is under the margin)");
++
++        // (5) the record (M83): the deep keys only with the key on, and only on a deepened option
++        final Decision d = new Decision("attack", 5, "COMBAT_DECLARE_ATTACKERS");
++        d.options.addAll(List.of("attack:none", "attack:21,26", "attack:21"));
++        d.chosen = "attack:none";
++        d.by = "search";
++        final Decision.SearchStats s = new Decision.SearchStats();
++        s.tokens.addAll(List.of("attack:none", "attack:21,26", "attack:21"));
++        s.n.addAll(List.of(3, 3, 3));
++        s.meanLeaf.addAll(List.of(100.0, 132.0, 116.0));
++        s.win.addAll(List.of(0.55, 0.57, 0.56));
++        s.best = 1;
++        d.search = s;
++        final Map<?, ?> off = (Map<?, ?>) ((Map<?, ?>) Json.parse(d.toJson(0, 9, 30, 20))).get("search");
++        check(!off.containsKey("deepen") && !off.containsKey("deepRounds") && !off.containsKey("deepPlayouts") && !off.containsKey("shallowChosen")
++                && !((Map<?, ?>) ((Object[]) off.get("options"))[1]).containsKey("deep"), "D542: key off, no deep key in the record (M55 unchanged)");
++        s.deepen = 2;
++        s.deepRounds = 4;
++        s.deepPlayouts = 9;
++        s.shallowChosen = 1;
++        s.deepVerdict.addAll(java.util.Arrays.asList(null, "veto", "held"));
++        s.deepN.addAll(List.of(0, 4, 4));
++        s.deepDiff.addAll(List.of(nan, -99871.26, 3.0));
++        s.deepSeDiff.addAll(List.of(nan, 0.0, 1.04));
++        final Map<?, ?> on = (Map<?, ?>) ((Map<?, ?>) Json.parse(d.toJson(0, 10, 30, 20))).get("search");
++        final Object[] oo = (Object[]) on.get("options");
++        final Map<?, ?> o1 = (Map<?, ?>) oo[1];
++        check(Double.valueOf(2.0).equals(on.get("deepen")) && Long.valueOf(4).equals(on.get("deepRounds"))
++                && Long.valueOf(9).equals(on.get("deepPlayouts")) && Long.valueOf(1).equals(on.get("shallowChosen")),
++                "D542: key on: deepen, deepRounds, deepPlayouts and shallowChosen on the block");
++        check(!((Map<?, ?>) oo[0]).containsKey("deep") && !((Map<?, ?>) oo[0]).containsKey("deepN")
++                && "veto".equals(o1.get("deep")) && Long.valueOf(4).equals(o1.get("deepN"))
++                && Double.valueOf(-99871.3).equals(o1.get("deepDiff")) && Double.valueOf(0.0).equals(o1.get("deepSeDiff"))
++                && "held".equals(((Map<?, ?>) oo[2]).get("deep")) && Double.valueOf(1.0).equals(((Map<?, ?>) oo[2]).get("deepSeDiff")),
++                "D542: the deep keys on the deepened options only, rounded to a tenth: " + on);
++
++        // (6) the schedule: shallow work left; the deep legs wait for it unless deepmix=1; which comparisons want a deep
++        // leg (a retired settled winner does not: its veto changes nothing) and in what order; starved
++        final boolean[] act = {true, true, false, true};
++        final boolean[] stl = {false, true, true, false};
++        check(Anytime.shallowLeft(act, stl, 3, 12) && !Anytime.shallowLeft(act, stl, 12, 12)
++                && !Anytime.shallowLeft(act, new boolean[] {false, true, true, true}, 3, 12)
++                && !Anytime.shallowLeft(new boolean[] {true, false, false, false}, new boolean[4], 3, 12),
++                "D542: shallow work is left while an active alternative is unsettled under maxrounds, and only then");
++        check(!Anytime.deepThisRound(true, false) && Anytime.deepThisRound(false, false)
++                && Anytime.deepThisRound(true, true) && Anytime.deepThisRound(false, true),
++                "D542: with deepmix off the deep legs wait while shallow work is left; with deepmix=1 they do not");
++        // 1 +32, 2 +5, 3 +40, 4 +15, 5 -10 (Forge's answer 0); which are active and deepened varies by case
++        final List<double[]> six = List.of(new double[] {100, 132, 105, 140, 115, 90}, new double[] {90, 122, 95, 130, 105, 80},
++                new double[] {80, 112, 85, 120, 95, 70});
++        final boolean[] noneDone = new boolean[6];
++        final List<Integer> legsB = Anytime.deepLegs(new boolean[] {false, true, true, true, true, false}, noneDone,
++                new boolean[] {true, true, false, false, true, true}, six, m, 2);
++        check(legsB.equals(List.of(1, 4, 2)), "D542: (b) the shallow best a deepened winner (1, +32): it first, then the "
++                + "near-ties best-first, active or retired (4, 2); the retired winner 3 gets none (got " + legsB + ")");
++        final List<Integer> legsA = Anytime.deepLegs(new boolean[] {false, false, true, true, true, false}, noneDone,
++                new boolean[] {true, true, false, false, true, true}, six, m, 2);
++        check(legsA.isEmpty(), "D542: (a) the shallow best an unsettled winner (1, not deepened): no deep leg at all (got " + legsA + ")");
++        final List<Integer> legsC = Anytime.deepLegs(new boolean[] {false, false, true, false, true, false}, noneDone,
++                new boolean[] {true, false, true, false, true, true}, six, m, 2);
++        check(legsC.equals(List.of(4, 2)), "D542: (c) no winner above the margin (the best is 4, +15): the near-ties best-first (got "
++                + legsC + ")");
++        final List<Integer> legsD = Anytime.deepLegs(new boolean[] {false, true, true, true, true, false}, noneDone,
++                new boolean[] {true, true, false, true, true, true}, six, m, 2);
++        check(legsD.equals(List.of(3, 4, 2)), "D542: (d) two active settled winners: the shallow best (3, +40) first, the "
++                + "other winner (1, +32) none, then the near-ties (got " + legsD + ")");
++        final List<Integer> legsDone = Anytime.deepLegs(new boolean[] {false, true, true, true, true, false},
++                new boolean[] {false, true, false, false, true, false}, new boolean[] {true, true, false, false, true, true}, six, m, 2);
++        check(legsDone.equals(List.of(2)), "D542: a comparison marked done gets no leg (got " + legsDone + ")");
++        final double[] r0 = {1, 1, 1}, r1 = {2, 2, nan};
++        check(Anytime.starved(new boolean[] {false, true, true}, List.of(r0, r1))
++                && !Anytime.starved(new boolean[] {false, true, true}, List.of(r0, r0, r0))
++                && !Anytime.starved(new boolean[] {false, true, false}, List.of(r0, r0, r0))
++                && !Anytime.starved(new boolean[3], List.of()),
++                "D542: starved when every comparison that wanted depth has fewer than 3 deep pairs, and only then");
++    }
++
+     /**
+      * D523: the two random-rollout arms and random-v2's guardrails, without
+      * the engine.  {@code search-v2-rrandom} is search-v2 plus
+diff --git a/bridge/src/mtgtable/ai/Decisions.java b/bridge/src/mtgtable/ai/Decisions.java
+index 99957b3b1..18751fbfc 100644
+--- a/bridge/src/mtgtable/ai/Decisions.java
++++ b/bridge/src/mtgtable/ai/Decisions.java
+@@ -867,7 +867,17 @@ public final class Decisions {
+             s.seDiff.add(at(r.seDiff, i));
+             s.win.add(at(r.win, i));
+             s.prior.add(at(r.prior, i));
++            if (r.deepen > 0) {   // D542: the deep evidence, only with the key on
++                s.deepVerdict.add(i < r.deepVerdict.length ? Anytime.deepWord(r.deepVerdict[i]) : null);
++                s.deepN.add(i < r.deepN.length ? r.deepN[i] : 0);
++                s.deepDiff.add(at(r.deepDiff, i));
++                s.deepSeDiff.add(at(r.deepSeDiff, i));
++            }
+         }
++        s.deepen = r.deepen;
++        s.deepRounds = r.deepRounds;
++        s.deepPlayouts = r.deepPlayouts;
++        s.shallowChosen = r.shallowChosen;
+         s.generated = r.generated;
+         s.horizon = r.horizon;
+         s.rule = r.rule;
+diff --git a/bridge/src/mtgtable/ai/SearchConfig.java b/bridge/src/mtgtable/ai/SearchConfig.java
+index 692ca52eb..c488f362c 100644
+--- a/bridge/src/mtgtable/ai/SearchConfig.java
++++ b/bridge/src/mtgtable/ai/SearchConfig.java
+@@ -162,6 +162,23 @@ import java.util.Locale;
+  *     legal, Forge's land against each other-named land (no pass, no holding),
+  *     instead of leaving the land drop to Forge.</li>
+  * </ul>
++ *
++ * <p>D542's {@code deepen=<z>} (0, off, by default; printed only when above 0,
++ * so no registered config text, ladder hash or the live seat moves): inside the
++ * anytime loop, for the kinds {@code what=} searches (p, a, b), an alternative
++ * whose shallow paired difference to Forge's answer is settled (at least
++ * {@code Anytime.RACE_FROM} paired rounds, every paired difference the same) gets
++ * no more rollouts at its horizon; if that difference is at least
++ * {@code -margin} it is rolled against Forge's answer one turn further
++ * ({@code horizonFor(kind) + 1}) in the rounds after, and the deep paired
++ * difference may veto a shallow winner (mean + z·se below 0) or promote a
++ * near-tie (mean − z·se above the margin), each over at least
++ * {@code Anytime.DEEP_MIN} deep rounds ({@code SearchPolicy.searchDeepen}).  It
++ * needs {@code anytime=1} and the margin rule, and is refused otherwise.  The
++ * deep legs wait until no shallow work is left (shallow first); D542's
++ * {@code deepmix=1} (off by default, printed only when on, refused without
++ * {@code deepen} above 0) runs them in every round instead, after the round's
++ * shallow legs.
+  */
+ public final class SearchConfig {
+ 
+@@ -239,6 +256,19 @@ public final class SearchConfig {
+     /** D540: Forge's land drop against each legal land of another name. */
+     public final boolean lands;
+ 
++    /**
++     * D542: the deep verdict's multiplier z; 0 = off (the default).  Above 0, a settled
++     * comparison (p, a, b) is rolled one turn further with the budget it no longer needs,
++     * and its deep paired difference may veto or promote it (the class comment).
++     */
++    public final double deepen;
++
++    /**
++     * D542: the deep legs also run in rounds with shallow work left, after that round's shallow legs
++     * ({@code deepmix=1}); off (the default), they wait until no shallow work is left.  Only with {@code deepen}.
++     */
++    public final boolean deepmix;
++
+     /** D417's defaults. */
+     public static final int MULL_MS = 6000;
+     public static final int MULL_TURNS = 3;
+@@ -322,6 +352,8 @@ public final class SearchConfig {
+         this.declined = false;
+         this.instant = false;
+         this.lands = false;
++        this.deepen = 0;
++        this.deepmix = false;
+     }
+ 
+     /**
+@@ -464,6 +496,8 @@ public final class SearchConfig {
+         this.declined = base.declined;
+         this.instant = base.instant;
+         this.lands = base.lands;
++        this.deepen = base.deepen;
++        this.deepmix = base.deepmix;
+     }
+ 
+     /** D540: a copy of {@code base} with the three candidate switches given; every other field is {@code base}'s. */
+@@ -499,6 +533,79 @@ public final class SearchConfig {
+         this.declined = declined;
+         this.instant = instant;
+         this.lands = lands;
++        this.deepen = base.deepen;
++        this.deepmix = base.deepmix;
++    }
++
++    /**
++     * D542: a copy of {@code base} with the deep verdict's z (0 = off) and the deep legs' schedule given; every other
++     * field is {@code base}'s.
++     */
++    private SearchConfig(final SearchConfig base, final double deepen, final boolean deepmix) {
++        if (!(deepen >= 0 && deepen <= 5)) {
++            throw new IllegalArgumentException("search deepen= is 0 (off) or a z above 0 up to 5, got " + deepen);
++        }
++        if (deepen > 0 && !base.anytime) {
++            throw new IllegalArgumentException("search deepen= runs inside the anytime loop: it needs anytime=1 (D542)");
++        }
++        if (deepen > 0 && base.lcb) {
++            throw new IllegalArgumentException("search deepen= judges on the margin rule: it cannot take override=lcb (D542)");
++        }
++        if (deepmix && !(deepen > 0)) {
++            throw new IllegalArgumentException("search deepmix=1 schedules deepen's deep legs: it needs deepen above 0 (D542)");
++        }
++        this.budgetMs = base.budgetMs;
++        this.maxCandidates = base.maxCandidates;
++        this.horizonTurns = base.horizonTurns;
++        this.minRounds = base.minRounds;
++        this.margin = base.margin;
++        this.maxRounds = base.maxRounds;
++        this.priority = base.priority;
++        this.attacks = base.attacks;
++        this.blocks = base.blocks;
++        this.seed = base.seed;
++        this.attackTurns = base.attackTurns;
++        this.lcb = base.lcb;
++        this.z = base.z;
++        this.untapped = base.untapped;
++        this.oracle = base.oracle;
++        this.anytime = base.anytime;
++        this.rankPrior = base.rankPrior;
++        this.generate = base.generate;
++        this.prior = base.prior;
++        this.evalModel = base.evalModel;
++        this.rollout = base.rollout;
++        this.leafModel = base.leafModel;
++        this.mull = base.mull;
++        this.mullMs = base.mullMs;
++        this.mullTurns = base.mullTurns;
++        this.targets = base.targets;
++        this.distillModel = base.distillModel;
++        this.observe = base.observe;
++        this.declined = base.declined;
++        this.instant = base.instant;
++        this.lands = base.lands;
++        this.deepen = deepen;
++        this.deepmix = deepmix;
++    }
++
++    /**
++     * D542: this config with the deep verdict's z ({@code deepen=<z>}) and the deep legs' schedule
++     * ({@code deepmix=1}) as given; 0 and off is the config as it was.
++     */
++    public SearchConfig withDeepen(final double deepen, final boolean deepmix) {
++        if (deepen == this.deepen && deepmix == this.deepmix) {
++            return this;
++        }
++        return new SearchConfig(this, deepen, deepmix);
++    }
++
++    /**
++     * D542: whether a decision of this kind is deepened -- {@code deepen} on, and one of the kinds
++     * {@code what=} searches (p, a, b); the opening hand (m, k) and the target search (t) never are.
++     */
++    public boolean deepens(final String kind) {
++        return deepen > 0 && ("p".equals(kind) || "a".equals(kind) || "b".equals(kind));
+     }
+ 
+     /**
+@@ -653,6 +760,8 @@ public final class SearchConfig {
+         boolean declined = false;   // D540
+         boolean instant = false;
+         boolean lands = false;
++        double deepen = 0;   // D542
++        boolean deepmix = false;
+         if (text != null && !text.isBlank()) {
+             for (final String kv : text.split(",")) {
+                 final String[] p = kv.trim().split("=", 2);
+@@ -699,10 +808,12 @@ public final class SearchConfig {
+                 case "declined": declined = bit("declined", p[1]); break;   // D540: declined casts, aimed
+                 case "instant": instant = bit("instant", p[1]); break;   // D540: instant-speed windows Forge plays in
+                 case "lands": lands = bit("lands", p[1]); break;   // D540: the land drop's other-named lands
++                case "deepen": deepen = Double.parseDouble(p[1]); break;   // D542: settled comparisons one turn further
++                case "deepmix": deepmix = bit("deepmix", p[1]); break;   // D542: deep legs in rounds with shallow work left
+                 default: throw new IllegalArgumentException("unknown search option " + p[0]
+                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
+                         + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets, distill,"
+-                        + " observe, declined, instant, lands)");
++                        + " observe, declined, instant, lands, deepen, deepmix)");
+                 }
+             }
+         }
+@@ -719,7 +830,7 @@ public final class SearchConfig {
+                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
+                 "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf)
+                 .withDecisions(mull, mullMs, mullTurns, targets).withDistill(distill).withObserve(observe)
+-                .withCandidates(declined, instant, lands);
++                .withCandidates(declined, instant, lands).withDeepen(deepen, deepmix);
+         // gen is read only under rank=prior (and validated there).
+     }
+ 
+@@ -787,6 +898,13 @@ public final class SearchConfig {
+         if (lands) {
+             sb.append(",lands=1");
+         }
++        // D542's, likewise: only when on, so a config without it prints as before.
++        if (deepen > 0) {
++            sb.append(",deepen=").append(trim(deepen));
++        }
++        if (deepmix) {
++            sb.append(",deepmix=1");
++        }
+         return sb.toString();
+     }
+ 
+diff --git a/bridge/src/mtgtable/ai/SearchPolicy.java b/bridge/src/mtgtable/ai/SearchPolicy.java
+index 31ddf91a0..59667a423 100644
+--- a/bridge/src/mtgtable/ai/SearchPolicy.java
++++ b/bridge/src/mtgtable/ai/SearchPolicy.java
+@@ -425,6 +425,26 @@ public final class SearchPolicy {
+         public int pruned;
+         public int retired;
+ 
++        /**
++         * D542 ({@code deepen=<z>}): the z the deep verdict used (0: the key was off, and nothing below is filled);
++         * per candidate, its deep verdict ({@link Anytime#DEEP_NONE} when it was not deepened), the deep paired
++         * rounds it shares with Forge's answer, and its deep paired difference to Forge's answer with that
++         * difference's standard error (NaN when not deepened or below two pairs); the deep rounds in which Forge's
++         * deep leg finished; the deep rollouts that finished ({@link #playouts} counts the shallow ones alone, as
++         * before); the deep rollouts' leaves ({@code deepLeaves[round][cand]}, NaN for a leg not played);
++         * and what the shallow rule alone would have played, on this search's own shallow evidence (the verdict
++         * changed when {@link #chosen} differs from it).  {@link #stat} and {@link #best} stay the shallow rule's.
++         */
++        public double deepen;
++        public int[] deepVerdict = new int[0];
++        public int[] deepN = new int[0];
++        public double[] deepDiff = new double[0];
++        public double[] deepSeDiff = new double[0];
++        public int deepRounds;
++        public int deepPlayouts;
++        public List<double[]> deepLeaves = new ArrayList<>();
++        public int shallowChosen = -1;
++
+         /**
+          * The override rule (D312; D350's noise-aware variant).  {@code margin}:
+          * the best mean beats Forge's by more than {@code margin}.  {@code lcb}:
+@@ -529,6 +549,17 @@ public final class SearchPolicy {
+             if (anytime) {
+                 sb.append(String.format(Locale.ROOT, ", anytime: %d pruned, %d retired", pruned, retired));
+             }
++            if (deepen > 0) {   // D542
++                sb.append(String.format(Locale.ROOT, ", deepen z %s: %d deep rounds, %d deep playouts", deepen, deepRounds,
++                        deepPlayouts));
++                for (int i = 1; i < deepVerdict.length; i++) {
++                    if (deepVerdict[i] != Anytime.DEEP_NONE) {
++                        sb.append(String.format(Locale.ROOT, "; %d %s d %.0f+-%.0f over %d", i,
++                                Anytime.deepWord(deepVerdict[i]), deepDiff[i], deepSeDiff[i], deepN[i]));
++                    }
++                }
++                sb.append(", shallow rule ").append(shallowChosen);
++            }
+             sb.append(fallback != null ? ", fallback " + fallback : overrode ? ", overrode with " + best : ", kept Forge's");
+             return sb.toString();
+         }
+@@ -2706,6 +2737,9 @@ public final class SearchPolicy {
+ 
+     private Outcome search(final Player ai, final List<Cand> cands, final String kind, final long t0) {
+         if (cfg.anytime) {
++            if (cfg.deepen > 0 && cfg.deepens(kind)) {
++                return searchDeepen(ai, cands, kind, t0);   // D542: only with deepen=<z> on; off, one field read
++            }
+             return searchAnytime(ai, cands, kind, t0);
+         }
+         final long deadline = t0 + budgetFor(kind) * 1_000_000L;
+@@ -3049,6 +3083,395 @@ public final class SearchPolicy {
+         return o;
+     }
+ 
++    // ==================================================================
++    // D542: deepen settled comparisons (deepen=<z>)
++    // ==================================================================
++
++    /**
++     * D542: {@link #searchAnytime} with settled comparisons looked at one turn
++     * further, entered only under {@code deepen=<z>} for p, a and b
++     * ({@link SearchConfig#deepens}); with the key off this method is never
++     * called and {@link #searchAnytime} runs unchanged.  Its shallow half is that
++     * method's loop, line for line, but for these:
++     *
++     * <ul>
++     * <li><b>Settled.</b> After each round, an active alternative whose first
++     *     {@link Anytime#RACE_FROM} paired differences with Forge's answer are exactly
++     *     the same ({@link Anytime#settled}) gets no more rollouts at this horizon.
++     *     The shallow rounds go to the unsettled, unraced alternatives (pruned to the
++     *     budget among themselves, raced as today), with Forge's answer rolled only
++     *     while one of them is left.  The settled test runs before the race, so an
++     *     alternative the race retires the round it settles can still be deepened.</li>
++     * <li><b>Deepened.</b> A settled alternative whose shallow difference is at least
++     *     {@code -margin} is deepened, and gets a deep leg only where the verdict can
++     *     still move ({@link Anytime#deepLegs}: the shallow best if it is a deepened
++     *     winner, then the deepened near-ties; none while the shallow best is an
++     *     unsettled winner).  A round's deep legs roll Forge's answer once, then those
++     *     alternatives, at {@code horizon + 1} with the round's seed.  <b>Shallow first</b>: a round runs deep legs only when it starts with no
++     *     shallow work left ({@link Anytime#deepThisRound}); {@code deepmix=1} runs them
++     *     in every round, after its shallow legs.  A deepened comparison stops at
++     *     {@link Anytime#DEEP_MIN} settled deep pairs, {@code maxrounds} deep pairs, or
++     *     its second deep error.</li>
++     * <li><b>The verdict.</b> The shallow rule's (the margin rule on {@link Anytime#best})
++     *     is kept as {@link Report#shallowChosen}; each deepened alternative gets
++     *     {@link Anytime#deepVerdict}; the index played is {@link Anytime#deepChoice}.</li>
++     * </ul>
++     *
++     * A deep rollout has the decision's own deadline; one the deadline cuts returns
++     * null, counts in {@code .deepen.cut} alone, ends the loop and never feeds a
++     * verdict.  A deep error never moves the shallow search.  Every shallow statistic
++     * keeps its meaning: {@code timedOut} is set only when the deadline cut shallow
++     * work, and {@code search.rollouts}, {@code search.playUs} and the report's
++     * {@code playouts} count shallow rollouts only, a deep rollout's own counters going
++     * under {@code search.<k>.deepen.} ({@code deepSink}).  Deep counters, by kind:
++     * {@code settled}, {@code pairs}, {@code decisions}, {@code rollouts},
++     * {@code playUs}, {@code copyUs}, {@code rounds}, {@code cut}, {@code errors},
++     * {@code short}, {@code starved}, {@code shallowCut}, {@code vetoes},
++     * {@code promotions} and {@code changed} (D542 point 7).
++     */
++    private Outcome searchDeepen(final Player ai, final List<Cand> cands, final String kind, final long t0) {
++        final long deadline = t0 + budgetFor(kind) * 1_000_000L;
++        final Game game = ai.getGame();
++        final int k = cands.size();
++        final int horizon = horizonFor(kind);
++        final int deepHorizon = horizon + 1;
++        final String pre = "search." + kind + ".deepen.";
++        final List<double[]> leaves = new ArrayList<>();
++        final List<double[]> wins = new ArrayList<>();
++        final List<double[]> deep = new ArrayList<>();
++        final boolean[] active = new boolean[k];
++        Arrays.fill(active, true);
++        final boolean[] settled = new boolean[k];
++        final boolean[] deepened = new boolean[k];
++        final boolean[] deepDone = new boolean[k];
++        final boolean[] wanted = new boolean[k];   // the comparisons the rule gave a deep leg, or wants one at the end
++        final int[] errs = new int[k];
++        final int[] deepErrs = new int[k];
++        int errors = 0;
++        int complete = 0;
++        long rolloutNs = 0;
++        int timed = 0;
++        boolean deepOff = false;
++        boolean finished = false;
++        boolean deepRan = false;
++        // a deep rollout's counters go under search.<k>.deepen. (its playUs, copyUs, stepTimeouts, ...), so every
++        // shallow statistic -- search.rollouts, search.playUs, search.copyUs, search.stepTimeouts -- keeps its meaning
++        final Sink deepSink = new Sink() {
++            @Override
++            public void add(final String key, final int n) {
++                sink.add(key.startsWith("search.") ? pre + key.substring("search.".length()) : key, n);
++            }
++
++            @Override
++            public void event(final String text) {
++                sink.event(text);
++            }
++        };
++        final Report rep = new Report();
++        report = rep;
++        rep.kind = kind;
++        rep.cands = new ArrayList<>(cands);
++        rep.budgetMs = budgetFor(kind);
++        rep.horizon = horizon;
++        rep.rule = "margin";   // SearchConfig refuses deepen with override=lcb, and p, a, b take the config's rule
++        rep.z = 0;
++        rep.margin = cfg.margin;
++        rep.leaves = leaves;
++        rep.anytime = true;
++        rep.deepen = cfg.deepen;
++        rep.deepLeaves = deep;
++        attachPrior(rep, cands);
++        if (Determinizer.hiddenFaceDown(game, ai) > 0) {
++            sink.add("search.oppFaceDownDecisions", 1);
++        }
++        try {
++            rounds:
++            while (System.nanoTime() < deadline) {
++                final boolean shallowLeft = Anytime.shallowLeft(active, settled, complete, cfg.maxRounds);
++                final boolean deepLeft = !deepOff && !Anytime.deepLegs(deepened, deepDone, active, leaves, cfg.margin, cfg.minRounds).isEmpty();
++                if (!shallowLeft && !deepLeft) {
++                    finished = true;
++                    break;   // decided: every alternative settled, raced out or pruned, and no deep leg can change the choice
++                }
++                final long seed = rng.nextLong();
++                if (shallowLeft) {
++                    // ---- the shallow legs: searchAnytime's round over the unsettled alternatives ----
++                    final int r = leaves.size();
++                    final boolean[] rolling = new boolean[k];
++                    rolling[0] = true;
++                    for (int i = 1; i < k; i++) {
++                        rolling[i] = active[i] && !settled[i];
++                    }
++                    if (r > 0 && timed > 0) {
++                        final int cut = Anytime.pruneToBudget(rolling, leaves, rolloutNs / timed, deadline, r, cfg.minRounds);
++                        if (cut > 0) {
++                            for (int i = 1; i < k; i++) {
++                                if (active[i] && !settled[i] && !rolling[i]) {
++                                    active[i] = false;   // pruned, as searchAnytime prunes
++                                }
++                            }
++                            rep.pruned += cut;
++                            sink.add("search.anytime.pruned", cut);
++                        }
++                    }
++                    final double[] round = new double[k];
++                    final double[] roundWin = new double[k];
++                    Arrays.fill(round, Double.NaN);
++                    Arrays.fill(roundWin, Double.NaN);
++                    leaves.add(round);
++                    wins.add(roundWin);
++                    boolean full = true;
++                    for (final int i : Anytime.order(rolling, leaves, r)) {
++                        final long tr = System.nanoTime();
++                        final Playout p;
++                        try {
++                            p = rollout(game, ai, cands.get(i), seed, deadline, r == 0 && i == 0, horizon, r);
++                        } catch (final CopyFailed e) {
++                            throw e;
++                        } catch (final CandidateUnmappable e) {
++                            if (i == 0) {
++                                sink.add("search.fallback.unmappable", 1);
++                                rep.fallback = "unmappable";
++                                return null;
++                            }
++                            sink.add("search.candidateUnmappable", 1);
++                            active[i] = false;
++                            continue;
++                        } catch (final RuntimeException | StackOverflowError e) {
++                            errors++;
++                            errs[i]++;
++                            sink.add("search.rolloutErrors", 1);
++                            if (errs[0] >= 3 || errors >= 3 * k) {
++                                sink.add("search.fallback.rolloutErrors", 1);
++                                rep.fallback = "rolloutErrors";
++                                return null;
++                            }
++                            if (i > 0 && errs[i] >= 2) {
++                                active[i] = false;
++                                sink.add("search.anytime.erroredOut", 1);
++                            } else {
++                                full = false;
++                            }
++                            continue;
++                        }
++                        if (p == null) {
++                            rep.timedOut = true;
++                            break rounds;   // out of time mid-round: the rollouts this round finished are kept
++                        }
++                        rolloutNs += System.nanoTime() - tr;   // the shallow legs alone time the shallow pruning
++                        timed++;
++                        sink.add("search.rollouts", 1);
++                        if (cfg.rolloutMix()) {
++                            countMixRollout(r, sink);
++                        }
++                        rep.playouts++;
++                        round[i] = p.leaf;
++                        roundWin[i] = winOf(p);
++                    }
++                    if (full) {
++                        complete++;
++                    }
++                    // settled before the race: an alternative the race retires this round is still deepened
++                    for (int i = 1; i < k; i++) {
++                        if (active[i] && !settled[i] && Anytime.settled(leaves, i, Anytime.RACE_FROM)) {
++                            settled[i] = true;
++                            sink.add(pre + "settled", 1);
++                            if (Anytime.standing(leaves, i) >= -cfg.margin) {
++                                deepened[i] = true;   // counted in .pairs only if the rule ever wants it (below)
++                            }
++                        }
++                    }
++                    final int out = Anytime.race(active, leaves);
++                    if (out > 0) {
++                        rep.retired += out;
++                        sink.add("search.anytime.retired", out);
++                    }
++                }
++                // ---- the deep legs: Forge's answer and each deepened alternative whose verdict could change the
++                // choice, at horizon + 1, this round's seed; shallow first: only in a round that started with no
++                // shallow work left, unless deepmix=1 (Anytime.deepThisRound) ----
++                if (deepOff || !Anytime.deepThisRound(shallowLeft, cfg.deepmix)) {
++                    continue;
++                }
++                final List<Integer> legs = Anytime.deepLegs(deepened, deepDone, active, leaves, cfg.margin, cfg.minRounds);
++                if (legs.isEmpty()) {
++                    continue;
++                }
++                for (final int i : legs) {
++                    wanted[i] = true;
++                }
++                legs.add(0, 0);
++                final double[] row = new double[k];
++                Arrays.fill(row, Double.NaN);
++                deep.add(row);
++                final int dr = deep.size() - 1;
++                for (final int i : legs) {
++                    final Playout p;
++                    deepRan = true;
++                    try {
++                        p = playout(game, ai, cands.get(i), seed, rolloutLimits(cfg, deadline, deepHorizon, leafEval, dr), deepSink,
++                                false, failCopyForTest);
++                    } catch (final RuntimeException | StackOverflowError e) {
++                        // depth never ends the search: CopyFailed and CandidateUnmappable land here too
++                        sink.add(pre + "errors", 1);
++                        if (i == 0) {
++                            if (++deepErrs[0] >= 2) {
++                                deepOff = true;
++                            }
++                            break;   // no Forge leg this round: none of its legs could pair
++                        }
++                        if (++deepErrs[i] >= 2) {
++                            deepDone[i] = true;
++                        }
++                        continue;
++                    }
++                    if (p == null) {
++                        sink.add(pre + "cut", 1);   // a cut deep leg counts here alone: timedOut is the shallow search's
++                        break rounds;   // out of time: a cut leg has no leaf, and a leg left alone pairs with nothing
++                    }
++                    sink.add(pre + "rollouts", 1);
++                    rep.deepPlayouts++;
++                    row[i] = p.leaf;
++                }
++                if (!Double.isNaN(row[0])) {
++                    rep.deepRounds++;
++                    sink.add(pre + "rounds", 1);
++                }
++                for (final int i : legs) {
++                    if (i > 0 && !deepDone[i]
++                            && (Anytime.paired(deep, i) >= cfg.maxRounds || Anytime.settled(deep, i, Anytime.DEEP_MIN))) {
++                        deepDone[i] = true;   // the deep pair re-measures the same number, or reached the round cap
++                    }
++                }
++            }
++            // the loop ended at the deadline unless it finished; timedOut keeps its meaning -- the shallow search was cut
++            // -- and shallowCut counts a deadline that cut shallow work after a deep leg had run (deepmix=1 only)
++            final boolean shallowCut = !finished && Anytime.shallowLeft(active, settled, complete, cfg.maxRounds);
++            if (shallowCut) {
++                rep.timedOut = true;
++                if (deepRan) {
++                    sink.add(pre + "shallowCut", 1);
++                }
++            }
++        } catch (final CopyFailed e) {
++            sink.add("search.fallback.copyError", 1);
++            sink.event("search " + kind + ": copy failed, Forge's answer: " + e.getCause());
++            rep.fallback = "copyError";
++            return null;
++        } finally {
++            sink.add("search." + kind + ".ms", (int) ((System.nanoTime() - t0) / 1_000_000L));
++            sink.add("search." + kind + ".us", (int) ((System.nanoTime() - t0) / 1_000L));   // J126
++            if (report == rep) {
++                while (!leaves.isEmpty() && Anytime.allNaN(leaves.get(leaves.size() - 1))) {
++                    leaves.remove(leaves.size() - 1);
++                    wins.remove(wins.size() - 1);
++                }
++                rep.ms = (System.nanoTime() - t0) / 1_000_000L;
++                Report.fillStats(rep, leaves, wins, k);
++                rep.rounds = complete;
++                if (!deepOff) {
++                    for (final int i : Anytime.deepLegs(deepened, deepDone, active, leaves, cfg.margin, cfg.minRounds)) {
++                        wanted[i] = true;   // still wanted when the loop ended (the clock, or no time for its legs)
++                    }
++                }
++                rep.deepVerdict = new int[k];
++                rep.deepN = new int[k];
++                rep.deepDiff = new double[k];
++                rep.deepSeDiff = new double[k];
++                Arrays.fill(rep.deepDiff, Double.NaN);
++                Arrays.fill(rep.deepSeDiff, Double.NaN);
++                for (int i = 1; i < k; i++) {
++                    if (wanted[i]) {
++                        final double[] d = Anytime.pairedDiff(deep, i, 0);
++                        rep.deepVerdict[i] = Anytime.DEEP_HELD;   // the verdict below replaces it when one is reached
++                        rep.deepN[i] = d == null ? 0 : (int) d[2];
++                        rep.deepDiff[i] = d == null ? Double.NaN : d[0];
++                        rep.deepSeDiff[i] = d == null ? Double.NaN : d[1];
++                    }
++                }
++            }
++        }
++        sink.add("search.rounds", complete);
++        if (cfg.rolloutMix()) {
++            countMixRounds(leaves, sink);
++        }
++        final boolean[] any = new boolean[k];
++        Arrays.fill(any, true);
++        final int most = Anytime.most(any, leaves);
++        if (most == 0 && Anytime.count(active) <= 1 && rep.n.length > 0 && rep.n[0] > 0) {
++            sink.add("search.anytime.noAlternatives", 1);
++            return null;
++        }
++        if (most == 0) {
++            sink.add("search.fallback.budget", 1);
++            rep.fallback = "budget";
++            rep.chosen = 0;
++            return null;
++        }
++        final int best = Anytime.best(active, leaves, rep.diffLeaf, cfg.minRounds);
++        if (most < cfg.minRounds) {
++            sink.add("search.anytime.short", 1);
++        }
++        final Outcome o = new Outcome();
++        o.rounds = complete;
++        o.mean = rep.meanLeaf.clone();
++        // today's verdict on this search's shallow evidence, kept for the record and the changed counter
++        final int shallow = Report.verdict(false, cfg.z, cfg.margin, rep, best,
++                best == 0 ? most : Anytime.paired(leaves, best));
++        if (cfg.rolloutMix()) {
++            countMixPairs(leaves, best, sink);
++        }
++        // the deep verdicts, then the choice (Anytime.deepChoice: a veto is never played, a promotion acts only
++        // where the shallow rule keeps Forge's answer)
++        final double[] deepMean = new double[k];
++        Arrays.fill(deepMean, Double.NaN);
++        // only the comparisons the rule wanted deepened (Anytime.deepLegs) are judged and counted: .pairs, .decisions,
++        // .short and .starved; .starved is the clock's alone, so a comparison whose deep legs ended on errors, and every
++        // comparison of a decision whose deepening two Forge deep-leg errors turned off, is left out of it
++        int pairs = 0;
++        final boolean[] clockWanted = new boolean[k];
++        for (int i = 1; i < k; i++) {
++            if (!wanted[i]) {
++                continue;
++            }
++            pairs++;
++            sink.add(pre + "pairs", 1);
++            clockWanted[i] = !deepOff && deepErrs[i] < 2;
++            final double[] d = Anytime.pairedDiff(deep, i, 0);
++            final int v = Anytime.deepVerdict(rep.diffLeaf[i], d, cfg.margin, cfg.deepen);
++            rep.deepVerdict[i] = v;
++            deepMean[i] = d == null ? Double.NaN : d[0];
++            if (d == null || d[2] < Anytime.DEEP_MIN) {
++                sink.add(pre + "short", 1);
++            }
++            if (v == Anytime.DEEP_VETO) {
++                sink.add(pre + "vetoes", 1);
++            } else if (v == Anytime.DEEP_PROMOTE) {
++                sink.add(pre + "promotions", 1);
++            }
++        }
++        final int chosen = Anytime.deepChoice(active, leaves, rep.diffLeaf, cfg.minRounds, cfg.margin, rep.deepVerdict,
++                deepMean);
++        if (pairs > 0) {
++            sink.add(pre + "decisions", 1);
++        }
++        if (Anytime.starved(clockWanted, deep)) {
++            sink.add(pre + "starved", 1);   // every comparison that wanted depth ended under DEEP_MIN deep pairs
++        }
++        if (chosen != shallow) {
++            sink.add(pre + "changed", 1);
++        }
++        o.chosen = chosen;
++        rep.shallowChosen = shallow;
++        rep.best = best;
++        rep.chosen = chosen;
++        rep.overrode = chosen > 0;
++        if (REPORT_EVENTS) {
++            sink.event(rep.summary());
++        }
++        return o;
++    }
++
+     /** A playout's win estimate: a finished copy 1 / 0 / 0.5, else σ(leaf / {@link #LEAF_SCALE}). */
+     public static double winOf(final Playout p) {
+         if (p.over) {
+diff --git a/tools/ai-bench/AiBench.java b/tools/ai-bench/AiBench.java
+index eaa3093f9..b9ed704db 100644
+--- a/tools/ai-bench/AiBench.java
++++ b/tools/ai-bench/AiBench.java
+@@ -1524,6 +1524,7 @@ public final class AiBench {
+         modalScenarios();
+         targetCostScenarios();
+         searchCandidatesScenarios();
++        deepenScenarios();
+     }
+ 
+     /**
+@@ -1760,6 +1761,152 @@ public final class AiBench {
+                 });
+     }
+ 
++    /**
++     * D542's {@code deepen=<z>} on the classic board for it: an all-out attack the
++     * end-of-turn leaf likes and the crack-back punishes.  The seat (3 life) holds two
++     * Grizzly Bears; the opponent (12 life, no hand, a library of Forests, so every
++     * rollout is dealt alike) holds two tapped Hill Giants.  Swinging both Bears takes
++     * the opponent to 8, which the leaf scores about 50 points up at this turn's end,
++     * and leaves no untapped blocker against two 3/3s next turn: dead.  In order, each
++     * check saying what it saw: (1) the board -- Forge's own attack is no attack (the
++     * arm needs a shallow winner that is not Forge's answer); (2) the horizon matters --
++     * the all-out attack played out to this turn's end leaves the seat alive, one turn
++     * further it loses, and no attack one turn further does not; (3) without the key the
++     * anytime search overrules Forge with the all-out attack (the shallow override the
++     * arm must catch) and counts nothing of D542's; (4) with {@code deepen=2} the search
++     * settles the comparison, deepens it, VETOES the all-out attack, does not attack at all
++     * (one Bear is as lethal as two), and counts the change -- a board that does not fire is a failure; (5) the same with
++     * {@code deepmix=1}.
++     */
++    static void deepenScenarios() throws Exception {
++        System.out.println("== ai-bench selftest: deepen settled comparisons (D542, engine)");
++        final List<String> crack = List.of("humanlife=12", "ailife=3", "turn=5", "activeplayer=ai",
++                "activephase=COMBAT_DECLARE_ATTACKERS", "humanbattlefield=Hill Giant|Tapped;Hill Giant|Tapped;Forest",
++                "humanlibrary=Forest;Forest;Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp;Swamp;Swamp",
++                "aibattlefield=Grizzly Bears;Grizzly Bears;Forest");
++        // (1) the board: Forge's own attack
++        scenario("d542-crackback-forge", crack, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
++            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
++            final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
++            ai.getGame().getPhaseHandler().setCombat(combat);
++            combat.initConstraints();
++            ctl.declareAttackers(ai, combat);
++            check(combat.getAttackers().isEmpty(),
++                    "D542: the board: Forge's own attack at 3 life against two tapped Hill Giants is no attack (got "
++                            + combat.getAttackers() + ")");
++        });
++        // (2) the horizon matters: the all-out attack at this turn's end and one turn further, and no attack one turn further
++        scenario("d542-crackback-horizon", crack, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
++            final Game g = ai.getGame();
++            final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
++            g.getPhaseHandler().setCombat(combat);
++            combat.initConstraints();
++            final Player opp = ai.getWeakestOpponent();
++            final Map<Card, forge.game.GameEntity> all = new LinkedHashMap<>();
++            for (final Card c : ai.getCardsIn(ZoneType.Battlefield)) {
++                if (c.isCreature()) {
++                    all.put(c, opp);
++                }
++            }
++            final String[] seen = new String[3];
++            final int[] at = {0};
++            mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> seen[at[0]] = "turn " + copy.getPhaseHandler().getTurn()
++                    + ", seat life " + aiC.getLife() + ", opponent life " + aiC.getWeakestOpponent().getLife()
++                    + (copy.isGameOver() ? ", game over" : ""));
++            final mtgtable.ai.SearchPolicy.Playout[] p = new mtgtable.ai.SearchPolicy.Playout[3];
++            try {
++                final long far = System.nanoTime() + 30_000_000_000L;
++                p[0] = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.attackCand(all), 7,
++                        new mtgtable.ai.SearchPolicy.Limits(far, 0, 20_000), new CountSink(), false, null);
++                at[0] = 1;
++                p[1] = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.attackCand(all), 7,
++                        new mtgtable.ai.SearchPolicy.Limits(far, 1, 20_000), new CountSink(), false, null);
++                at[0] = 2;
++                p[2] = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.attackCand(new LinkedHashMap<>()), 7,
++                        new mtgtable.ai.SearchPolicy.Limits(far, 1, 20_000), new CountSink(), false, null);
++            } finally {
++                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
++            }
++            final String what = "all-out at this turn's end: " + seen[0] + "; all-out one turn further: " + seen[1]
++                    + "; no attack one turn further: " + seen[2];
++            check(all.size() == 2 && p[0] != null && !p[0].over && p[1] != null && p[1].over && p[1].result < 0
++                            && p[2] != null && !(p[2].over && p[2].result < 0),
++                    "D542: the crack-back is one turn further: the all-out attack survives this turn and loses the next, no "
++                            + "attack does not lose -- " + what);
++            check(combat.getAttackers().isEmpty() && opp.getLife() == 12 && ai.getLife() == 3, "D542: the real game is untouched");
++        });
++        // (3) without the key, the shallow search overrules Forge with the all-out attack
++        scenario("d542-crackback-off", crack, PolicyLobbyPlayerAi.Outlets.OFF,
++                SearchConfig.parse("ms=6000,rounds=2,seed=7,what=a,anytime=1"), (ai, pol) -> {
++                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
++                    final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
++                    ai.getGame().getPhaseHandler().setCombat(combat);
++                    combat.initConstraints();
++                    ctl.declareAttackers(ai, combat);
++                    final Map<String, Integer> c = ctl.counts();
++                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
++                    boolean any = false;
++                    for (final String key : c.keySet()) {
++                        any |= key.contains(".deepen.");
++                    }
++                    check(combat.getAttackers().size() == 2 && c.getOrDefault("search.a.changed", 0) == 1 && !any
++                                    && rep != null && rep.deepen == 0,
++                            "D542: without the key the anytime search plays the all-out attack the leaf likes, and counts "
++                                    + "nothing of D542's (" + (rep == null ? "no report" : rep.summary()) + "; " + c + ")");
++                });
++        // (4) with deepen=2: settled, deepened, vetoed, not played
++        scenario("d542-crackback-deepen", crack, PolicyLobbyPlayerAi.Outlets.OFF,
++                SearchConfig.parse("ms=6000,rounds=2,seed=7,what=a,anytime=1,deepen=2"), (ai, pol) -> {
++                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
++                    final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
++                    ai.getGame().getPhaseHandler().setCombat(combat);
++                    combat.initConstraints();
++                    ctl.declareAttackers(ai, combat);
++                    final Map<String, Integer> c = ctl.counts();
++                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
++                    int allOut = -1;
++                    for (int i = 1; rep != null && i < rep.cands.size(); i++) {
++                        if (mtgtable.ai.SearchPolicy.token(rep.cands.get(i)).contains(",")) {
++                            allOut = i;   // attack:<id>,<id>: both Bears
++                        }
++                    }
++                    final String what = (rep == null ? "no report" : rep.summary()) + "; " + c;
++                    check(rep != null && rep.deepen == 2 && rep.horizon == 0 && allOut > 0 && rep.shallowChosen == allOut
++                                    && rep.deepVerdict[allOut] == mtgtable.ai.Anytime.DEEP_VETO
++                                    && rep.deepN[allOut] >= mtgtable.ai.Anytime.DEEP_MIN && rep.chosen != allOut,
++                            "D542: the all-out attack is the shallow rule's pick, deepened over at least 3 deep pairs, and vetoed -- "
++                                    + what);
++                    check(combat.getAttackers().isEmpty(), "D542: the seat does not attack (one Bear is as lethal as two on this board; got "
++                            + combat.getAttackers() + ")");
++                    check(c.getOrDefault("search.a.deepen.settled", 0) >= 1 && c.getOrDefault("search.a.deepen.pairs", 0) >= 1
++                                    && c.getOrDefault("search.a.deepen.decisions", 0) == 1
++                                    && c.getOrDefault("search.a.deepen.rounds", 0) >= mtgtable.ai.Anytime.DEEP_MIN
++                                    && c.getOrDefault("search.a.deepen.rollouts", 0) >= 2 * mtgtable.ai.Anytime.DEEP_MIN
++                                    && c.getOrDefault("search.a.deepen.vetoes", 0) >= 1 && c.getOrDefault("search.a.deepen.changed", 0) == 1
++                                    && c.getOrDefault("search.a.deepen.errors", 0) == 0 && c.getOrDefault("search.rolloutErrors", 0) == 0
++                                    && c.getOrDefault("search.a.deepen.shallowCut", 0) == 0 && c.getOrDefault("search.a.deepen.starved", 0) == 0
++                                    && c.getOrDefault("search.a.deepen.playUs", 0) > 0 && rep != null && rep.deepPlayouts == c.getOrDefault("search.a.deepen.rollouts", 0)
++                                    && rep.playouts == c.getOrDefault("search.rollouts", 0),
++                            "D542: the arm fires and says so in its counters, shallow first: no shallow work cut, no comparison starved, "
++                                    + "the deep rollouts and their play time counted apart from the shallow ones (" + c + ")");
++                });
++        // (5) the same with deepmix=1: the deep legs also run in rounds with shallow work left; the verdict is the same
++        scenario("d542-crackback-deepmix", crack, PolicyLobbyPlayerAi.Outlets.OFF,
++                SearchConfig.parse("ms=6000,rounds=2,seed=7,what=a,anytime=1,deepen=2,deepmix=1"), (ai, pol) -> {
++                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
++                    final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
++                    ai.getGame().getPhaseHandler().setCombat(combat);
++                    combat.initConstraints();
++                    ctl.declareAttackers(ai, combat);
++                    final Map<String, Integer> c = ctl.counts();
++                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
++                    check(rep != null && combat.getAttackers().isEmpty() && c.getOrDefault("search.a.deepen.vetoes", 0) >= 1
++                                    && c.getOrDefault("search.a.deepen.changed", 0) == 1 && c.getOrDefault("search.a.deepen.errors", 0) == 0,
++                            "D542: with deepmix=1 the all-out attack is vetoed too and the seat does not attack ("
++                                    + (rep == null ? "no report" : rep.summary()) + "; " + c + ")");
++                });
++    }
++
+     /** D540: the zone of the seat's first card named {@code name}, by any zone it can be in here ("none" if it has none). */
+     private static String zoneOf(final Player p, final String name) {
+         for (final ZoneType z : List.of(ZoneType.Hand, ZoneType.Stack, ZoneType.Graveyard, ZoneType.Exile, ZoneType.Battlefield)) {
+diff --git a/tools/ai-ladder/kinds.ts b/tools/ai-ladder/kinds.ts
+index cc8bd288f..0e74fae67 100644
+--- a/tools/ai-ladder/kinds.ts
++++ b/tools/ai-ladder/kinds.ts
+@@ -123,6 +123,9 @@ export const KINDS: Record<string, Kind> = {
+       declined: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: castable spells Forge's per-card AI declines for any reason, aimed by Forge's own targeting (dropped with no legal target), are priority candidates after today's -- in the windows already searched and in the own-main empty-stack windows where Forge passed with nothing else to consider" },
+       instant: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: outside the seat's own main phases, on an empty stack and either turn, a window where Forge plays a non-land, non-mana play is searched: Forge's play against pass and the alternatives" },
+       lands: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D540: where a land of another name than Forge's is legal, Forge's land drop against each other-named land (no pass, no holding the land)" },
++      // D542: deepen settled comparisons, off by default and out of the hash while off.
++      deepen: { type: 'enum', values: ['0', '1', '1.5', '2'], default: '0', omitAtDefault: true, doc: "D542: the deep verdict's z (0 = off; needs anytime=on and override=margin): a comparison with Forge's answer settled at its horizon (3 paired rounds alike) and not below -margin is rolled one turn further with the budget it no longer needs; its deep paired difference vetoes a shallow winner (mean + z*se < 0) or promotes a near-tie (mean - z*se > margin), each over at least 3 deep pairs; the deep legs wait until no shallow work is left" },
++      deepmix: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D542: with deepen above 0, the deep legs also run in rounds with shallow work left, after that round's shallow legs (the unsettled alternatives then get fewer shallow rounds until the deep pairs settle)" },
+     },
+     // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
+     // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
+@@ -149,6 +152,9 @@ export const KINDS: Record<string, Kind> = {
+       if (p.declined === 'on') kv.push('declined=1');
+       if (p.instant === 'on') kv.push('instant=1');
+       if (p.lands === 'on') kv.push('lands=1');
++      // D542: after D540's, as SearchConfig.toString prints it, only when on.
++      if (p.deepen !== undefined) kv.push(`deepen=${p.deepen}`);
++      if (p.deepmix === 'on') kv.push('deepmix=1');
+       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
+     },
+     available: (repo) => {
+diff --git a/tools/ai-ladder/players.json b/tools/ai-ladder/players.json
+index 3e78410e2..ca686b3cc 100644
+--- a/tools/ai-ladder/players.json
++++ b/tools/ai-ladder/players.json
+@@ -53,6 +53,12 @@
+     {"name":"search-v3-declined","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","declined":"on"},"note":"D540 (what the search considers): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus one key, declined=1 -- a castable spell Forge's per-card AI declines for any reason (not only an untargeted CantPlayAi spell, D312's rule) is aimed by Forge's own targeting (the targets canPlaySa left, else Forge's mandatory choice) and becomes a priority candidate after today's, dropped and counted when it has no legal target; so the own-main empty-stack windows where Forge passed with nothing else to consider are searched too when such a spell exists. Every other param search-v2-no-b's. For measurement, never the live seat. Fixed 1,200-game match against search-v2-no-b under D540's pre-registered readings (J214)."},
+     {"name":"search-v3-instant","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","instant":"on"},"note":"D540 (what the search considers): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus one key, instant=1 -- outside the seat's own main phases, on an empty stack and on either turn, a priority window where Forge plays something that is not a land and not a mana ability is searched as a main-phase window is: Forge's play against pass and the alternatives, rolled out to the end of that turn. Every other param search-v2-no-b's. For measurement, never the live seat. Fixed 1,200-game match against search-v2-no-b under D540's pre-registered readings (J214)."},
+     {"name":"search-v3-lands","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","lands":"on"},"note":"D540 (what the search considers): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus one key, lands=1 -- where Forge plays a land and a land of another name is legal too, Forge's land is rolled out against each other-named land (two of one name are one choice; no pass and no holding the land), where search-v2 always leaves the land drop to Forge. Every other param search-v2-no-b's. For measurement, never the live seat. Fixed 1,200-game match against search-v2-no-b under D540's pre-registered readings (J214)."},
+-    {"name":"search-v3-declined-instant","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","declined":"on","instant":"on"},"note":"D541 (D540's two positive keys together): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus two keys, declined=1 and instant=1 -- search-v3-declined's params with instant=on added, nothing else different. A castable spell Forge's per-card AI declines is aimed by Forge's own targeting and becomes a priority candidate after today's, and an empty-stack window outside the seat's own main phases where Forge plays a non-land, non-mana play is searched; D540 points 2 and 3 are the two keys. Every other param search-v2-no-b's. For measurement, never the live seat. One fixed 4,800-game match against search-v2-no-b on deals no job has played, under D541's pre-registered readings (J215); a new player, never pooled with J214's two one-key matches."}
++    {"name":"search-v3-declined-instant","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","declined":"on","instant":"on"},"note":"D541 (D540's two positive keys together): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus two keys, declined=1 and instant=1 -- search-v3-declined's params with instant=on added, nothing else different. A castable spell Forge's per-card AI declines is aimed by Forge's own targeting and becomes a priority candidate after today's, and an empty-stack window outside the seat's own main phases where Forge plays a non-land, non-mana play is searched; D540 points 2 and 3 are the two keys. Every other param search-v2-no-b's. For measurement, never the live seat. One fixed 4,800-game match against search-v2-no-b on deals no job has played, under D541's pre-registered readings (J215); a new player, never pooled with J214's two one-key matches."},
++    {"name":"search-v3-deepen-z2","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","deepen":"2"},"note":"D542 (deepen settled comparisons): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus deepen=2 -- inside the anytime loop, an alternative whose comparison with Forge's answer is settled at its horizon (its first 3 paired differences exactly the same) gets no more rollouts there, and if its shallow paired difference is at least -margin it is rolled against Forge's answer one turn further while its verdict could change the choice; the deep paired difference vetoes a shallow winner when its mean + 2*se is below 0, and promotes a near-tie when its mean - 2*se clears the margin, each over at least 3 deep pairs; after a veto the play is Forge's answer or a promotion; a promotion acts only where the shallow rule keeps Forge's answer. Schedule: the deep legs wait until no shallow work is left, so no shallow round costs more than search-v3's (shallow first). Priority and attacks, as search-v3 searches them. Every other param search-v2-no-b's. For measurement, never the live seat. One of six D542 players; J216's pilot plays all six and its 4,800-game match against search-v2-no-b plays at most one, chosen from the pilot's exposure alone (D542)."},
++    {"name":"search-v3-deepen-z15","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","deepen":"1.5"},"note":"D542 (deepen settled comparisons): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus deepen=1.5 -- inside the anytime loop, an alternative whose comparison with Forge's answer is settled at its horizon (its first 3 paired differences exactly the same) gets no more rollouts there, and if its shallow paired difference is at least -margin it is rolled against Forge's answer one turn further while its verdict could change the choice; the deep paired difference vetoes a shallow winner when its mean + 1.5*se is below 0, and promotes a near-tie when its mean - 1.5*se clears the margin, each over at least 3 deep pairs; after a veto the play is Forge's answer or a promotion; a promotion acts only where the shallow rule keeps Forge's answer. Schedule: the deep legs wait until no shallow work is left, so no shallow round costs more than search-v3's (shallow first). Priority and attacks, as search-v3 searches them. Every other param search-v2-no-b's. For measurement, never the live seat. One of six D542 players; J216's pilot plays all six and its 4,800-game match against search-v2-no-b plays at most one, chosen from the pilot's exposure alone (D542)."},
++    {"name":"search-v3-deepen-z1","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","deepen":"1"},"note":"D542 (deepen settled comparisons): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus deepen=1 -- inside the anytime loop, an alternative whose comparison with Forge's answer is settled at its horizon (its first 3 paired differences exactly the same) gets no more rollouts there, and if its shallow paired difference is at least -margin it is rolled against Forge's answer one turn further while its verdict could change the choice; the deep paired difference vetoes a shallow winner when its mean + 1*se is below 0, and promotes a near-tie when its mean - 1*se clears the margin, each over at least 3 deep pairs; after a veto the play is Forge's answer or a promotion; a promotion acts only where the shallow rule keeps Forge's answer. Schedule: the deep legs wait until no shallow work is left, so no shallow round costs more than search-v3's (shallow first). Priority and attacks, as search-v3 searches them. Every other param search-v2-no-b's. For measurement, never the live seat. One of six D542 players; J216's pilot plays all six and its 4,800-game match against search-v2-no-b plays at most one, chosen from the pilot's exposure alone (D542)."},
++    {"name":"search-v3-deepmix-z2","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","deepen":"2","deepmix":"on"},"note":"D542 (deepen settled comparisons): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus deepen=2 and deepmix=1 -- inside the anytime loop, an alternative whose comparison with Forge's answer is settled at its horizon (its first 3 paired differences exactly the same) gets no more rollouts there, and if its shallow paired difference is at least -margin it is rolled against Forge's answer one turn further while its verdict could change the choice; the deep paired difference vetoes a shallow winner when its mean + 2*se is below 0, and promotes a near-tie when its mean - 2*se clears the margin, each over at least 3 deep pairs; after a veto the play is Forge's answer or a promotion; a promotion acts only where the shallow rule keeps Forge's answer. Schedule: the deep legs also run in rounds with shallow work left, after that round's shallow legs (deepmix=1: the unsettled alternatives get fewer shallow rounds until the deep pairs settle). Priority and attacks, as search-v3 searches them. Every other param search-v2-no-b's. For measurement, never the live seat. One of six D542 players; J216's pilot plays all six and its 4,800-game match against search-v2-no-b plays at most one, chosen from the pilot's exposure alone (D542)."},
++    {"name":"search-v3-deepmix-z15","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","deepen":"1.5","deepmix":"on"},"note":"D542 (deepen settled comparisons): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus deepen=1.5 and deepmix=1 -- inside the anytime loop, an alternative whose comparison with Forge's answer is settled at its horizon (its first 3 paired differences exactly the same) gets no more rollouts there, and if its shallow paired difference is at least -margin it is rolled against Forge's answer one turn further while its verdict could change the choice; the deep paired difference vetoes a shallow winner when its mean + 1.5*se is below 0, and promotes a near-tie when its mean - 1.5*se clears the margin, each over at least 3 deep pairs; after a veto the play is Forge's answer or a promotion; a promotion acts only where the shallow rule keeps Forge's answer. Schedule: the deep legs also run in rounds with shallow work left, after that round's shallow legs (deepmix=1: the unsettled alternatives get fewer shallow rounds until the deep pairs settle). Priority and attacks, as search-v3 searches them. Every other param search-v2-no-b's. For measurement, never the live seat. One of six D542 players; J216's pilot plays all six and its 4,800-game match against search-v2-no-b plays at most one, chosen from the pilot's exposure alone (D542)."},
++    {"name":"search-v3-deepmix-z1","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500,"anytime":"on","what":"pa","deepen":"1","deepmix":"on"},"note":"D542 (deepen settled comparisons): search-v3 is the live seat since D539, the ladder's search-v2-no-b (59505e241363: search-v2 with what=pa), plus deepen=1 and deepmix=1 -- inside the anytime loop, an alternative whose comparison with Forge's answer is settled at its horizon (its first 3 paired differences exactly the same) gets no more rollouts there, and if its shallow paired difference is at least -margin it is rolled against Forge's answer one turn further while its verdict could change the choice; the deep paired difference vetoes a shallow winner when its mean + 1*se is below 0, and promotes a near-tie when its mean - 1*se clears the margin, each over at least 3 deep pairs; after a veto the play is Forge's answer or a promotion; a promotion acts only where the shallow rule keeps Forge's answer. Schedule: the deep legs also run in rounds with shallow work left, after that round's shallow legs (deepmix=1: the unsettled alternatives get fewer shallow rounds until the deep pairs settle). Priority and attacks, as search-v3 searches them. Every other param search-v2-no-b's. For measurement, never the live seat. One of six D542 players; J216's pilot plays all six and its 4,800-game match against search-v2-no-b plays at most one, chosen from the pilot's exposure alone (D542)."}
+   ]
+ }
+diff --git a/tools/check-redaction.mjs b/tools/check-redaction.mjs
+index 55b394401..d96bb90b0 100755
+--- a/tools/check-redaction.mjs
++++ b/tools/check-redaction.mjs
+@@ -3549,9 +3549,12 @@ const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCa
+ const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX',
+   'retargeted', 'staleRefused', 'cardTargetOffered', 'modesDrawn', 'targetCountTrimmed', 'costTargetAvoided'];
+ const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
++// M83 / D542: deepen, deepRounds, deepPlayouts and shallowChosen on the block, deep, deepN, deepDiff and deepSeDiff on a deepened
++// option -- only in a search run with deepen=<z>, numbers and one of three words.
+ const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
+-  'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);
+-const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior']);
++  'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated', 'deepen', 'deepRounds', 'deepPlayouts', 'shallowChosen']);
++const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior', 'deep', 'deepN', 'deepDiff', 'deepSeDiff']);
++const DEEP_WORDS = ['held', 'veto', 'promote'];
+ const SEARCH_RULES = ['margin', 'lcb'];
+ const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced', 'explore', 'guardrails']);
+ // M78 / D496: a `reveal` line -- what Forge's PlayerController.reveal showed the viewing seat: the ids, the zone
+@@ -3860,10 +3863,17 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
+       if (!FALLBACKS.includes(sb?.fallback)) bad(lineNo, `decision ${b.n} search fallback ${JSON.stringify(sb?.fallback)}`);
+       if (sb?.rule !== undefined && !SEARCH_RULES.includes(sb.rule)) bad(lineNo, `decision ${b.n} search rule ${JSON.stringify(sb.rule)}`);
+       if (sb?.generated !== undefined && !(Number.isInteger(sb.generated) && sb.generated > 0)) bad(lineNo, `decision ${b.n} search generated ${JSON.stringify(sb.generated)}`);
++      // M83 / D542: the deep keys come together, only with deepen above 0
++      const deepOn = sb?.deepen !== undefined;
++      if (deepOn && !(typeof sb.deepen === 'number' && sb.deepen > 0)) bad(lineNo, `decision ${b.n} search deepen ${JSON.stringify(sb.deepen)}`);
++      if (deepOn && !(Number.isInteger(sb.deepRounds) && sb.deepRounds >= 0 && Number.isInteger(sb.deepPlayouts) && sb.deepPlayouts >= 0 && Number.isInteger(sb.shallowChosen))) bad(lineNo, `decision ${b.n} search deepen without deepRounds, deepPlayouts and shallowChosen`);
++      if (!deepOn && (sb?.deepRounds !== undefined || sb?.deepPlayouts !== undefined || sb?.shallowChosen !== undefined)) bad(lineNo, `decision ${b.n} search deepRounds, deepPlayouts or shallowChosen without deepen (M83)`);
+       for (const o of sb?.options ?? []) {
+         for (const k of Object.keys(o)) if (!SEARCH_OPTION_KEYS.has(k)) bad(lineNo, `decision ${b.n} search option carries "${k}"`);
+         checkToken(o.token, 'search option');
+-        for (const k of ['n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior']) if (o[k] !== undefined && o[k] !== null && typeof o[k] !== 'number') bad(lineNo, `decision ${b.n} search option ${k} is not a number`);
++        for (const k of ['n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior', 'deepDiff', 'deepSeDiff']) if (o[k] !== undefined && o[k] !== null && typeof o[k] !== 'number') bad(lineNo, `decision ${b.n} search option ${k} is not a number`);
++        if (o.deep !== undefined && (!deepOn || !DEEP_WORDS.includes(o.deep) || !Number.isInteger(o.deepN) || o.deepN < 0)) bad(lineNo, `decision ${b.n} search option deep ${JSON.stringify(o.deep)} (M83: held, veto or promote, with deepN, under deepen)`);
++        if (o.deep === undefined && (o.deepN !== undefined || o.deepDiff !== undefined || o.deepSeDiff !== undefined)) bad(lineNo, `decision ${b.n} search option carries deep numbers without deep (M83)`);
+       }
+     }
+     // D3: the state it was taken in, and what that state shows the viewer.
+diff --git a/web/test/ai-ladder.test.ts b/web/test/ai-ladder.test.ts
+index 1366a493e..a7cedb825 100644
+--- a/web/test/ai-ladder.test.ts
++++ b/web/test/ai-ladder.test.ts
+@@ -1327,6 +1327,58 @@ test('D541: search-v3-declined-instant is search-v3-declined with instant=on and
+   assert.equal(by.get('search-v3-lands')!.hash, 'e0b09eb7b014');
+ });
+ 
++test('D542: the six deepen players are search-v3 (search-v2-no-b) with deepen=2, 1.5 or 1, and deepmix=on for three, and nothing else, at their own hashes', () => {
++  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
++  const reg = players(raw, REPO);
++  const by = new Map(reg.map((x) => [x.name, x]));
++  const V3CFG = 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1';
++  const v3raw = raw.players.find((p) => p.name === 'search-v2-no-b')!;
++  const v3 = by.get('search-v2-no-b')!;
++  // the hashes were computed for the lane by a re-implementation of configHash checked on seven registered hashes
++  // (cdd55e02a89c, 59505e241363, 63c35e9f7d5b, 795daea97aaa, 25ee7e76b741, e0b09eb7b014, af6771947a25); this test holds them
++  const arms = [
++    ['search-v3-deepen-z2', '2', false, '378105159aa3'],
++    ['search-v3-deepen-z15', '1.5', false, 'b3f8993b3896'],
++    ['search-v3-deepen-z1', '1', false, 'da01c6ec0a1d'],
++    ['search-v3-deepmix-z2', '2', true, '8941ca286ea4'],
++    ['search-v3-deepmix-z15', '1.5', true, '6a360470f103'],
++    ['search-v3-deepmix-z1', '1', true, '62eb7ef18d18'],
++  ] as const;
++  for (const [name, z, mix, hash] of arms) {
++    const x = by.get(name);
++    assert.ok(x?.cfg, `${name} is registered and playable`);
++    const xr = raw.players.find((y) => y.name === name)!;
++    assert.equal(xr.kind, v3raw.kind);
++    assert.deepEqual(xr.params, mix ? { ...v3raw.params, deepen: z, deepmix: 'on' } : { ...v3raw.params, deepen: z },
++      `${name}'s params are search-v2-no-b's with deepen=${z}${mix ? ' and deepmix=on' : ''}`);
++    const rest: Record<string, unknown> = { ...x!.resolved };
++    delete rest.deepen;
++    delete rest.deepmix;
++    assert.deepEqual(rest, v3.resolved, `every other resolved param of ${name} is search-v2-no-b's`);
++    assert.equal(x!.cfg, `${V3CFG},deepen=${z}${mix ? ',deepmix=1' : ''}`, `${name}'s seat config is search-v3's plus its keys`);
++    assert.equal(x!.hash, hash, `${name}'s config hash (D542)`);
++    assert.equal(reg.filter((y) => y.hash === hash).length, 1, `one registered player has the hash ${hash}`);
++    assert.match(xr.note ?? '', /D542/);
++    assert.match(xr.note ?? '', /never the live seat/);
++  }
++  assert.equal(new Set(arms.map(([, , , h]) => h)).size, 6);
++  // off, the key is out of every config and every hash; on, it prints after D540's keys, as SearchConfig.toString does
++  const plain = resolveParams('search', {});
++  assert.deepEqual(resolveParams('search', { deepen: '0', deepmix: 'off' }), plain);
++  assert.doesNotMatch(KINDS.search!.cfg(plain), /deepen|deepmix/);
++  assert.match(KINDS.search!.cfg(resolveParams('search', { anytime: 'on', deepen: '2', deepmix: 'on' })), /,anytime=1,deepen=2,deepmix=1$/);
++  assert.match(KINDS.search!.cfg(resolveParams('search', { anytime: 'on', deepen: '1.5', lands: 'on' })), /,anytime=1,lands=1,deepen=1\.5$/);
++  assert.throws(() => resolveParams('search', { deepen: '3' }), /deepen must be one of/);
++  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
++  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /deepen|deepmix/, 'the live seat turns neither on');
++  assert.ok(java.includes('case "deepen"') && java.includes('case "deepmix"'), 'SearchConfig parses deepen= and deepmix=');
++  // the players they are built on keep their hashes
++  assert.equal(v3.hash, '59505e241363');
++  assert.equal(by.get('search-v1-anytime')!.hash, 'cdd55e02a89c');
++  assert.equal(by.get('search-v3-declined-instant')!.hash, 'af6771947a25');
++  assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
++});
++
+ test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
+   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
+   const f = join(dir, 'b0.jsonl');
