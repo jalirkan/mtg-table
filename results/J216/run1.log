@@ -1,0 +1,1815 @@
+==== J216 run1 started 2026-11-12T22:56:49-05:00 in unit lab-J216-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J216: search-v3-declined-instant against search-v2-no-b, 4,800 games on the dev set, blocks 622,900,000-622,900,599
+match search-v3-declined-instant vs search-v2-no-b on tools/ai-bench/pairs-dev.txt: 600 batch(es) of 8 games (4800 games, 2400 mirrored pairs), no stopping rule
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900000, 2 pair(s))
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900001, 2 pair(s))
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900002, 2 pair(s))
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900003, 2 pair(s))
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900004, 2 pair(s))
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900005, 2 pair(s))
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900006, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 226 s
+  8 decisive games (4 pairs): search-v3-declined-instant scores 50.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900007, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 255 s
+  16 decisive games (8 pairs): search-v3-declined-instant scores 43.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900008, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 261 s
+  24 decisive games (12 pairs): search-v3-declined-instant scores 41.7%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900009, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 342 s
+  32 decisive games (16 pairs): search-v3-declined-instant scores 43.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900010, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 460 s
+  40 decisive games (20 pairs): search-v3-declined-instant scores 45.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900011, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 496 s
+  48 decisive games (24 pairs): search-v3-declined-instant scores 47.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900012, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 237 s
+  56 decisive games (28 pairs): search-v3-declined-instant scores 48.2%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900013, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 346 s
+  64 decisive games (32 pairs): search-v3-declined-instant scores 48.4%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900014, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 406 s
+  72 decisive games (36 pairs): search-v3-declined-instant scores 50.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900015, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 234 s
+  80 decisive games (40 pairs): search-v3-declined-instant scores 50.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900016, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 421 s
+  88 decisive games (44 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900017, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 765 s
+  96 decisive games (48 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900018, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 323 s
+  104 decisive games (52 pairs): search-v3-declined-instant scores 51.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900019, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 263 s
+  112 decisive games (56 pairs): search-v3-declined-instant scores 51.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900020, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 463 s
+  120 decisive games (60 pairs): search-v3-declined-instant scores 51.7%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900021, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 206 s
+  128 decisive games (64 pairs): search-v3-declined-instant scores 51.6%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900022, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 214 s
+  136 decisive games (68 pairs): search-v3-declined-instant scores 51.5%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900023, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 274 s
+  144 decisive games (72 pairs): search-v3-declined-instant scores 51.4%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900024, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 333 s
+  152 decisive games (76 pairs): search-v3-declined-instant scores 52.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900025, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 239 s
+  160 decisive games (80 pairs): search-v3-declined-instant scores 51.2%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900026, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 494 s
+  168 decisive games (84 pairs): search-v3-declined-instant scores 51.2%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900027, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 284 s
+  176 decisive games (88 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900028, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 375 s
+  184 decisive games (92 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900029, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 276 s
+  192 decisive games (96 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900030, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 323 s
+  200 decisive games (100 pairs): search-v3-declined-instant scores 50.5%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900031, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 267 s
+  208 decisive games (104 pairs): search-v3-declined-instant scores 50.5%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900032, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 224 s
+  216 decisive games (108 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900033, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 424 s
+  224 decisive games (112 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900034, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 446 s
+  232 decisive games (116 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900035, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 304 s
+  240 decisive games (120 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900036, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 255 s
+  248 decisive games (124 pairs): search-v3-declined-instant scores 51.2%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900037, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 417 s
+  256 decisive games (128 pairs): search-v3-declined-instant scores 51.2%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900038, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 298 s
+  264 decisive games (132 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900039, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 387 s
+  272 decisive games (136 pairs): search-v3-declined-instant scores 50.7%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900040, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 348 s
+  280 decisive games (140 pairs): search-v3-declined-instant scores 50.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900041, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 629 s
+  288 decisive games (144 pairs): search-v3-declined-instant scores 50.7%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900042, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 417 s
+  296 decisive games (148 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900043, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 336 s
+  304 decisive games (152 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900044, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 460 s
+  312 decisive games (156 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900045, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 450 s
+  320 decisive games (160 pairs): search-v3-declined-instant scores 51.2%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900046, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 247 s
+  328 decisive games (164 pairs): search-v3-declined-instant scores 51.2%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900047, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 404 s
+  336 decisive games (168 pairs): search-v3-declined-instant scores 51.5%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900048, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 330 s
+  344 decisive games (172 pairs): search-v3-declined-instant scores 51.5%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900049, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 416 s
+  352 decisive games (176 pairs): search-v3-declined-instant scores 51.4%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900050, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 261 s
+  360 decisive games (180 pairs): search-v3-declined-instant scores 51.4%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900051, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 205 s
+  368 decisive games (184 pairs): search-v3-declined-instant scores 51.4%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900052, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 274 s
+  376 decisive games (188 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900053, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 327 s
+  384 decisive games (192 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900054, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 476 s
+  392 decisive games (196 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900055, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 259 s
+  400 decisive games (200 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900056, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 414 s
+  408 decisive games (204 pairs): search-v3-declined-instant scores 51.2%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900057, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 400 s
+  416 decisive games (208 pairs): search-v3-declined-instant scores 51.2%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900058, 2 pair(s))
+  done   w0 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 337 s
+  424 decisive games (212 pairs): search-v3-declined-instant scores 51.7%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900059, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 191 s
+  432 decisive games (216 pairs): search-v3-declined-instant scores 51.6%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900060, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 364 s
+  440 decisive games (220 pairs): search-v3-declined-instant scores 51.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900061, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 308 s
+  448 decisive games (224 pairs): search-v3-declined-instant scores 51.6%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900062, 2 pair(s))
+  done   w2 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 384 s
+  456 decisive games (228 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900063, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 389 s
+  464 decisive games (232 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900064, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 426 s
+  472 decisive games (236 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900065, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 254 s
+  480 decisive games (240 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900066, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 238 s
+  488 decisive games (244 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900067, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 190 s
+  496 decisive games (248 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900068, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 300 s
+  504 decisive games (252 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900069, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 288 s
+  512 decisive games (256 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900070, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 318 s
+  520 decisive games (260 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900071, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 542 s
+  528 decisive games (264 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900072, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 516 s
+  536 decisive games (268 pairs): search-v3-declined-instant scores 51.3%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900073, 2 pair(s))
+  done   w1 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 312 s
+  544 decisive games (272 pairs): search-v3-declined-instant scores 51.7%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900074, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 249 s
+  552 decisive games (276 pairs): search-v3-declined-instant scores 51.6%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900075, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 200 s
+  560 decisive games (280 pairs): search-v3-declined-instant scores 51.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900076, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 425 s
+  568 decisive games (284 pairs): search-v3-declined-instant scores 51.6%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900077, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 208 s
+  576 decisive games (288 pairs): search-v3-declined-instant scores 51.6%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900078, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 372 s
+  584 decisive games (292 pairs): search-v3-declined-instant scores 51.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900079, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 467 s
+  592 decisive games (296 pairs): search-v3-declined-instant scores 51.7%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900080, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 504 s
+  600 decisive games (300 pairs): search-v3-declined-instant scores 51.7%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900081, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 272 s
+  608 decisive games (304 pairs): search-v3-declined-instant scores 51.6%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900082, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 229 s
+  616 decisive games (308 pairs): search-v3-declined-instant scores 51.6%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900083, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 430 s
+  624 decisive games (312 pairs): search-v3-declined-instant scores 51.6%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900084, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 269 s
+  632 decisive games (316 pairs): search-v3-declined-instant scores 51.4%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900085, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 538 s
+  640 decisive games (320 pairs): search-v3-declined-instant scores 51.4%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900086, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 260 s
+  648 decisive games (324 pairs): search-v3-declined-instant scores 51.4%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900087, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 329 s
+  656 decisive games (328 pairs): search-v3-declined-instant scores 51.2%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900088, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 539 s
+  664 decisive games (332 pairs): search-v3-declined-instant scores 51.4%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900089, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 215 s
+  672 decisive games (336 pairs): search-v3-declined-instant scores 51.2%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900090, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 308 s
+  680 decisive games (340 pairs): search-v3-declined-instant scores 51.2%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900091, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 302 s
+  688 decisive games (344 pairs): search-v3-declined-instant scores 51.3%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900092, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 232 s
+  696 decisive games (348 pairs): search-v3-declined-instant scores 51.3%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900093, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 234 s
+  704 decisive games (352 pairs): search-v3-declined-instant scores 51.4%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900094, 2 pair(s))
+  done   w2 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 485 s
+  712 decisive games (356 pairs): search-v3-declined-instant scores 51.7%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900095, 2 pair(s))
+  done   w3 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 567 s
+  720 decisive games (360 pairs): search-v3-declined-instant scores 51.4%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900096, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 239 s
+  728 decisive games (364 pairs): search-v3-declined-instant scores 51.4%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900097, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 255 s
+  736 decisive games (368 pairs): search-v3-declined-instant scores 51.4%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900098, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 291 s
+  744 decisive games (372 pairs): search-v3-declined-instant scores 51.3%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900099, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 511 s
+  752 decisive games (376 pairs): search-v3-declined-instant scores 51.3%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900100, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 268 s
+  760 decisive games (380 pairs): search-v3-declined-instant scores 51.4%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900101, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 519 s
+  768 decisive games (384 pairs): search-v3-declined-instant scores 51.3%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900102, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 357 s
+  776 decisive games (388 pairs): search-v3-declined-instant scores 51.3%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900103, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 271 s
+  784 decisive games (392 pairs): search-v3-declined-instant scores 51.3%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900104, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 337 s
+  792 decisive games (396 pairs): search-v3-declined-instant scores 51.3%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900105, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 406 s
+  800 decisive games (400 pairs): search-v3-declined-instant scores 51.2%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900106, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 203 s
+  808 decisive games (404 pairs): search-v3-declined-instant scores 51.2%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900107, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 384 s
+  816 decisive games (408 pairs): search-v3-declined-instant scores 51.2%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900108, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 252 s
+  824 decisive games (412 pairs): search-v3-declined-instant scores 51.2%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900109, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 470 s
+  832 decisive games (416 pairs): search-v3-declined-instant scores 51.2%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900110, 2 pair(s))
+  done   w6 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 524 s
+  840 decisive games (420 pairs): search-v3-declined-instant scores 51.4%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900111, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 330 s
+  848 decisive games (424 pairs): search-v3-declined-instant scores 51.4%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900112, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 231 s
+  856 decisive games (428 pairs): search-v3-declined-instant scores 51.4%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900113, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 273 s
+  864 decisive games (432 pairs): search-v3-declined-instant scores 51.4%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900114, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 323 s
+  872 decisive games (436 pairs): search-v3-declined-instant scores 51.5%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900115, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 313 s
+  880 decisive games (440 pairs): search-v3-declined-instant scores 51.5%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900116, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 351 s
+  888 decisive games (444 pairs): search-v3-declined-instant scores 51.6%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900117, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 536 s
+  896 decisive games (448 pairs): search-v3-declined-instant scores 51.7%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900118, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 238 s
+  904 decisive games (452 pairs): search-v3-declined-instant scores 51.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900119, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 352 s
+  912 decisive games (456 pairs): search-v3-declined-instant scores 51.5%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900120, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 185 s
+  920 decisive games (460 pairs): search-v3-declined-instant scores 51.4%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900121, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 377 s
+  928 decisive games (464 pairs): search-v3-declined-instant scores 51.4%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900122, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 244 s
+  936 decisive games (468 pairs): search-v3-declined-instant scores 51.5%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900123, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 479 s
+  944 decisive games (472 pairs): search-v3-declined-instant scores 51.5%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900124, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 411 s
+  952 decisive games (476 pairs): search-v3-declined-instant scores 51.5%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900125, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 482 s
+  960 decisive games (480 pairs): search-v3-declined-instant scores 51.5%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900126, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 233 s
+  968 decisive games (484 pairs): search-v3-declined-instant scores 51.4%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900127, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 276 s
+  976 decisive games (488 pairs): search-v3-declined-instant scores 51.4%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900128, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 526 s
+  984 decisive games (492 pairs): search-v3-declined-instant scores 51.5%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900129, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 437 s
+  992 decisive games (496 pairs): search-v3-declined-instant scores 51.5%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900130, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 267 s
+  1000 decisive games (500 pairs): search-v3-declined-instant scores 51.5%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900131, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 381 s
+  1008 decisive games (504 pairs): search-v3-declined-instant scores 51.5%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900132, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 369 s
+  1016 decisive games (508 pairs): search-v3-declined-instant scores 51.5%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900133, 2 pair(s))
+  done   w6 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 403 s
+  1024 decisive games (512 pairs): search-v3-declined-instant scores 51.3%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900134, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 253 s
+  1032 decisive games (516 pairs): search-v3-declined-instant scores 51.3%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900135, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 284 s
+  1040 decisive games (520 pairs): search-v3-declined-instant scores 51.3%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900136, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 371 s
+  1048 decisive games (524 pairs): search-v3-declined-instant scores 51.3%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900137, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 313 s
+  1056 decisive games (528 pairs): search-v3-declined-instant scores 51.2%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900138, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 257 s
+  1064 decisive games (532 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900139, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 260 s
+  1072 decisive games (536 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900140, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 311 s
+  1080 decisive games (540 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900141, 2 pair(s))
+  done   w2 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 566 s
+  1088 decisive games (544 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900142, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 211 s
+  1096 decisive games (548 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900143, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 285 s
+  1104 decisive games (552 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900144, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 312 s
+  1112 decisive games (556 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900145, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 552 s
+  1120 decisive games (560 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900146, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 359 s
+  1128 decisive games (564 pairs): search-v3-declined-instant scores 50.7%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900147, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 196 s
+  1136 decisive games (568 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900148, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 318 s
+  1144 decisive games (572 pairs): search-v3-declined-instant scores 50.7%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900149, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 393 s
+  1152 decisive games (576 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900150, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 336 s
+  1160 decisive games (580 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900151, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 443 s
+  1168 decisive games (584 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900152, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 202 s
+  1176 decisive games (588 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900153, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 288 s
+  1184 decisive games (592 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900154, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 385 s
+  1192 decisive games (596 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900155, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 514 s
+  1200 decisive games (600 pairs): search-v3-declined-instant scores 50.7%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900156, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 389 s
+  1208 decisive games (604 pairs): search-v3-declined-instant scores 50.7%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900157, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 282 s
+  1216 decisive games (608 pairs): search-v3-declined-instant scores 50.7%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900158, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 323 s
+  1224 decisive games (612 pairs): search-v3-declined-instant scores 50.7%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900159, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 307 s
+  1232 decisive games (616 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900160, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 442 s
+  1240 decisive games (620 pairs): search-v3-declined-instant scores 50.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900161, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 381 s
+  1248 decisive games (624 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900162, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 287 s
+  1256 decisive games (628 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900163, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 306 s
+  1264 decisive games (632 pairs): search-v3-declined-instant scores 50.7%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900164, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 323 s
+  1272 decisive games (636 pairs): search-v3-declined-instant scores 50.6%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900165, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 364 s
+  1280 decisive games (640 pairs): search-v3-declined-instant scores 50.5%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900166, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 159 s
+  1288 decisive games (644 pairs): search-v3-declined-instant scores 50.5%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900167, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 544 s
+  1296 decisive games (648 pairs): search-v3-declined-instant scores 50.6%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900168, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 311 s
+  1304 decisive games (652 pairs): search-v3-declined-instant scores 50.6%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900169, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 430 s
+  1312 decisive games (656 pairs): search-v3-declined-instant scores 50.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900170, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 174 s
+  1320 decisive games (660 pairs): search-v3-declined-instant scores 50.7%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900171, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 340 s
+  1328 decisive games (664 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900172, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 281 s
+  1336 decisive games (668 pairs): search-v3-declined-instant scores 50.7%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900173, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 256 s
+  1344 decisive games (672 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900174, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 385 s
+  1352 decisive games (676 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900175, 2 pair(s))
+  done   w3 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 266 s
+  1360 decisive games (680 pairs): search-v3-declined-instant scores 50.7%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900176, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 364 s
+  1368 decisive games (684 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900177, 2 pair(s))
+  done   w0 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 425 s
+  1376 decisive games (688 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900178, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 670 s
+  1384 decisive games (692 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900179, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 286 s
+  1392 decisive games (696 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900180, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 431 s
+  1400 decisive games (700 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900181, 2 pair(s))
+  done   w4 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 385 s
+  1408 decisive games (704 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900182, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 241 s
+  1416 decisive games (708 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900183, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 416 s
+  1424 decisive games (712 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900184, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 284 s
+  1432 decisive games (716 pairs): search-v3-declined-instant scores 50.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900185, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 538 s
+  1440 decisive games (720 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900186, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 278 s
+  1448 decisive games (724 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900187, 2 pair(s))
+  done   w6 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 541 s
+  1456 decisive games (728 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900188, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 323 s
+  1464 decisive games (732 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900189, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 469 s
+  1472 decisive games (736 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900190, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 362 s
+  1480 decisive games (740 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900191, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 384 s
+  1488 decisive games (744 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900192, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 386 s
+  1496 decisive games (748 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900193, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 249 s
+  1504 decisive games (752 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900194, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 346 s
+  1512 decisive games (756 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900195, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 680 s
+  1520 decisive games (760 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900196, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 372 s
+  1528 decisive games (764 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900197, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 335 s
+  1536 decisive games (768 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900198, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 289 s
+  1544 decisive games (772 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900199, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 294 s
+  1552 decisive games (776 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900200, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 498 s
+  1560 decisive games (780 pairs): search-v3-declined-instant scores 50.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900201, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 356 s
+  1568 decisive games (784 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900202, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 179 s
+  1576 decisive games (788 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900203, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 311 s
+  1584 decisive games (792 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900204, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 219 s
+  1592 decisive games (796 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900205, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 310 s
+  1600 decisive games (800 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900206, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 534 s
+  1608 decisive games (804 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900207, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 333 s
+  1616 decisive games (808 pairs): search-v3-declined-instant scores 50.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900208, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 257 s
+  1624 decisive games (812 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900209, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 245 s
+  1632 decisive games (816 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900210, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 461 s
+  1640 decisive games (820 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900211, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 271 s
+  1648 decisive games (824 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900212, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 265 s
+  1656 decisive games (828 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900213, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 485 s
+  1664 decisive games (832 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900214, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 420 s
+  1672 decisive games (836 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900215, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 479 s
+  1680 decisive games (840 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900216, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 255 s
+  1688 decisive games (844 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900217, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 307 s
+  1696 decisive games (848 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900218, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 360 s
+  1704 decisive games (852 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900219, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 309 s
+  1712 decisive games (856 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900220, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 303 s
+  1720 decisive games (860 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900221, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 796 s
+  1728 decisive games (864 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900222, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 423 s
+  1736 decisive games (868 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900223, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 285 s
+  1744 decisive games (872 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900224, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 370 s
+  1752 decisive games (876 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900225, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 503 s
+  1760 decisive games (880 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900226, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 469 s
+  1768 decisive games (884 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900227, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 251 s
+  1776 decisive games (888 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900228, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 299 s
+  1784 decisive games (892 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900229, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 502 s
+  1792 decisive games (896 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900230, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 333 s
+  1800 decisive games (900 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900231, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 380 s
+  1808 decisive games (904 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900232, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 190 s
+  1816 decisive games (908 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900233, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 279 s
+  1824 decisive games (912 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900234, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 337 s
+  1832 decisive games (916 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900235, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 350 s
+  1840 decisive games (920 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900236, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-3 search-v2-no-b (1 draws) in 194 s
+  1847 decisive games (924 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900237, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 536 s
+  1855 decisive games (928 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900238, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 295 s
+  1863 decisive games (932 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900239, 2 pair(s))
+  done   w1 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 484 s
+  1871 decisive games (936 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900240, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 435 s
+  1879 decisive games (940 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900241, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 307 s
+  1887 decisive games (944 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900242, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 261 s
+  1895 decisive games (948 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900243, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 420 s
+  1903 decisive games (952 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900244, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 461 s
+  1911 decisive games (956 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900245, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 339 s
+  1919 decisive games (960 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900246, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 367 s
+  1927 decisive games (964 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900247, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 263 s
+  1935 decisive games (968 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900248, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 308 s
+  1943 decisive games (972 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900249, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 618 s
+  1951 decisive games (976 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900250, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 358 s
+  1959 decisive games (980 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900251, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 446 s
+  1967 decisive games (984 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900252, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 390 s
+  1975 decisive games (988 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900253, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 301 s
+  1983 decisive games (992 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900254, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 286 s
+  1991 decisive games (996 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900255, 2 pair(s))
+  done   w5 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 231 s
+  1999 decisive games (1000 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900256, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 441 s
+  2007 decisive games (1004 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900257, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 360 s
+  2015 decisive games (1008 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900258, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 283 s
+  2023 decisive games (1012 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900259, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 396 s
+  2031 decisive games (1016 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900260, 2 pair(s))
+  done   w1 search-v3-declined-instant 7-1 search-v2-no-b (0 draws) in 445 s
+  2039 decisive games (1020 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900261, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 248 s
+  2047 decisive games (1024 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900262, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 347 s
+  2055 decisive games (1028 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900263, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 247 s
+  2063 decisive games (1032 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900264, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 330 s
+  2071 decisive games (1036 pairs): search-v3-declined-instant scores 51.2%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900265, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 377 s
+  2079 decisive games (1040 pairs): search-v3-declined-instant scores 51.2%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900266, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 400 s
+  2087 decisive games (1044 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900267, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 189 s
+  2095 decisive games (1048 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900268, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 613 s
+  2103 decisive games (1052 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900269, 2 pair(s))
+  done   w6 search-v3-declined-instant 1-7 search-v2-no-b (0 draws) in 328 s
+  2111 decisive games (1056 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900270, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 287 s
+  2119 decisive games (1060 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900271, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 490 s
+  2127 decisive games (1064 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900272, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 281 s
+  2135 decisive games (1068 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900273, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 266 s
+  2143 decisive games (1072 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900274, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 431 s
+  2151 decisive games (1076 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900275, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 290 s
+  2159 decisive games (1080 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900276, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 563 s
+  2167 decisive games (1084 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900277, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 296 s
+  2175 decisive games (1088 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900278, 2 pair(s))
+  done   w6 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 552 s
+  2183 decisive games (1092 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900279, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 342 s
+  2191 decisive games (1096 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900280, 2 pair(s))
+  done   w4 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 573 s
+  2199 decisive games (1100 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900281, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 339 s
+  2207 decisive games (1104 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900282, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 296 s
+  2215 decisive games (1108 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900283, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 355 s
+  2223 decisive games (1112 pairs): search-v3-declined-instant scores 51.1%
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 289 s
+  2231 decisive games (1116 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900284, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 283 s
+  2239 decisive games (1120 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900285, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 222 s
+  2247 decisive games (1124 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900286, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 287 s
+  2255 decisive games (1128 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900287, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 251 s
+  2263 decisive games (1132 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900288, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 466 s
+  2271 decisive games (1136 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900289, 2 pair(s))
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900290, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 492 s
+  2279 decisive games (1140 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900291, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 151 s
+  2287 decisive games (1144 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900292, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 304 s
+  2295 decisive games (1148 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900293, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 289 s
+  2303 decisive games (1152 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900294, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 450 s
+  2311 decisive games (1156 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900295, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 263 s
+  2319 decisive games (1160 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900296, 2 pair(s))
+  done   w5 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 362 s
+  2327 decisive games (1164 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900297, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 372 s
+  2335 decisive games (1168 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900298, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 326 s
+  2343 decisive games (1172 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900299, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 331 s
+  2351 decisive games (1176 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900300, 2 pair(s))
+  done   w4 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 452 s
+  2359 decisive games (1180 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900301, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 425 s
+  2367 decisive games (1184 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900302, 2 pair(s))
+  done   w1 search-v3-declined-instant 7-1 search-v2-no-b (0 draws) in 474 s
+  2375 decisive games (1188 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900303, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 272 s
+  2383 decisive games (1192 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900304, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 290 s
+  2391 decisive games (1196 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900305, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 474 s
+  2399 decisive games (1200 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900306, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 308 s
+  2407 decisive games (1204 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900307, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 317 s
+  2415 decisive games (1208 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900308, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 261 s
+  2423 decisive games (1212 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900309, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 535 s
+  2431 decisive games (1216 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900310, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 397 s
+  2439 decisive games (1220 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900311, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 323 s
+  2447 decisive games (1224 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900312, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 341 s
+  2455 decisive games (1228 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900313, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 429 s
+  2463 decisive games (1232 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900314, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 357 s
+  2471 decisive games (1236 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900315, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 354 s
+  2479 decisive games (1240 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900316, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 230 s
+  2487 decisive games (1244 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900317, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 229 s
+  2495 decisive games (1248 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900318, 2 pair(s))
+  done   w4 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 303 s
+  2503 decisive games (1252 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900319, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 501 s
+  2511 decisive games (1256 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900320, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 576 s
+  2519 decisive games (1260 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900321, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 265 s
+  2527 decisive games (1264 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900322, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 435 s
+  2535 decisive games (1268 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900323, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 391 s
+  2543 decisive games (1272 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900324, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 534 s
+  2551 decisive games (1276 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900325, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 392 s
+  2559 decisive games (1280 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900326, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 347 s
+  2567 decisive games (1284 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900327, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 356 s
+  2575 decisive games (1288 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900328, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 376 s
+  2583 decisive games (1292 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900329, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 308 s
+  2591 decisive games (1296 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900330, 2 pair(s))
+  done   w2 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 320 s
+  2599 decisive games (1300 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900331, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 248 s
+  2607 decisive games (1304 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900332, 2 pair(s))
+  done   w6 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 260 s
+  2615 decisive games (1308 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900333, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 404 s
+  2623 decisive games (1312 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900334, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 248 s
+  2631 decisive games (1316 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900335, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 537 s
+  2639 decisive games (1320 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900336, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 205 s
+  2647 decisive games (1324 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900337, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 211 s
+  2655 decisive games (1328 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900338, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 376 s
+  2663 decisive games (1332 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900339, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 341 s
+  2671 decisive games (1336 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900340, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 294 s
+  2679 decisive games (1340 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900341, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 196 s
+  2687 decisive games (1344 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900342, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 572 s
+  2695 decisive games (1348 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900343, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 428 s
+  2703 decisive games (1352 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900344, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 479 s
+  2711 decisive games (1356 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900345, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 804 s
+  2719 decisive games (1360 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900346, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 211 s
+  2727 decisive games (1364 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900347, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 401 s
+  2735 decisive games (1368 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900348, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 331 s
+  2743 decisive games (1372 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900349, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 408 s
+  2751 decisive games (1376 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900350, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 229 s
+  2759 decisive games (1380 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900351, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 285 s
+  2767 decisive games (1384 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900352, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 343 s
+  2775 decisive games (1388 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900353, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 303 s
+  2783 decisive games (1392 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900354, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 248 s
+  2791 decisive games (1396 pairs): search-v3-declined-instant scores 50.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900355, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 420 s
+  2799 decisive games (1400 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900356, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 296 s
+  2807 decisive games (1404 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900357, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 177 s
+  2815 decisive games (1408 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900358, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 272 s
+  2823 decisive games (1412 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900359, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 465 s
+  2831 decisive games (1416 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900360, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 304 s
+  2839 decisive games (1420 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900361, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 193 s
+  2847 decisive games (1424 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900362, 2 pair(s))
+  done   w0 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 390 s
+  2855 decisive games (1428 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900363, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 313 s
+  2863 decisive games (1432 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900364, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 478 s
+  2871 decisive games (1436 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900365, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 286 s
+  2879 decisive games (1440 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900366, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 230 s
+  2887 decisive games (1444 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900367, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 306 s
+  2895 decisive games (1448 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900368, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 340 s
+  2903 decisive games (1452 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900369, 2 pair(s))
+  done   w0 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 429 s
+  2911 decisive games (1456 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900370, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 337 s
+  2919 decisive games (1460 pairs): search-v3-declined-instant scores 50.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900371, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 363 s
+  2927 decisive games (1464 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900372, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 297 s
+  2935 decisive games (1468 pairs): search-v3-declined-instant scores 50.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900373, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 474 s
+  2943 decisive games (1472 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900374, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 272 s
+  2951 decisive games (1476 pairs): search-v3-declined-instant scores 50.7%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900375, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 265 s
+  2959 decisive games (1480 pairs): search-v3-declined-instant scores 50.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900376, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 428 s
+  2967 decisive games (1484 pairs): search-v3-declined-instant scores 50.7%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900377, 2 pair(s))
+  done   w0 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 453 s
+  2975 decisive games (1488 pairs): search-v3-declined-instant scores 50.7%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900378, 2 pair(s))
+  done   w3 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 641 s
+  2983 decisive games (1492 pairs): search-v3-declined-instant scores 50.7%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900379, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 1096 s
+  2991 decisive games (1496 pairs): search-v3-declined-instant scores 50.7%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900380, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 255 s
+  2999 decisive games (1500 pairs): search-v3-declined-instant scores 50.7%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900381, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 238 s
+  3007 decisive games (1504 pairs): search-v3-declined-instant scores 50.7%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900382, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 312 s
+  3015 decisive games (1508 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900383, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 276 s
+  3023 decisive games (1512 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900384, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 489 s
+  3031 decisive games (1516 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900385, 2 pair(s))
+  done   w6 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 295 s
+  3039 decisive games (1520 pairs): search-v3-declined-instant scores 50.7%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900386, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 420 s
+  3047 decisive games (1524 pairs): search-v3-declined-instant scores 50.7%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900387, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 426 s
+  3055 decisive games (1528 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900388, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 329 s
+  3063 decisive games (1532 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900389, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 249 s
+  3071 decisive games (1536 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900390, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 381 s
+  3079 decisive games (1540 pairs): search-v3-declined-instant scores 50.8%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900391, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 253 s
+  3087 decisive games (1544 pairs): search-v3-declined-instant scores 50.8%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900392, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 216 s
+  3095 decisive games (1548 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900393, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 405 s
+  3103 decisive games (1552 pairs): search-v3-declined-instant scores 50.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900394, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 502 s
+  3111 decisive games (1556 pairs): search-v3-declined-instant scores 50.8%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900395, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 528 s
+  3119 decisive games (1560 pairs): search-v3-declined-instant scores 50.8%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900396, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 216 s
+  3127 decisive games (1564 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900397, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 436 s
+  3135 decisive games (1568 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900398, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 211 s
+  3143 decisive games (1572 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900399, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 301 s
+  3151 decisive games (1576 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900400, 2 pair(s))
+  done   w3 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 406 s
+  3159 decisive games (1580 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900401, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 290 s
+  3167 decisive games (1584 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900402, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 342 s
+  3175 decisive games (1588 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900403, 2 pair(s))
+  done   w5 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 334 s
+  3183 decisive games (1592 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900404, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 328 s
+  3191 decisive games (1596 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900405, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 344 s
+  3199 decisive games (1600 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900406, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 397 s
+  3207 decisive games (1604 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900407, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 285 s
+  3215 decisive games (1608 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900408, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 228 s
+  3223 decisive games (1612 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900409, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 325 s
+  3231 decisive games (1616 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900410, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 485 s
+  3239 decisive games (1620 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900411, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 229 s
+  3247 decisive games (1624 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900412, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 161 s
+  3255 decisive games (1628 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900413, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 275 s
+  3263 decisive games (1632 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900414, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 429 s
+  3271 decisive games (1636 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900415, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 447 s
+  3279 decisive games (1640 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900416, 2 pair(s))
+  done   w6 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 356 s
+  3287 decisive games (1644 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900417, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 359 s
+  3295 decisive games (1648 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900418, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 278 s
+  3303 decisive games (1652 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900419, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 405 s
+  3311 decisive games (1656 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900420, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 191 s
+  3319 decisive games (1660 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900421, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 459 s
+  3327 decisive games (1664 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900422, 2 pair(s))
+  done   w0 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 422 s
+  3335 decisive games (1668 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900423, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 290 s
+  3343 decisive games (1672 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900424, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 439 s
+  3351 decisive games (1676 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900425, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 358 s
+  3359 decisive games (1680 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900426, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 248 s
+  3367 decisive games (1684 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900427, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 475 s
+  3375 decisive games (1688 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900428, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 401 s
+  3383 decisive games (1692 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900429, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 431 s
+  3391 decisive games (1696 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900430, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 352 s
+  3399 decisive games (1700 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900431, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 489 s
+  3407 decisive games (1704 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900432, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 304 s
+  3415 decisive games (1708 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900433, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 217 s
+  3423 decisive games (1712 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900434, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 507 s
+  3431 decisive games (1716 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900435, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 348 s
+  3439 decisive games (1720 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900436, 2 pair(s))
+  done   w5 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 311 s
+  3447 decisive games (1724 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900437, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 410 s
+  3455 decisive games (1728 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900438, 2 pair(s))
+  done   w6 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 235 s
+  3463 decisive games (1732 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900439, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 285 s
+  3471 decisive games (1736 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900440, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 553 s
+  3479 decisive games (1740 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900441, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 210 s
+  3487 decisive games (1744 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900442, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 324 s
+  3495 decisive games (1748 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900443, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 306 s
+  3503 decisive games (1752 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900444, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 381 s
+  3511 decisive games (1756 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900445, 2 pair(s))
+  done   w0 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 250 s
+  3519 decisive games (1760 pairs): search-v3-declined-instant scores 50.8%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900446, 2 pair(s))
+  done   w1 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 575 s
+  3527 decisive games (1764 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900447, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 217 s
+  3535 decisive games (1768 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900448, 2 pair(s))
+  done   w2 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 421 s
+  3543 decisive games (1772 pairs): search-v3-declined-instant scores 50.8%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900449, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 309 s
+  3551 decisive games (1776 pairs): search-v3-declined-instant scores 50.8%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900450, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 547 s
+  3559 decisive games (1780 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900451, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 430 s
+  3567 decisive games (1784 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900452, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 306 s
+  3575 decisive games (1788 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900453, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 329 s
+  3583 decisive games (1792 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900454, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 453 s
+  3591 decisive games (1796 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900455, 2 pair(s))
+  done   w0 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 659 s
+  3599 decisive games (1800 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900456, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 357 s
+  3607 decisive games (1804 pairs): search-v3-declined-instant scores 50.9%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900457, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 526 s
+  3615 decisive games (1808 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900458, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 249 s
+  3623 decisive games (1812 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900459, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 349 s
+  3631 decisive games (1816 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900460, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 399 s
+  3639 decisive games (1820 pairs): search-v3-declined-instant scores 50.9%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900461, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 601 s
+  3647 decisive games (1824 pairs): search-v3-declined-instant scores 50.9%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900462, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 185 s
+  3655 decisive games (1828 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900463, 2 pair(s))
+  done   w0 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 370 s
+  3663 decisive games (1832 pairs): search-v3-declined-instant scores 50.9%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900464, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 264 s
+  3671 decisive games (1836 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900465, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 341 s
+  3679 decisive games (1840 pairs): search-v3-declined-instant scores 50.9%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900466, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 379 s
+  3687 decisive games (1844 pairs): search-v3-declined-instant scores 50.9%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900467, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 226 s
+  3695 decisive games (1848 pairs): search-v3-declined-instant scores 50.9%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900468, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 279 s
+  3703 decisive games (1852 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900469, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 277 s
+  3711 decisive games (1856 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900470, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 273 s
+  3719 decisive games (1860 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900471, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 319 s
+  3727 decisive games (1864 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900472, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 292 s
+  3735 decisive games (1868 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900473, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 307 s
+  3743 decisive games (1872 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900474, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 352 s
+  3751 decisive games (1876 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900475, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 484 s
+  3759 decisive games (1880 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900476, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 350 s
+  3767 decisive games (1884 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900477, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 734 s
+  3775 decisive games (1888 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900478, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 268 s
+  3783 decisive games (1892 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900479, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 235 s
+  3791 decisive games (1896 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900480, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 398 s
+  3799 decisive games (1900 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900481, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 356 s
+  3807 decisive games (1904 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900482, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 202 s
+  3815 decisive games (1908 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900483, 2 pair(s))
+  done   w5 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 420 s
+  3823 decisive games (1912 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900484, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 474 s
+  3831 decisive games (1916 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900485, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 348 s
+  3839 decisive games (1920 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900486, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 363 s
+  3847 decisive games (1924 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900487, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 340 s
+  3855 decisive games (1928 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900488, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 296 s
+  3863 decisive games (1932 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900489, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 424 s
+  3871 decisive games (1936 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900490, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 465 s
+  3879 decisive games (1940 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900491, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 607 s
+  3887 decisive games (1944 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900492, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 409 s
+  3895 decisive games (1948 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900493, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 421 s
+  3903 decisive games (1952 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900494, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 287 s
+  3911 decisive games (1956 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900495, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 343 s
+  3919 decisive games (1960 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900496, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 246 s
+  3927 decisive games (1964 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900497, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 441 s
+  3935 decisive games (1968 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900498, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 354 s
+  3943 decisive games (1972 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900499, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 508 s
+  3951 decisive games (1976 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900500, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 272 s
+  3959 decisive games (1980 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900501, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 323 s
+  3967 decisive games (1984 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900502, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 264 s
+  3975 decisive games (1988 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900503, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 239 s
+  3983 decisive games (1992 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900504, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 471 s
+  3991 decisive games (1996 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900505, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 409 s
+  3999 decisive games (2000 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900506, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 251 s
+  4007 decisive games (2004 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900507, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 321 s
+  4015 decisive games (2008 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900508, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 223 s
+  4023 decisive games (2012 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900509, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 437 s
+  4031 decisive games (2016 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900510, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 287 s
+  4039 decisive games (2020 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900511, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 368 s
+  4047 decisive games (2024 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900512, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 193 s
+  4055 decisive games (2028 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900513, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 306 s
+  4063 decisive games (2032 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900514, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 432 s
+  4071 decisive games (2036 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900515, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 218 s
+  4079 decisive games (2040 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900516, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 380 s
+  4087 decisive games (2044 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900517, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 408 s
+  4095 decisive games (2048 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900518, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 245 s
+  4103 decisive games (2052 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900519, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 289 s
+  4111 decisive games (2056 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900520, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 412 s
+  4119 decisive games (2060 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900521, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 239 s
+  4127 decisive games (2064 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900522, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 250 s
+  4135 decisive games (2068 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900523, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 375 s
+  4143 decisive games (2072 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900524, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 239 s
+  4151 decisive games (2076 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900525, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 309 s
+  4159 decisive games (2080 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900526, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 398 s
+  4167 decisive games (2084 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900527, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 267 s
+  4175 decisive games (2088 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900528, 2 pair(s))
+  done   w0 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 336 s
+  4183 decisive games (2092 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900529, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 262 s
+  4191 decisive games (2096 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900530, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 527 s
+  4199 decisive games (2100 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900531, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 294 s
+  4207 decisive games (2104 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900532, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 291 s
+  4215 decisive games (2108 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900533, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 367 s
+  4223 decisive games (2112 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900534, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 529 s
+  4231 decisive games (2116 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900535, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 315 s
+  4239 decisive games (2120 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900536, 2 pair(s))
+  done   w6 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 383 s
+  4247 decisive games (2124 pairs): search-v3-declined-instant scores 51.2%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900537, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 310 s
+  4255 decisive games (2128 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900538, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 475 s
+  4263 decisive games (2132 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900539, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 390 s
+  4271 decisive games (2136 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900540, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 455 s
+  4279 decisive games (2140 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900541, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 426 s
+  4287 decisive games (2144 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900542, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 472 s
+  4295 decisive games (2148 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900543, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 208 s
+  4303 decisive games (2152 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900544, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 380 s
+  4311 decisive games (2156 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900545, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 280 s
+  4319 decisive games (2160 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900546, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 264 s
+  4327 decisive games (2164 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900547, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 394 s
+  4335 decisive games (2168 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900548, 2 pair(s))
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 318 s
+  4343 decisive games (2172 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900549, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 299 s
+  4351 decisive games (2176 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900550, 2 pair(s))
+  done   w6 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 315 s
+  4359 decisive games (2180 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900551, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 385 s
+  4367 decisive games (2184 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900552, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 296 s
+  4375 decisive games (2188 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900553, 2 pair(s))
+  done   w1 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 398 s
+  4383 decisive games (2192 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900554, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 230 s
+  4391 decisive games (2196 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900555, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 308 s
+  4399 decisive games (2200 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900556, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 181 s
+  4407 decisive games (2204 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900557, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 380 s
+  4415 decisive games (2208 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900558, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 410 s
+  4423 decisive games (2212 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900559, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 280 s
+  4431 decisive games (2216 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900560, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 460 s
+  4439 decisive games (2220 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900561, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 305 s
+  4447 decisive games (2224 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900562, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 410 s
+  4455 decisive games (2228 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900563, 2 pair(s))
+  done   w3 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 430 s
+  4463 decisive games (2232 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900564, 2 pair(s))
+  done   w6 search-v3-declined-instant 2-6 search-v2-no-b (0 draws) in 285 s
+  4471 decisive games (2236 pairs): search-v3-declined-instant scores 51.0%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900565, 2 pair(s))
+  done   w5 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 319 s
+  4479 decisive games (2240 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900566, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 324 s
+  4487 decisive games (2244 pairs): search-v3-declined-instant scores 51.0%
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 346 s
+  4495 decisive games (2248 pairs): search-v3-declined-instant scores 51.0%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900567, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 440 s
+  4503 decisive games (2252 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900568, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 305 s
+  4511 decisive games (2256 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900569, 2 pair(s))
+  done   w0 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 424 s
+  4519 decisive games (2260 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900570, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 382 s
+  4527 decisive games (2264 pairs): search-v3-declined-instant scores 51.0%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900571, 2 pair(s))
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900572, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 439 s
+  4535 decisive games (2268 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900573, 2 pair(s))
+  done   w4 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 257 s
+  4543 decisive games (2272 pairs): search-v3-declined-instant scores 51.0%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900574, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 271 s
+  4551 decisive games (2276 pairs): search-v3-declined-instant scores 51.0%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900575, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 164 s
+  4559 decisive games (2280 pairs): search-v3-declined-instant scores 51.0%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900576, 2 pair(s))
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 362 s
+  4567 decisive games (2284 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900577, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 291 s
+  4575 decisive games (2288 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900578, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 197 s
+  4583 decisive games (2292 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900579, 2 pair(s))
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 285 s
+  4591 decisive games (2296 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900580, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 171 s
+  4599 decisive games (2300 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900581, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 280 s
+  4607 decisive games (2304 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900582, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 268 s
+  4615 decisive games (2308 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900583, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 361 s
+  4623 decisive games (2312 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900584, 2 pair(s))
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 675 s
+  4631 decisive games (2316 pairs): search-v3-declined-instant scores 51.0%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900585, 2 pair(s))
+  done   w0 search-v3-declined-instant 6-2 search-v2-no-b (0 draws) in 834 s
+  4639 decisive games (2320 pairs): search-v3-declined-instant scores 51.1%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900586, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 300 s
+  4647 decisive games (2324 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900587, 2 pair(s))
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 248 s
+  4655 decisive games (2328 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900588, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 278 s
+  4663 decisive games (2332 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900589, 2 pair(s))
+  done   w4 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 453 s
+  4671 decisive games (2336 pairs): search-v3-declined-instant scores 51.1%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900590, 2 pair(s))
+  done   w2 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 615 s
+  4679 decisive games (2340 pairs): search-v3-declined-instant scores 51.1%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900591, 2 pair(s))
+  done   w5 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 199 s
+  4687 decisive games (2344 pairs): search-v3-declined-instant scores 51.1%
+  start  w5 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900592, 2 pair(s))
+  done   w3 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 440 s
+  4695 decisive games (2348 pairs): search-v3-declined-instant scores 51.1%
+  start  w3 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900593, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 302 s
+  4703 decisive games (2352 pairs): search-v3-declined-instant scores 51.1%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900594, 2 pair(s))
+  done   w1 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 346 s
+  4711 decisive games (2356 pairs): search-v3-declined-instant scores 51.1%
+  start  w1 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900595, 2 pair(s))
+  done   w0 search-v3-declined-instant 7-1 search-v2-no-b (0 draws) in 523 s
+  4719 decisive games (2360 pairs): search-v3-declined-instant scores 51.2%
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900596, 2 pair(s))
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 399 s
+  4727 decisive games (2364 pairs): search-v3-declined-instant scores 51.2%
+  start  w4 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900597, 2 pair(s))
+  done   w2 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 323 s
+  4735 decisive games (2368 pairs): search-v3-declined-instant scores 51.2%
+  start  w2 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900598, 2 pair(s))
+  done   w6 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 256 s
+  4743 decisive games (2372 pairs): search-v3-declined-instant scores 51.2%
+  start  w6 search-v3-declined-instant vs search-v2-no-b (match:j216:20261113T035650-3946462, seed 622900599, 2 pair(s))
+  done   w5 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 349 s
+  4751 decisive games (2376 pairs): search-v3-declined-instant scores 51.2%
+  done   w1 search-v3-declined-instant 5-3 search-v2-no-b (0 draws) in 381 s
+  4759 decisive games (2380 pairs): search-v3-declined-instant scores 51.2%
+  done   w3 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 471 s
+  4767 decisive games (2384 pairs): search-v3-declined-instant scores 51.2%
+  done   w2 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 192 s
+  4775 decisive games (2388 pairs): search-v3-declined-instant scores 51.2%
+  done   w6 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 244 s
+  4783 decisive games (2392 pairs): search-v3-declined-instant scores 51.2%
+  done   w4 search-v3-declined-instant 4-4 search-v2-no-b (0 draws) in 353 s
+  4791 decisive games (2396 pairs): search-v3-declined-instant scores 51.2%
+  done   w0 search-v3-declined-instant 3-5 search-v2-no-b (0 draws) in 442 s
+  4799 decisive games (2400 pairs): search-v3-declined-instant scores 51.2%
+
+match finished: 4800 of 4800 games (1 draws, 1 engine errors, 0 timeouts), 2400 mirrored pairs
+search-v3-declined-instant scores 51.2% [95% 50.3%, 52.0%] = +8 Elo [+2, +14] against search-v2-no-b
+search-v3-declined-instant: 115231 decisions searched in 4798 games, 21091 changed Forge's answer (18.3%); budget fallbacks 726 = 0.6% [95% 0.5%, 0.8%]; other fallbacks {"unmappable":96}
+search-v3-declined-instant by kind: p 17624/90649, a 3467/24582
+search-v3-declined-instant time per decision: 925.172 ms (p+a+b); by kind p 947.226, a 843.844
+search-v3-declined-instant rollouts timed out inside one engine step: 71
+search-v2-no-b: 100534 decisions searched in 4798 games, 18264 changed Forge's answer (18.2%); budget fallbacks 556 = 0.6% [95% 0.4%, 0.7%]; other fallbacks {"unmappable":103}
+search-v2-no-b by kind: p 14755/76458, a 3509/24076
+search-v2-no-b time per decision: 904.042 ms (p+a+b); by kind p 921.033, a 850.084
+search-v2-no-b rollouts timed out inside one engine step: 59
+{"v":1,"at":"2026-11-13T12:26:50.697Z","id":"j216:20261113T035650-3946462","host":"j216","a":"search-v3-declined-instant","b":"search-v2-no-b","ah":"af6771947a25","bh":"59505e241363","set":"tools/ai-bench/pairs-dev.txt","target":4800,"planned":4800,"complete":true,"played":4800,"draws":1,"errors":1,"timeouts":0,"decisive":4799,"pairs":2400,"aWins":2456,"score":0.5119,"se":0.0043,"lo":0.5034,"hi":0.5203,"elo":8.3,"eloLo":2.4,"eloHi":14.1,"aSearch":{"games":4798,"searched":115231,"changed":21091,"fallback":{"budget":726,"unmappable":96},"budgetRate":0.0063,"budgetLo":0.005021,"budgetHi":0.00758,"byKind":{"p":{"searched":90649,"changed":17624,"rate":0.19442},"a":{"searched":24582,"changed":3467,"rate":0.141038}},"msMean":{"p":947.226,"a":843.844},"msPerDecision":925.172,"evalLeaves":0,"evalLeafUs":null,"stepTimeouts":71,"unavailable":0},"bSearch":{"games":4798,"searched":100534,"changed":18264,"fallback":{"unmappable":103,"budget":556},"budgetRate":0.00553,"budgetLo":0.004406,"budgetHi":0.006655,"byKind":{"p":{"searched":76458,"changed":14755,"rate":0.192982},"a":{"searched":24076,"changed":3509,"rate":0.145747}},"msMean":{"p":921.033,"a":850.084},"msPerDecision":904.042,"evalLeaves":0,"evalLeafUs":null,"stepTimeouts":59,"unavailable":0}}
