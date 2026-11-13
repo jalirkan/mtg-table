@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-12T19:39:29-05:00
+- time: 2026-11-12T19:44:08-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
-- running: J215 commands 1/2, 3936/4800 games, 594/h, ETA 2026-11-12T21:06:45-05:00, 7 worker(s), 7 core(s)
+- running: J215 commands 1/2, 3984/4800 games, 610.3/h, ETA 2026-11-12T21:04:22-05:00, 7 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 13.82; memory 15.6/30.5 GB, swap 5416 MB, pressure 0% (lab budget 23.4 GB)
+- load: 12.71; memory 15.9/30.5 GB, swap 5569 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J214 done at 2026-11-12T11:45:50-05:00: mde.played 1200 · mde.elo 5.8 · mde.eloLo -4.6 · mde.eloHi 16.2 · min.played 1200 · min.elo 10.4 · min.eloLo -0.7 · min.eloHi 21.5 · mla.played 1200 · mla.elo 1.2 · mla.eloLo -9.6 · mla.eloHi 11.9 · v.declined.shown 0 · v.declined.smallGain 0 · v.declined.inconclusive1200 1 · v.declined.notShown 0 · v.declined.notRead 0 · v.declined.notPlayed 0 · v.instant.shown 0 · v.instant.smallGain 0 · v.instant.inconclusive1200 1 · v.instant.notShown 0 · v.instant.notRead 0 · v.instant.notPlayed 0 · v.lands.shown 0 · v.lands.smallGain 0 · v.lands.inconclusive1200 0 · v.lands.notShown 1 · v.lands.notRead 0 · v.lands.notPlayed 0 · v.declined.windowsPerGame 3.025 · v.instant.windowsPerGame 1.839 · v.lands.windowsPerGame 3.498 · v.candidates 0 · v.notRead 0
