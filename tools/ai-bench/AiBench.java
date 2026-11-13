@@ -980,6 +980,16 @@ public final class AiBench {
 
     static int selftest(final String[] argv) throws Exception {
         final boolean engine = !Arrays.asList(argv).contains("--no-engine");
+        if (engine && Arrays.asList(argv).contains("--stack-windows")) {
+            // D544's phase 1, opt-in and alone: what stackwin needs of a copy on a non-empty stack. Not in the default
+            // run, because today's copier does not carry the stack and these checks say so by failing.
+            final Config cfg = Config.load();
+            Bootstrap.installGui(cfg.forgeHomeDir());           // hard rule 1
+            Bootstrap.initializeModel(false);
+            stackWindowScenarios();
+            System.out.println("ai-bench selftest (--stack-windows): " + checks + " check(s), " + failures + " failure(s)");
+            return failures == 0 ? 0 : 1;
+        }
         System.out.println("== ai-bench selftest: statistics");
         final double[] w1 = wilson(5, 10);
         check(Math.abs(w1[0] - 0.2366) < 1e-3 && Math.abs(w1[1] - 0.7634) < 1e-3, "wilson(5,10) = [0.2366, 0.7634]");
@@ -1758,6 +1768,523 @@ public final class AiBench {
                     check(c.getOrDefault("search.p.considered", 0) == 0 && c.getOrDefault("search.rollouts", 0) == 0,
                             "D540: with instant off the opponent's end step is never searched (pick " + pick + "; " + c + ")");
                 });
+    }
+
+    /**
+     * D544, phase 1 (opt-in: {@code --selftest --stack-windows}, alone; not in the default run): can the search
+     * run on a non-empty stack?  Each case builds a real stack window on the engine -- the items put there by
+     * Forge's own cast and activation paths ({@code ComputerUtil.handlePlayingSpellAbility}, costs paid), or by
+     * {@code GameState}'s {@code putonstack} for a free spell -- and then checks what {@code stackwin} would need:
+     * (1) a bare {@link LenientGameCopier} copy carries the stack item by item (kind, source, controller, targets,
+     * order); (2) one rollout of "pass" and one of a response (the seat's spell aimed at what is on the stack, or
+     * at its own threatened creature) each run to the horizon without an engine error and end with the watched
+     * cards where the rules put them; (3) the live game is the same before and after (zones, stack, targets,
+     * priority, life, mana).  The cases: (a) the opponent's creature spell, the seat holding Counterspell; (b) the
+     * opponent's Lightning Bolt on the seat's creature, the seat holding Ephemerate (a confirm-set card); (c) the
+     * opponent's activated ability (Fanatical Firebrand's ping) and triggered ability (Flametongue Kavu's), the seat
+     * holding Ephemerate; (d) the seat's own creature spell with the opponent's Counterspell on top, the seat holding
+     * a second Counterspell.  Every check prints what it saw, so a failure describes the copy, never a guess.
+     */
+    static void stackWindowScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: the search on a non-empty stack (D544 phase 1, engine, opt-in)");
+
+        // (a) the opponent's creature spell; the seat holds Counterspell with two Islands
+        scenario("d544-a-creature-spell", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanhand=Grizzly Bears", "humanbattlefield=Forest;Forest",
+                "humanlibrary=Forest;Forest;Forest;Forest", "aihand=Counterspell", "aibattlefield=Island;Island",
+                "ailibrary=Island;Island;Island;Island"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);   // a live window is in play: triggers fire only then (Trigger.requirementsCheck)
+            final Player opp = ai.getWeakestOpponent();
+            final boolean cast = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Grizzly Bears"), sa -> true), null);
+            check(cast && g.getStack().size() == 1, "d544 (a): the board: the opponent's Grizzly Bears is on the stack, paid ("
+                    + stackOf(g) + ")");
+            if (!cast) {
+                return;
+            }
+            final forge.game.spellability.SpellAbility cs = playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Counterspell"), sa -> true);
+            cs.resetTargets();
+            cs.getTargets().add(g.getStack().peekAbility());
+            stackCase("d544 (a)", ai, cs, new String[][] {
+                    {"Grizzly Bears", opp.getName(), "Battlefield", "Graveyard"},
+                    {"Counterspell", ai.getName(), "Hand", "Graveyard"}});
+        });
+
+        // (b) the opponent's Lightning Bolt on the seat's Grizzly Bears; the seat holds Ephemerate with a Plains
+        scenario("d544-b-removal", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanhand=Lightning Bolt", "humanbattlefield=Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aihand=Ephemerate",
+                "aibattlefield=Grizzly Bears;Plains", "ailibrary=Plains;Plains;Plains;Plains"), PolicyLobbyPlayerAi.Outlets.OFF,
+                (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);   // a live window is in play: triggers fire only then (Trigger.requirementsCheck)
+            final Player opp = ai.getWeakestOpponent();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final boolean cast = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Lightning Bolt"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(bears);
+                    });
+            check(cast && g.getStack().size() == 1, "d544 (b): the board: the opponent's Lightning Bolt on the seat's Bears is on the stack ("
+                    + stackOf(g) + ")");
+            if (!cast) {
+                return;
+            }
+            final forge.game.spellability.SpellAbility eph = playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Ephemerate"), sa -> true);
+            eph.resetTargets();
+            eph.getTargets().add(bears);
+            stackCase("d544 (b)", ai, eph, new String[][] {
+                    {"Grizzly Bears", ai.getName(), "Graveyard", "Battlefield"},
+                    {"Lightning Bolt", opp.getName(), "Graveyard", "Graveyard"}});
+        });
+
+        // (c1) the opponent's activated ability: Fanatical Firebrand ({T}, sacrifice: 1 damage) on the seat's Llanowar Elves
+        scenario("d544-c1-activated", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanbattlefield=Fanatical Firebrand;Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aihand=Ephemerate",
+                "aibattlefield=Llanowar Elves;Plains", "ailibrary=Plains;Plains;Plains;Plains"), PolicyLobbyPlayerAi.Outlets.OFF,
+                (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);   // a live window is in play: triggers fire only then (Trigger.requirementsCheck)
+            final Player opp = ai.getWeakestOpponent();
+            final Card elves = named(ai.getCardsIn(ZoneType.Battlefield), "Llanowar Elves");
+            final Card firebrand = named(opp.getCardsIn(ZoneType.Battlefield), "Fanatical Firebrand");
+            forge.game.spellability.SpellAbility ping = null;
+            for (final forge.game.spellability.SpellAbility sa : firebrand.getSpellAbilities()) {
+                ping = ping == null && sa.isActivatedAbility() && !sa.isManaAbility() ? sa : ping;
+            }
+            final boolean act = ping != null && forge.ai.ComputerUtil.handlePlayingSpellAbility(opp, withActivator(ping, opp), sa -> {
+                sa.resetTargets();
+                sa.getTargets().add(elves);
+            });
+            check(act && g.getStack().size() == 1 && !g.getStack().peek().isSpell(),
+                    "d544 (c1): the board: Fanatical Firebrand's ability on the seat's Elves is on the stack, the Firebrand sacrificed ("
+                            + stackOf(g) + "; Firebrand in " + zoneIn(g, opp.getName(), "Fanatical Firebrand") + ")");
+            if (!act) {
+                return;
+            }
+            final forge.game.spellability.SpellAbility eph = playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Ephemerate"), sa -> true);
+            eph.resetTargets();
+            eph.getTargets().add(elves);
+            stackCase("d544 (c1)", ai, eph, new String[][] {
+                    {"Llanowar Elves", ai.getName(), "Graveyard", "Battlefield"},
+                    {"Fanatical Firebrand", opp.getName(), "Graveyard", "Graveyard"}});
+        });
+
+        // (c2) the opponent's triggered ability: Flametongue Kavu's enters trigger on the seat's Grizzly Bears
+        scenario("d544-c2-trigger", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanhand=Flametongue Kavu", "humanbattlefield=Mountain;Mountain;Mountain;Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aihand=Ephemerate",
+                "aibattlefield=Grizzly Bears;Plains", "ailibrary=Plains;Plains;Plains;Plains"), PolicyLobbyPlayerAi.Outlets.OFF,
+                (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);   // a live window is in play: triggers fire only then (Trigger.requirementsCheck)
+            final Player opp = ai.getWeakestOpponent();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final boolean cast = forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Flametongue Kavu"), sa -> true), null);
+            final StringBuilder how = new StringBuilder();
+            if (cast) {
+                g.getStack().resolveStack();                       // the Kavu enters; its trigger waits
+                how.append("age ").append(g.getAge()).append(", after resolving: stack ").append(stackOf(g)).append(", Kavu in ")
+                        .append(zoneIn(g, opp.getName(), "Flametongue Kavu")).append(", waiting ")
+                        .append(g.getStack().hasSimultaneousStackEntries());
+                g.getTriggerHandler().runWaitingTriggers();
+                how.append(", after runWaitingTriggers waiting ").append(g.getStack().hasSimultaneousStackEntries());
+                g.getStack().addAllTriggeredAbilitiesToStack();    // the opponent's AI puts it on the stack and aims it
+            }
+            final boolean ok = cast && g.getStack().size() == 1 && g.getStack().peek().isTrigger();
+            check(ok, "d544 (c2): the board: Flametongue Kavu's enters trigger is on the stack (" + stackOf(g) + "; " + how
+                    + "; Bears in " + zoneIn(g, ai.getName(), "Grizzly Bears") + ")");
+            if (!ok) {
+                return;
+            }
+            final forge.game.spellability.SpellAbility eph = playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Ephemerate"), sa -> true);
+            eph.resetTargets();
+            eph.getTargets().add(bears);
+            final boolean onBears = stackOf(g).toString().contains("Grizzly Bears#" + bears.getId());
+            stackCase("d544 (c2)", ai, eph, new String[][] {
+                    {"Grizzly Bears", ai.getName(), onBears ? "Graveyard" : "Battlefield", "Battlefield"},
+                    {"Flametongue Kavu", opp.getName(), "Battlefield", "Battlefield"}});
+        });
+
+        // (d) the seat's own Grizzly Bears on the stack (free), the opponent's Counterspell on top; the seat holds a second
+        scenario("d544-d-own-spell", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai",
+                "activephase=MAIN1", "humanhand=Counterspell", "humanbattlefield=Island;Island",
+                "humanlibrary=Island;Island;Island;Island", "aihand=Counterspell", "aibattlefield=Island;Island",
+                "ailibrary=Island;Island;Island;Island", "aiputonstack=Grizzly Bears"), PolicyLobbyPlayerAi.Outlets.OFF,
+                (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);   // a live window is in play: triggers fire only then (Trigger.requirementsCheck)
+            final Player opp = ai.getWeakestOpponent();
+            final boolean bearsUp = g.getStack().size() == 1 && g.getStack().peek().isSpell();
+            final boolean cast = bearsUp && forge.ai.ComputerUtil.handlePlayingSpellAbility(opp,
+                    playOf(opp, named(opp.getCardsIn(ZoneType.Hand), "Counterspell"), sa -> true), sa -> {
+                        sa.resetTargets();
+                        sa.getTargets().add(g.getStack().peekAbility());
+                    });
+            check(cast && g.getStack().size() == 2, "d544 (d): the board: the seat's Bears, the opponent's Counterspell on it on top ("
+                    + stackOf(g) + ")");
+            if (!cast) {
+                return;
+            }
+            final forge.game.spellability.SpellAbility cs = playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Counterspell"), sa -> true);
+            cs.resetTargets();
+            cs.getTargets().add(g.getStack().peekAbility());
+            stackCase("d544 (d)", ai, cs, new String[][] {
+                    {"Grizzly Bears", ai.getName(), "Graveyard", "Battlefield"},
+                    {"Counterspell", opp.getName(), "Graveyard", "Graveyard"}});
+        });
+    }
+
+    /** D544: {@code sa} with its activating player set (Forge's own cast path expects it). */
+    private static forge.game.spellability.SpellAbility withActivator(final forge.game.spellability.SpellAbility sa, final Player p) {
+        sa.setActivatingPlayer(p);
+        return sa;
+    }
+
+    /**
+     * D544: one stack window's three checks (the class comment of {@link #stackWindowScenarios}).  {@code watch} rows are
+     * {card name, owner's name, its zone at the leaf after "pass", its zone after the response}.
+     */
+    private static void stackCase(final String label, final Player ai, final forge.game.spellability.SpellAbility response,
+                                  final String[][] watch) {
+        final Game g = ai.getGame();
+        final String before = fingerprint(g);
+        final List<String> live = stackOf(g);
+        String copied;
+        String copiedZone;
+        try {
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final Game copy = cp.makeCopy(null, ai);
+            copied = stackOf(copy).toString();
+            copiedZone = names(copy.getCardsIn(ZoneType.Stack)).toString();
+        } catch (final RuntimeException e) {
+            copied = "threw " + e;
+            copiedZone = "?";
+        }
+        check(copied.equals(live.toString()), label + ": a copy carries the stack item by item (live " + live + "; copy "
+                + copied + ", its Stack zone " + copiedZone + ")");
+        for (final forge.game.spellability.SpellAbility sa : Arrays.asList(null, response)) {
+            final String what = sa == null ? "pass" : "cast " + sa.getHostCard().getName() + " -> " + targetsOf(sa);
+            final String[] seen = new String[2];
+            mtgtable.ai.SearchPolicy.probeForTest((copy, aiC) -> {
+                final forge.game.phase.PhaseHandler ph = copy.getPhaseHandler();
+                seen[0] = "stack " + stackOf(copy) + ", Stack zone " + names(copy.getCardsIn(ZoneType.Stack)) + ", priority "
+                        + (ph.getPriorityPlayer() == null ? "nobody" : ph.getPriorityPlayer().getName());
+            });
+            mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                final forge.game.phase.PhaseHandler ph = copy.getPhaseHandler();
+                final StringBuilder sb = new StringBuilder("turn " + ph.getTurn() + " "
+                        + (ph.getPhase() == null ? "no phase" : ph.getPhase().name()));
+                for (final String[] w : watch) {
+                    sb.append("; ").append(w[0]).append(" (").append(w[1]).append(") in ").append(zoneIn(copy, w[1], w[0]));
+                }
+                seen[1] = sb.append("; stack ").append(stackOf(copy)).toString();
+            });
+            final CountSink sink = new CountSink();
+            String err = null;
+            Object res = null;
+            try {
+                res = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(sa), 7,
+                        new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+            } catch (final RuntimeException e) {
+                err = e.getClass().getSimpleName() + (e.getCause() == null ? ": " + e.getMessage() : " <- " + e.getCause());
+            } finally {
+                mtgtable.ai.SearchPolicy.probeForTest(null);
+                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+            }
+            boolean where = seen[1] != null;
+            for (final String[] w : watch) {
+                where &= seen[1] != null && seen[1].contains(w[0] + " (" + w[1] + ") in " + (sa == null ? w[2] : w[3]));
+            }
+            final StringBuilder want = new StringBuilder();
+            for (final String[] w : watch) {
+                want.append(want.length() == 0 ? "" : ", ").append(w[0]).append(" in ").append(sa == null ? w[2] : w[3]);
+            }
+            check(err == null && res != null && where, label + ": " + what + " rolls out to the horizon with " + want
+                    + " (after the install: " + seen[0] + "; at the leaf: " + seen[1] + (err == null ? "" : "; threw " + err)
+                    + (res == null && err == null ? "; no leaf" : "") + "; " + sink.counts + ")");
+        }
+        // The same two rollouts with the test-side prototype carry (carryStackPrototype) run in the probe, after the
+        // install: what a copier that carries the stack would give.  A counter candidate still cannot be installed
+        // (its target is a stack object, which the copier's find() cannot map), so it fails here as above.
+        boolean atStack = false;
+        for (final forge.game.GameObject o : response.getTargets()) {
+            atStack |= o instanceof forge.game.spellability.SpellAbility;
+        }
+        for (final forge.game.spellability.SpellAbility sa : Arrays.asList(null, response)) {
+            // a response aimed at a stack object cannot be installed (find() has no map for it): the probe casts it on
+            // the copy after the carry, aimed at the carried item, and the forced answer that follows is "pass"
+            final boolean castInProbe = sa != null && atStack;
+            final String what = sa == null ? "pass" : "cast " + sa.getHostCard().getName() + " -> " + targetsOf(sa)
+                    + (castInProbe ? " (cast in the probe, then pass)" : "");
+            final String[] seen = new String[2];
+            mtgtable.ai.SearchPolicy.probeForTest((copy, aiC) -> {
+                final Map<forge.game.spellability.SpellAbility, forge.game.spellability.SpellAbility> done =
+                        new java.util.IdentityHashMap<>();
+                final List<String> lost = carryStackPrototype(g, copy, done);
+                final forge.game.phase.PhaseHandler ph = copy.getPhaseHandler();
+                String cast = "";
+                if (castInProbe) {
+                    final Card h = copy.findById(sa.getHostCard().getId());
+                    forge.game.spellability.SpellAbility m = null;
+                    for (final forge.game.spellability.SpellAbility c : h == null ? List.<forge.game.spellability.SpellAbility>of()
+                            : new ArrayList<>(h.getSpellAbilities())) {
+                        m = m == null && c.isSpell() && c.getDescription().equals(sa.getDescription()) ? c : m;
+                    }
+                    if (m != null) {
+                        m.setActivatingPlayer(aiC);
+                        final forge.game.spellability.SpellAbility fm = m;
+                        final boolean ok = forge.ai.ComputerUtil.handlePlayingSpellAbility(aiC, fm, x -> {
+                            x.resetTargets();
+                            for (final forge.game.GameObject o : sa.getTargets()) {
+                                final forge.game.GameObject t = o instanceof forge.game.spellability.SpellAbility ? done.get(o)
+                                        : o instanceof Card ? copy.findById(((Card) o).getId()) : null;
+                                if (t != null) {
+                                    x.getTargets().add(t);
+                                }
+                            }
+                        });
+                        cast = ok ? ", cast on the copy" : ", the cast on the copy FAILED";
+                    } else {
+                        cast = ", no such spell on the copy";
+                    }
+                }
+                ph.setPriority(aiC);       // the carry's pushes gave priority to each item's controller; the install's again
+                ph.onStackResolved();
+                final StringBuilder casts = new StringBuilder();
+                for (final Player p : copy.getPlayers()) {
+                    casts.append(casts.length() == 0 ? "" : ", ").append(p.getName()).append(' ').append(p.getSpellsCastThisTurn())
+                            .append(" (live ").append(g.getPlayer(p.getId()).getSpellsCastThisTurn()).append(')');
+                }
+                seen[0] = "carried stack " + stackOf(copy) + (lost.isEmpty() ? "" : ", NOT carried " + lost) + cast
+                        + ", spells cast this turn " + casts;
+            });
+            mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                final forge.game.phase.PhaseHandler ph = copy.getPhaseHandler();
+                final StringBuilder sb = new StringBuilder("turn " + ph.getTurn() + " "
+                        + (ph.getPhase() == null ? "no phase" : ph.getPhase().name()));
+                for (final String[] w : watch) {
+                    sb.append("; ").append(w[0]).append(" (").append(w[1]).append(") in ").append(zoneIn(copy, w[1], w[0]));
+                }
+                seen[1] = sb.append("; stack ").append(stackOf(copy)).toString();
+            });
+            final CountSink sink = new CountSink();
+            String err = null;
+            Object res = null;
+            try {
+                res = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(castInProbe ? null : sa), 7,
+                        new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+            } catch (final RuntimeException e) {
+                err = e.getClass().getSimpleName() + (e.getCause() == null ? ": " + e.getMessage() : " <- " + e.getCause());
+            } finally {
+                mtgtable.ai.SearchPolicy.probeForTest(null);
+                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+            }
+            boolean where = seen[1] != null;
+            final StringBuilder want = new StringBuilder();
+            for (final String[] w : watch) {
+                where &= seen[1] != null && seen[1].contains(w[0] + " (" + w[1] + ") in " + (sa == null ? w[2] : w[3]));
+                want.append(want.length() == 0 ? "" : ", ").append(w[0]).append(" in ").append(sa == null ? w[2] : w[3]);
+            }
+            check(err == null && res != null && where, label + " [prototype carry]: " + what + " rolls out to the horizon with "
+                    + want + " (after the install and the carry: " + seen[0] + "; at the leaf: " + seen[1]
+                    + (err == null ? "" : "; threw " + err) + (res == null && err == null ? "; no leaf" : "") + "; " + sink.counts + ")");
+        }
+        final String after = fingerprint(g);
+        check(after.equals(before), label + ": the live game is untouched (" + (after.equals(before) ? before
+                : "before " + before + " | after " + after) + ")");
+    }
+
+    /**
+     * D544 phase 1, a PROTOTYPE kept in the test (never called by the search): the live stack rebuilt on a copy,
+     * bottom first, so the self-test can show what a copier that carries the stack would give and how much code that
+     * takes.  Each item's source is the copy's card with the same id (the copier keeps ids); a spell or activated
+     * ability is the copy's ability with the same description, a trigger a fresh {@code WrappedAbility} around the
+     * copy's trigger with its triggering objects' cards mapped by id; targets are mapped by id (a card, a player) or
+     * to the copy's item already rebuilt (a spell or ability on the stack); X is carried.  Each is pushed by
+     * {@code MagicStack.add} with the cast and target triggers held (they fired in the live game already).  NOT
+     * carried, and named in the returned list when it matters: paid lists, optional costs, modes, a spell's cast
+     * zone, mana spent, a trigger's remembered objects -- the full fix's work.  {@code MagicStack.add} also counts a
+     * spell cast again ({@code addSpellCastThisTurn}), which the probe reports.
+     */
+    static List<String> carryStackPrototype(final Game live, final Game copy,
+            final Map<forge.game.spellability.SpellAbility, forge.game.spellability.SpellAbility> done) {
+        final List<String> lost = new ArrayList<>();
+        final List<forge.game.spellability.SpellAbilityStackInstance> items = new ArrayList<>();
+        for (final forge.game.spellability.SpellAbilityStackInstance si : live.getStack()) {
+            items.add(0, si);   // bottom first
+        }
+        final forge.game.trigger.TriggerType[] held = {forge.game.trigger.TriggerType.SpellCast,
+                forge.game.trigger.TriggerType.SpellAbilityCast, forge.game.trigger.TriggerType.AbilityCast,
+                forge.game.trigger.TriggerType.SpellCastOrCopy, forge.game.trigger.TriggerType.BecomesTarget,
+                forge.game.trigger.TriggerType.BecomesTargetOnce};
+        for (final forge.game.trigger.TriggerType t : held) {
+            copy.getTriggerHandler().suppressMode(t);
+        }
+        try {
+            for (final forge.game.spellability.SpellAbilityStackInstance si : items) {
+                final forge.game.spellability.SpellAbility sa = si.getSpellAbility();
+                final Card host = copy.findById(si.getSourceCard().getId());
+                final Player act = copy.getPlayer(si.getActivatingPlayer().getId());
+                forge.game.spellability.SpellAbility n = null;
+                if (host == null) {
+                    lost.add("no source " + si.getSourceCard().getName());
+                    continue;
+                }
+                if (si.isTrigger() && sa instanceof forge.game.trigger.WrappedAbility) {
+                    final forge.game.trigger.WrappedAbility w = (forge.game.trigger.WrappedAbility) sa;
+                    final forge.game.trigger.Trigger t = w.getTrigger();
+                    forge.game.trigger.Trigger tc = null;
+                    final List<forge.game.trigger.Trigger> liveTs = new ArrayList<>(si.getSourceCard().getTriggers());
+                    final List<forge.game.trigger.Trigger> copyTs = new ArrayList<>(host.getTriggers());
+                    final int at = liveTs.indexOf(t);
+                    if (at >= 0 && at < copyTs.size()) {
+                        tc = copyTs.get(at);
+                    }
+                    for (final forge.game.trigger.Trigger x : copyTs) {
+                        tc = tc == null && String.valueOf(x).equals(String.valueOf(t)) ? x : tc;
+                    }
+                    if (tc == null) {
+                        lost.add("trigger " + host.getName());
+                        continue;
+                    }
+                    final forge.game.spellability.SpellAbility inner = tc.ensureAbility().copy(host, act, false);
+                    inner.setTrigger(tc);
+                    final Map<forge.game.ability.AbilityKey, Object> objs = new HashMap<>();
+                    for (final Map.Entry<forge.game.ability.AbilityKey, Object> e : w.getWrappedAbility().getTriggeringObjects().entrySet()) {
+                        final Object v = e.getValue();
+                        if (v instanceof Card) {
+                            final Card m = copy.findById(((Card) v).getId());
+                            if (m != null) {
+                                objs.put(e.getKey(), m);
+                            } else {
+                                lost.add("triggering " + e.getKey());
+                            }
+                        } else if (v instanceof Player) {
+                            objs.put(e.getKey(), copy.getPlayer(((Player) v).getId()));
+                        } else if (v instanceof Number || v instanceof String || v instanceof Boolean) {
+                            objs.put(e.getKey(), v);
+                        } else if (v != null) {
+                            lost.add("triggering " + e.getKey() + " (" + v.getClass().getSimpleName() + ")");
+                        }
+                    }
+                    inner.setTriggeringObjects(objs);
+                    n = new forge.game.trigger.WrappedAbility(tc, inner, w.getDecider() == null ? null
+                            : copy.getPlayer(w.getDecider().getId()));
+                } else {
+                    for (final forge.game.spellability.SpellAbility c : host.getAllSpellAbilities()) {
+                        if (n == null && c.isSpell() == sa.isSpell() && c.getDescription().equals(sa.getDescription())) {
+                            n = c;
+                        }
+                    }
+                    if (n == null) {
+                        lost.add("no ability " + sa.getDescription() + " on " + host.getName());
+                        continue;
+                    }
+                }
+                n.setActivatingPlayer(act);
+                n.setXManaCostPaid(sa.getXManaCostPaid());
+                for (forge.game.spellability.SpellAbility from = sa, to = n; from != null && to != null;
+                     from = from.getSubAbility(), to = to.getSubAbility()) {
+                    if (!from.usesTargeting()) {
+                        continue;
+                    }
+                    to.resetTargets();
+                    for (final forge.game.GameObject o : from.getTargets()) {
+                        final forge.game.GameObject m = o instanceof Card ? copy.findById(((Card) o).getId())
+                                : o instanceof Player ? copy.getPlayer(((Player) o).getId())
+                                : o instanceof forge.game.spellability.SpellAbility ? done.get(o) : null;
+                        if (m == null) {
+                            lost.add("target " + o);
+                        } else {
+                            to.getTargets().add(m);
+                        }
+                    }
+                }
+                copy.getStack().add(n);
+                done.put(sa, copy.getStack().peekAbility());
+            }
+        } finally {
+            for (final forge.game.trigger.TriggerType t : held) {
+                copy.getTriggerHandler().clearSuppression(t);
+            }
+        }
+        return lost;
+    }
+
+    /** D544: the stack, top first: kind, source name#id, controller, targets, and X when paid. */
+    static List<String> stackOf(final Game g) {
+        final List<String> out = new ArrayList<>();
+        for (final forge.game.spellability.SpellAbilityStackInstance si : g.getStack()) {
+            final forge.game.spellability.SpellAbility sa = si.getSpellAbility();
+            final Card src = si.getSourceCard();
+            out.add((si.isSpell() ? "spell " : si.isTrigger() ? "trigger " : "ability ") + (src == null ? "?" : src.getName()
+                    + "#" + src.getId()) + " by " + (si.getActivatingPlayer() == null ? "?" : si.getActivatingPlayer().getName())
+                    + " -> " + targetsOf(sa) + (sa.getXManaCostPaid() == null ? "" : " X=" + sa.getXManaCostPaid()));
+        }
+        return out;
+    }
+
+    /** D544: every target of {@code sa}'s chain: a card as name#id, a player by name, a spell or ability as its source's. */
+    static List<String> targetsOf(final forge.game.spellability.SpellAbility sa) {
+        final List<String> out = new ArrayList<>();
+        for (forge.game.spellability.SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+            if (!s.usesTargeting()) {
+                continue;
+            }
+            for (final forge.game.GameObject o : s.getTargets()) {
+                if (o instanceof Card) {
+                    out.add(((Card) o).getName() + "#" + ((Card) o).getId());
+                } else if (o instanceof Player) {
+                    out.add(((Player) o).getName());
+                } else if (o instanceof forge.game.spellability.SpellAbility) {
+                    final Card h = ((forge.game.spellability.SpellAbility) o).getHostCard();
+                    out.add("stack:" + (h == null ? "?" : h.getName() + "#" + h.getId()));
+                } else {
+                    out.add(String.valueOf(o));
+                }
+            }
+        }
+        return out;
+    }
+
+    /** D544: the zone of {@code owner}'s card named {@code name} in {@code g} ("none" when it is in none of them). */
+    static String zoneIn(final Game g, final String owner, final String name) {
+        for (final ZoneType z : List.of(ZoneType.Stack, ZoneType.Battlefield, ZoneType.Graveyard, ZoneType.Exile,
+                ZoneType.Hand, ZoneType.Library)) {
+            for (final Card c : g.getCardsIn(z)) {
+                if (name.equals(c.getName()) && c.getOwner() != null && owner.equals(c.getOwner().getName())) {
+                    return z.name();
+                }
+            }
+        }
+        return "none";
+    }
+
+    /** D544: the live game's state as one string: turn, step, priority, each player's life, mana and zones, the stack. */
+    static String fingerprint(final Game g) {
+        final forge.game.phase.PhaseHandler ph = g.getPhaseHandler();
+        final StringBuilder sb = new StringBuilder("turn " + ph.getTurn() + " " + ph.getPhase() + " active "
+                + (ph.getPlayerTurn() == null ? "?" : ph.getPlayerTurn().getName()) + " priority "
+                + (ph.getPriorityPlayer() == null ? "?" : ph.getPriorityPlayer().getName()));
+        for (final Player p : g.getPlayers()) {
+            sb.append(" | ").append(p.getName()).append(" life ").append(p.getLife()).append(" mana ")
+                    .append(p.getManaPool().totalMana());
+            for (final ZoneType z : List.of(ZoneType.Hand, ZoneType.Library, ZoneType.Graveyard, ZoneType.Battlefield,
+                    ZoneType.Exile)) {
+                sb.append(' ').append(z).append('[');
+                for (final Card c : p.getCardsIn(z)) {
+                    sb.append(c.getId()).append(c.isTapped() ? "t" : "").append(c.getDamage() > 0 ? "d" + c.getDamage() : "")
+                            .append(',');
+                }
+                sb.append(']');
+            }
+        }
+        sb.append(" | Stack zone ").append(names(g.getCardsIn(ZoneType.Stack))).append(" stack ").append(stackOf(g));
+        return sb.toString();
     }
 
     /** D540: the zone of the seat's first card named {@code name}, by any zone it can be in here ("none" if it has none). */
