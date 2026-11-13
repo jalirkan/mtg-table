@@ -11681,8 +11681,11 @@ Its follow-up is the cube lab's 59 ([the list](#fu-cube-lab)), closed by D546.
 <a id="d546-live-seat-declined-instant"></a>
 ## The live seat considers what Forge declines and plays at instant speed: search-v4 (2026-11-13, D546)
 
-**Status: built, tested and played by hand on the lane (D546's *Verification*); the full gate and the merge
-pending.** Branch `pc/live-seat-declined-instant` off main `97122947c` (D543's merge, J216's pin).
+**Status: built and tested on the lane, and its seat played (D546's *Verification*: the decision self-test 482
+checks and 0 failures, seat-identity all four golden games, the ladder's listing identical to main's, a three-game
+`MtgTable --ai-policy search` session whose start line and headers say search-v4 with both keys, 49 searched
+decisions with 2 at instant speed and the longest 1,931 ms, and three `RecordMatch` games with 3 instant and 4
+declined windows); the full gate and the merge pending.** Branch `pc/live-seat-declined-instant` off main `97122947c` (D543's merge, J216's pin).
 `docs/decisions/D546-live-seat-declined-instant.md` is the decision.
 
 - **The evidence**: J215 (D541) on the confirm set and J216 (D543) on the dev set, `search-v3-declined-instant`

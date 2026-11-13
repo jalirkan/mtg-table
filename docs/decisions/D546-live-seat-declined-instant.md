@@ -177,9 +177,50 @@ its own, and no reading pools the two.
 - D544's and D545's lanes (unmerged) were built on `search-v3-declined-instant` as D543 point 6 asked; nothing here
   changes what they measure against.
 
-**Verification.**
+**Verification (the lane, 2026-11-13, on `ba5f1c04f` once the D544 exposure run had ended with `rc 0` and the lab
+printed `idle [] []`; one JVM at a time, beside another lane's pilot).**
 
-*(Filled in after the runs.)*
+- **The engine and the build**: `./tools/check-forge.sh`, the pinned jar `3c0a7c38…8e5dd9`. `./bridge/build.sh` in
+  the lane's worktree, which had no `bridge/out`, `build OK`: the lint's self-test (33 rules, 79 firing cases) and
+  the lint (97 files under `bridge/src`, 4 under `tools/`), javac, every self-test; **the decision self-test 482
+  checks, 0 failures** (472 on main; the ten are `liveSeatDeclinedInstant`'s, and D539's and D540's live-seat checks
+  pass as rewritten), `TableSelfTest` 114 and 0, `StalledGameSelfTest` 156 and 0, the eval self-test 8,039 checks,
+  the grade self-test 132 and 0, the distill self-test 38 and 0. `git diff 97122947c --
+  bridge/src/mtgtable/ai/SearchConfig.java` changes the two constants and javadoc and nothing else.
+- **Gate step 12m**: `cubelab.sh seat-identity`, the forge, search, explore and plain seats, "all 4 games are the
+  golden's" (the search seat's 92 lines, digest `c68c2a849b7b0d54`, the golden's): no decision record of an atlas
+  seat moved.
+- **The ladder**: `./tools/ai-ladder.sh list` on the lane and on main (`97122947c`), 56 lines each, **identical**:
+  `search-v3-declined-instant` `af6771947a25` (`…,what=pa,seed=0,anytime=1,declined=1,instant=1`) and
+  `search-v2-no-b` `59505e241363` among them; only the notes changed.
+- **The tests the change touches**: `web/test/ai-ladder.test.ts` 57 pass (56 on main, plus the D546 case),
+  `cubelab-watch.test.ts` 13 and `claude-md.test.ts` 5, 0 failures; the watch runner's self-test 159 checks, 0
+  failures (157 before, plus `search-v4` and `search-v5`); the match launcher's 238 checks; `test_human.py` 15
+  tests OK (ws-6, `search-v4`, inside the M62 test); `node tools/decisions.mjs check` OK, 458 decisions;
+  `tools/public-check.sh` OK; `npm --prefix web run build` (`tsc --noEmit`, then vite) clean.
+- **The live seat, read off a real session**: `MtgTable --transport auto --ai-policy search --deck
+  decks/pacho-shield.dck --ai-deck decks/doom-legion.dck --games 3 --seed 64775` (the automated seat playing Pacho
+  SHIELD, the search AI Doom Legion), with `MTGTABLE_DISTILL_ROWS` on for the AI's searched decisions. The start
+  line is `ai policy = search (ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1,declined=1,instant=1;
+  search-v4, D412, D539, D546)`, and every one of the three games' session headers carries `ai` = `{policy: search,
+  version: search-v4, budgetMs: 1500, config: …,what=pa,anytime=1,declined=1,instant=1}`. The match played all
+  three games to the end with no stall or engine error (`MTGTABLE OK`, `emit errors 0`, `REVEAL count 0`): the AI
+  won game 1 on turn 14, game 2 on turn 16 (the match over) and game 3, after the restart, on turn 16, each by
+  AllOpponentsLost; `tools/check-redaction.mjs` passes all three frame logs. The AI's searched decisions over the
+  three games: **49** (32 priority, 17 attacks, **0 blocks**), 10 of them overriding Forge (7 priority, 3 attacks),
+  45.1 s of search in all; **2 searched priority decisions outside the AI's own main phases**, both instant-speed
+  windows of `instant=1` that search-v3 never searches (its own draw step on turn 16 of game 2, 3 candidates,
+  1,544 ms, and its upkeep on turn 8 of game 3, 2 candidates, 1,088 ms; Forge's play kept both times); **the longest
+  searched decision 1,931 ms** (a priority decision, turn 12 of game 1), the median 1,088 ms. The rows carry no
+  `declined` field, so that key's count is the second run's.
+- **The second run, for the exact counters** (`RecordMatch --ai-policy search`, the watch bots' path through the
+  same `parseLive(null)`, the same decks, seat 0 plain Forge, seeds 64775–64777, one game each, `RECORD OK` and the
+  redaction check passing on all three): the start line says `search = search-v4, D440`; the search seat won two
+  (14 and 18 turns) and lost one (17). Its counters, summed: **`search.p.instant.windows` 3** (1 a game, 2
+  candidates each) and **`search.p.declined.windows` 4** (all in the 64776 game, 4 aimed spells listed, 4
+  candidates), 0 `noTarget`, **0 retries** for either key, neither key's pick changing a decision in these three
+  games, 0 searched blocks; 36 priority and 18 attack decisions considered.
+- **Not run on the lane**: the full gate (the coordinator's, on the merged tree after D545 and D544).
 
 **Follow-up.** The seat-queue row for `search-v3-declined-instant` (D509, row 10 of
 `~/code/pc-results/study/seat-queue.md`, in pc-results, which this lane does not write) is marked landed by D546 at
