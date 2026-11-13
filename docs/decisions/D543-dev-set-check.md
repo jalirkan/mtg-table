@@ -27,8 +27,7 @@ plays it.**
   next decision and in PLAN (as D541 recorded J214's read of D540), not in the older file.
 - **Every search number since D398 has been read on one deck set.** The confirm set (`tools/ai-bench/pairs-confirm.txt`)
   is 30 deck pairs drafted by D318 from six cubes (fair-fight, modern-era, pauper, peasant, synergy, vintage; five
-  drafts each); every ladder match of the search family since D398 — J194 to J215, more than fifteen of them — was
-  played on it, and each night's next arm was chosen from the last night's points on it. The deals were new every
+  drafts each); every ladder match of the search family since D398 — more than fifteen of them — was played on it, and each night's next arm was chosen from the last night's points on it. The deals were new every
   time; the decks never were. A choice made from many readings of one set can fit that set's 30 pairs, and a
   pre-registered match on the same 30 pairs cannot see it: new deals answer the noise in the deals, not the
   selection on the decks.
@@ -228,7 +227,28 @@ plays it.**
 
 - `node tools/decisions.mjs check` OK (456 decisions, next D544); `node --test web/test/claude-md.test.ts` 5 of 5;
   `node --test web/test/ai-ladder.test.ts` 56 of 56 (no player added or changed); `./tools/public-check.sh` OK.
-- The job's pilot dry-run: below, when it has run.
+- `./tools/runner.sh check` on the draft (`pc-jobs` `drafts/J216-dev-set.md`, its `repos:` sha a placeholder of 40
+  zeros for the merge commit): `lint: clean`, `machine-checked`; the pilot 7 blocks and 52 checks, the commands 2
+  blocks and 30 checks.
+- **J216's pilot, dry-run at this lane's head `61d14700c`** (a scratch copy of the draft pinned to it; `./tools/runner.sh
+  dry-run --root <this worktree> --pilot-only --max-seconds 7200 --workers 6`, sandboxed, run twice, the second with
+  `--keep` to read its files): every block exit 0 (the build and the self-tests 39 s; the 4-game ladder match 163 s
+  and 189 s; the 4-game recorded run 61 s and 69 s); **51 of the 52 pilot checks pass both times**, the one that
+  fails being `merged == 1` (the lane is not on `origin/main`). The build: the lint's self-test 33 rules, 79 firing
+  cases, the lint 97 files under `bridge/src` and 4 under `tools/`, **decision self-test 472 checks, 0 failures**;
+  the ai-bench self-test 352 checks, 0 failures; the five players at their hashes; the code against `1eaa00d30`
+  under `bridge/src`, `tools/ai-ladder` and `tools/ai-bench` an empty diff; `hostBase('j216')` 622,000,000, the
+  pilot host 594,000,000, the dev set 30 pairs at exactly 40 batches each over the 600 blocks; the verdict's
+  self-test 59 of 59 cases, the pairs reader's 6 of 6, the exposure reader's 5 of 5, the recording reader's 13 of
+  13, the block, rollout and gate readers' each ok. In the 4 ladder games on the dev set (pair `fair-fight-900000000`,
+  the match line's set `tools/ai-bench/pairs-dev.txt`): both sides searched priority and attacks and no block, B's
+  D540 counters and A's lands counters all 0, the pairs reader rebuilt the line's 2 pairs from its 4 rows (`agree`
+  1). **The gate passed** (`play` 1): over the 8 games `search.p.declined.windows` 17 (4 ladder, 13 recorded) and
+  `search.p.instant.windows` 12 (8 and 4), no error or timeout, no retry. In the recorded games the searched priority
+  decisions were 67 in the seat's own main phase, 4 in an empty-stack instant-speed window (all with 2 candidates)
+  and 0 in a land window, none on a stack. A searched 23.0 s a game against B's 21.3 over the 4 ladder games (×1.08;
+  J215's match ran ×1.14).
+- Not run on the lane: the full gate (the coordinator's, at the merge).
 
 **Follow-up.** J216 plays the match at this lane's merge; its `report.md` carries J216's reading, the pooled line
 and the recommendation, and `summary.md` (the PC session) words them, J216 alone first. Its row in PLAN is the cube
