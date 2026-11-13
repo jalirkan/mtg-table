@@ -1,0 +1,17 @@
+==== J216 pilot6 started 2026-11-12T22:52:31-05:00 in unit lab-J216-pilot6, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v3-declined-instant vs search-v2-no-b on tools/ai-bench/pairs-dev.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v3-declined-instant vs search-v2-no-b (match:j216-pilot:20261113T035232-3870345, seed 594900000, 1 pair(s))
+  done   w0 search-v3-declined-instant 2-2 search-v2-no-b (0 draws) in 188 s
+  4 decisive games (2 pairs): search-v3-declined-instant scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v3-declined-instant scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v2-no-b
+search-v3-declined-instant: 111 decisions searched in 4 games, 24 changed Forge's answer (21.6%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v3-declined-instant by kind: p 16/83, a 8/28
+search-v3-declined-instant time per decision: 798.882 ms (p+a+b); by kind p 819.642, a 737.344
+search-v2-no-b: 113 decisions searched in 4 games, 23 changed Forge's answer (20.4%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-no-b by kind: p 21/84, a 2/29
+search-v2-no-b time per decision: 776.753 ms (p+a+b); by kind p 805.997, a 692.047
+{"run":"20261113T035232-3870345","matchPlayed":4,"lines":4,"games":4,"a":{"search.a.considered":28,"search.p.considered":83,"search.p.declined.listed":2,"search.p.instant.cands":14,"search.p.instant.windows":6,"search.p.skipLand":38,"search.p.declined.cands":2,"search.p.declined.changed":1,"search.p.declined.noTarget":4,"search.p.declined.windows":2},"b":{"search.a.considered":29,"search.p.considered":84,"search.p.skipLand":36},"declinedWindows":2,"declinedCands":2,"declinedChanged":1,"declinedRetry":0,"declinedFired":1,"declinedExposed":1,"declinedWindowsPerGame":0.5,"declinedCandsPerWindow":1,"declinedChangedPerGame":0.25,"declinedRetryPerGame":0,"instantWindows":6,"instantCands":14,"instantChanged":0,"instantRetry":0,"instantFired":1,"instantExposed":1,"instantWindowsPerGame":1.5,"instantCandsPerWindow":2.33,"instantChangedPerGame":0,"instantRetryPerGame":0,"declinedListed":2,"declinedNoTarget":4,"declinedListedPerGame":0.5,"declinedNoTargetPerGame":1,"exposed":1,"bD540":0,"bClean":1,"aLands":0,"aLandsClean":1,"kindsOk":1}
+{"purpose":"match:j216-pilot:20261113T035232-3870345","rows":4,"pairs":2,"games":4,"score":0.5,"se":0,"lo":0.5,"hi":0.5,"elo":0,"eloLo":0,"eloHi":0,"agree":1}
+{"written":1,"namesOk":1,"hashesOk":1,"setOk":1,"cfgOk":1,"pairsAgree":1,"played":4,"errorsTimeouts":0,"aP":83,"aA":28,"aB":0,"bP":84,"bA":29,"bB":0,"aMs":798.882,"bMs":776.753,"aSecPerGame":22.169,"bSecPerGame":21.943}
