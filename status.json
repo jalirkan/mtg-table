@@ -1,28 +1,18 @@
 {
  "schema": 1,
- "updated": "2026-11-13T07:27:00-05:00",
- "heartbeat": "2026-11-13T07:27:00-05:00",
+ "updated": "2026-11-13T07:27:15-05:00",
+ "heartbeat": "2026-11-13T07:27:15-05:00",
  "paused": false,
- "state": "degraded",
- "alerts": [
-  {
-   "at": "2026-11-13T07:27:00-05:00",
-   "id": "J216",
-   "kind": "memory-wait",
-   "needGb": 3.3,
-   "availGb": 24.9,
-   "freeGb": 21.9,
-   "text": "J216 waits on memory held outside the lab slice since 2026-11-13T07:27:00-05:00 (MemAvailable 24.9 GB, need 3.3 GB)"
-  }
- ],
+ "state": "running",
+ "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.63,
+  "load1": 3.33,
   "memUsedGb": 5.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 4867,
-  "pressure": 5.32,
+  "pressure": 1.31,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 1,
@@ -37,19 +27,19 @@
    "cpu": "heavy",
    "phase": "commands 2/2",
    "started": "2026-11-12T22:50:16-05:00",
-   "elapsed": 31005,
+   "elapsed": 31019,
    "done": 4792,
    "total": 4800,
    "unit": "games",
    "ratePerHour": 541.1,
-   "eta": "2026-11-13T07:27:53-05:00",
+   "eta": "2026-11-13T07:28:08-05:00",
    "workers": 6,
    "workersMax": 7,
    "cores": 1,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-13T07:26:16-05:00",
-   "memGb": 0.25,
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -164,7 +154,8 @@
      "workers": 6,
      "pressure": 2.2
     }
-   ]
+   ],
+   "detail": "lab-J216-run2"
   }
  ],
  "queue": [],
