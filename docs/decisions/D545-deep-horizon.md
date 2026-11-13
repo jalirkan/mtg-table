@@ -43,7 +43,9 @@ takes D545 (D200: a reserved number is not reused).*
   (unmerged, merging after this one), makes `af6771947a25` the live seat as search-v4. B in this match is that
   config. This lane's merge, J218's pin, carries main `97122947c`'s `bridge/src`, where the live seat is still
   `search-v2-no-b` (`59505e241363`); the match names B by its ladder config, so it plays the same whichever lane has
-  merged.
+  merged. This lane merges before D544 and D546; had either landed first, the lane would be rebased and the draft's
+  pilot checks (472 checks, the empty `bridge/src` diff, the one-player `players.json`) rewritten before J218 was
+  posted. Once J218 is posted at this merge's pin, later merges do not reach it.
 - **Positive 1,200-game points have shrunk before.** Three earlier positive 1,200-game points came back at about +2
   to +3 when 4,800 games read them again (targets, the evaluator leaf, routlets; D519 point 8: routlets +6.9 at 1,200,
   +2.9 at 4,800; D543's *Context*). J212's two points were each the arm that happened to read positive, on the deck
@@ -109,7 +111,10 @@ takes D545 (D200: a reserved number is not reused).*
    standard error of about 0.0055 or more against J216's 0.0043 on this set — and it stays in the rule for a match
    whose interval comes out wider than planned.
 5. **What a reading earns.**
-   - **SHOWN or SMALL GAIN**: depth pays when it is not starved. `search-v3-declined-instant-t1-x3` is a
+   - **SHOWN or SMALL GAIN**: the deeper horizon with three times the clock beats the pair; the match does not
+     separate the depth from the clock (point 6). Adopting it as it stands means about three times the wait a
+     searched decision at the table (the pilot: 2,150 against 658 ms), so it is offered with that cost beside it, and
+     the cheaper clock is what would make it adoptable without it. `search-v3-declined-instant-t1-x3` is a
      **live-seat candidate for the owner**, under a separate decision and a seat-queue row (D509), with the match's
      point and interval and its cost stated beside them: A's and B's search seconds a game and their ratio, and ms a
      searched decision on each side. The cost is reported and is never part of the reading (D519 point 5). The
@@ -120,7 +125,9 @@ takes D545 (D200: a reserved number is not reused).*
      +11.8 Elo over the pair (the highest upper end a lower end at 0.5 allows; +10.6 at J211's width), and **the
      horizon track closes at practical clocks**: no arm deepening the Forge rollouts at three times the clock or less
      is played again without a new decision saying what is different (a cheaper rollout, a different leaf). It does
-     not say the horizon is worth nothing.
+     not say the horizon is worth nothing: a true +8, the pair's own size, reads NOT SHOWN about one time in four
+     and a true +5 about three in five, so the closure is where nights go next, not a finding that depth is worth
+     less than that.
    - **No reading changes the live seat**: this job moves no seat. The live seat is what D546 makes it (B's config,
      as search-v4); a candidate from this match is a new seat-queue row under its own decision, and the job says
      so.
@@ -139,7 +146,9 @@ takes D545 (D200: a reserved number is not reused).*
    (`search.anytime.short`); budget fallbacks and their rate; ms of play and of copy a finished rollout; the priority
    overrides by direction a priority decision; the land windows left to Forge a game; both sides' `declined` and
    `instant` windows, candidates, changes and retries a game (the pair's keys on both seats); the games per dev deck
-   pair; and J212's three rows as they were.
+   pair; J212's three rows as they were; and the errors and timeouts, with the score recomputed counting every
+   timed-out game as A's loss (A thinks three times as long, so a timeout is likelier to be its game; the PC session's summary computes it from
+   the result rows, the job's report prints the counts).
 9. **The pilot, before the match**: the build with the decision self-test at 0 failures and 472 checks (no bridge
    source changed since D540's merge); the ai-bench self-test; the ladder test; six players at their hashes and seat
    configs (the anchor, `search-v2-no-b`, the pair, the new player and J212's `search-v2-t1-x3` and `search-v2-a1`);
@@ -166,9 +175,10 @@ takes D545 (D200: a reserved number is not reused).*
     match by the fit, 16.6 h at the middle. J212's `t1-x3` match ran 4.31 h against the fit's 3.68 h for its 73.7 s
     (+17%, beyond the fit's largest residual, +0.37 h): at that ratio about 19.4 h. The pilot about 15 minutes. So
     about 17 h (range 16–20 h) at 7 workers; about 19.4 h if memory pressure holds it at 6 workers by the fit and
-    about 22.7 h at 6 with `t1-x3`'s excess. The match stops itself at `--hours 26` and the step's timeout is 26.5 h
-    (the runner sets no ceiling on a step's `timeout:`); a match that reaches its own stop is `complete: false` and
-    gets no reading. It holds the machine alone for most of a day.
+    about 22.7 h at 6 with `t1-x3`'s excess. The match stops itself at `--hours 32` and the step's timeout is 32.5 h
+    (the runner sets no ceiling on a step's `timeout:`), room for 5 workers after a memory-stop retry, which replays
+    the match from its first block (about 29 h); a match that reaches its own stop is `complete: false` and gets no
+    reading. It holds the machine alone for most of a day.
 
 **Under D509: the atlas's seat and the live seat are unchanged by this lane** (D546 moves the live seat, in its own
 lane). This lane changes no file under `bridge/src`,
@@ -183,8 +193,10 @@ passes and `SearchPolicy` already honours; the rollouts run on the copies as eve
 1,200-game draws against another opponent, each picked because it was positive: `t1-x3` +9.8 [−1.7, +21.4] at
 ×2.72 the search time, `a1` +5.2 [−5.7, +16.2] at ×1.13. Every earlier positive 1,200-game point read again at
 4,800 came back at about +2 to +3 (the *Context*), and the dev set is held out from the selection, so each point's
-true effect is more likely below it than above. If both held as measured and added, about +15 Elo; if each shrank
-to +2 or +3 and they add, about +5; if they overlap, less. B is now the pair rather than search-v2, which none of
+true effect is more likely below it than above. J212's `t1-x3` also searched blocks one turn deeper (`what=pab`);
+no block is searched here, so any part of its +9.8 that came from blocks is not in this player; and J212's three arms
+played the same 150 blocks, so their two points are not independent. If both held as measured and added, about +15
+Elo; if each shrank to +2 or +3 and they add, about +5; if they overlap, less. B is now the pair rather than search-v2, which none of
 J212's games measured against. With J216's pair standard error on this set (0.0043192, a half-width of about ±5.9
 Elo; SMALL GAIN needs a point above about +5.9), from the normal approximation of the score:
 
@@ -225,8 +237,9 @@ candidate for the owner's decision and not an adoption.
 
 - **The cost**: extrapolated from J212's `t1-x3` (×2.72) on another base and opponent; the attacks' deeper rollouts
   at 4.5 s were never measured (`a1` ran at 1.5 s). The pilot's 4 ladder games and the match measure it.
-- **That the starvation bar is right for this player**: 15% short of two rounds sits between `t1-x3`'s 1.6% and
-  `t1`'s 11.8% plus a margin, on 8 games; the match reports its own share and does not gate on it.
+- **That the starvation bar is right for this player**: 15% short of two rounds is above `t1`'s 11.8%, so the gate
+  catches a clock that never reached the player, not a `t1`-sized starvation, which the match's own short share
+  reports (the dry-run's was 0 of 172); the match does not gate on it.
 - **The game timeout**: 1,800 s is set from J216's tail (706 s at 1.5 s against 1.5 s) scaled by the thinking time;
   the pilot's 8 games cannot see a tail of one game in 4,800.
 - **The horizon in the match**: the ladder's batch counters do not count the turns a rollout played (the `Playout`
@@ -274,9 +287,17 @@ exposure run ended, the lab `idle [] []`):**
   (ladder) and 85 s (recorded), far inside the 1,800 s timeout.
 - **What the pilot says about the time** (description; point 10 is unchanged): at the pilot's ×3.09 on J216's 22.2 s
   for B, A would search about 69 s a game, both sides about 91 s, about 17.8 h by the fit, about 20.8 h with
-  `t1-x3`'s 17% excess, and about 24.2 h at 6 workers with it, still under the match's 26 h stop. One deck pair and 4
+  `t1-x3`'s 17% excess, and about 24.2 h at 6 workers with it, under the match's 32 h stop. One deck pair and 4
   games; the match measures it.
 - Not run on the lane: the full gate (the coordinator's, at the merge).
+- **The review before the merge** (2026-11-13, an independent read of the lane's diff, the draft and the pilot's
+  files): the power table reproduced at 0.0043192; blocks 655,900,000–655,900,599 confirmed unplayed; no registered
+  number changed. Its findings, fixed in this text and the draft: the match's stop raised from 26 h to 32 h (26 h
+  left no room for a replay from the first block at 5 workers); point 5 now says the match does not separate the
+  depth from the clock and what adopting the player as it stands costs at the table; the starvation bar's wording;
+  the NOT SHOWN power beside its closure; the timed-out-games sensitivity promised in point 8; the merge order in
+  Context. Written down, not fixed: a ladder match cannot resume, so a stop replays it whole (tooling); and the dev
+  set is used once more for depth here, so a candidate from this match would be confirmed on a third deck set.
 
 **Follow-up.** J218 plays the match at this lane's merge; its `report.md` carries the reading and the description,
 and `summary.md` (the PC session) words them. A SHOWN or SMALL GAIN goes to the owner as a seat-queue row under its
