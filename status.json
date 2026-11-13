@@ -1,21 +1,21 @@
 {
  "schema": 1,
- "updated": "2026-11-12T21:04:48-05:00",
- "heartbeat": "2026-11-12T21:04:48-05:00",
+ "updated": "2026-11-12T21:09:14-05:00",
+ "heartbeat": "2026-11-12T21:09:14-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 12.52,
-  "memUsedGb": 13.1,
+  "load1": 4.85,
+  "memUsedGb": 4.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5960,
+  "swapUsedMb": 5901,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -25,21 +25,21 @@
    "id": "J215",
    "title": "D540's two positive keys together (D541): one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v3-declined-instant (search-v3 with declined=1 and instant=1, a new player, af6771947a25) against search-v2-no-b (search-v3, the live seat since D539), in a ladder folder of its own under --host j215 on deal blocks no job has played, 519,900,000-519,900,599, read by D519's four readings at 4,800 games as D541 writes them for this match (SHOWN, SMALL GAIN, INCONCLUSIVE AT 4,800, NOT SHOWN), with D540's completeness parts and exposure condition for both keys. Never pooled with J214. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-11-12T12:34:50-05:00",
-   "elapsed": 30598,
-   "done": 4728,
+   "elapsed": 30864,
+   "done": 4784,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 559.7,
-   "eta": "2026-11-12T21:12:31-05:00",
+   "ratePerHour": 560.4,
+   "eta": "2026-11-12T21:10:57-05:00",
    "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-12T21:01:55-05:00",
-   "memGb": 8.14,
+   "dataUpdated": "2026-11-12T21:08:21-05:00",
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -77,9 +77,9 @@
     "bs.registered": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 30554,
+    "elapsed_s": 30811,
     "j215_err": 0,
-    "j215_games": 4728,
+    "j215_games": 4784,
     "peak_worker_rss_gb": 1.41
    },
    "liveHeadline": [
@@ -140,7 +140,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J215-run1"
+   "detail": "lab-J215-run2"
   }
  ],
  "queue": [],
