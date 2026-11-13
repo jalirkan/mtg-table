@@ -653,7 +653,7 @@ public final class SearchPolicy {
      * on it -- on either turn, in any step.  Whether the stack can be carried is the search's next question
      * ({@link #stackRefused}).
      */
-    static boolean stackWindow(final Player ai) {
+    public static boolean stackWindow(final Player ai) {
         final forge.game.zone.MagicStack st = ai.getGame().getStack();
         if (st.isEmpty() || st.hasSimultaneousStackEntries()) {
             return false;
@@ -667,7 +667,7 @@ public final class SearchPolicy {
      * attackers declared, the opponent's end step, and the seat's own declare-blockers step (blocks are declared
      * before anyone has priority there, so a window in that step is after them) with attackers in it.
      */
-    static boolean passWindow(final Player ai) {
+    public static boolean passWindow(final Player ai) {
         final Game g = ai.getGame();
         final PhaseHandler ph = g.getPhaseHandler();
         if (!g.getStack().isEmpty() || g.getStack().hasSimultaneousStackEntries() || ph.getPhase() == null) {
@@ -688,7 +688,7 @@ public final class SearchPolicy {
      * trigger put there in the seat's own turn (the active player has priority first after a trigger is put on the
      * stack, 117.3b; after a spell or an ability, its controller does, 117.3c, and passed it on).
      */
-    static boolean opponentPassed(final Player ai) {
+    public static boolean opponentPassed(final Player ai) {
         final Game g = ai.getGame();
         final PhaseHandler ph = g.getPhaseHandler();
         if (g.getStack().isEmpty()) {
@@ -741,6 +741,24 @@ public final class SearchPolicy {
         widenedPhase = ph.getPhase();
         widenedStack = LenientGameCopier.stackKey(ai.getGame());
         widenedProgress = progress(ai, sa);
+    }
+
+    /** For the self-test only (D544): as if the search had just picked {@code sa}, a widened play under {@code key}. */
+    public void noteWidenedForTest(final Player ai, final String key, final SpellAbility sa) {
+        noteWidened(ai, key, sa);
+    }
+
+    /**
+     * For the self-test only (D544): {@code dactiv=1}'s listing (no declined spells) with {@code skip}'s sources left
+     * out; the declined activations it listed go in {@code activations}, and the memory sets as they were before the
+     * aims are returned (null when nothing was aimed).
+     */
+    public static Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> dactivListingForTest(final Player ai, final Set<Integer> skip,
+            final Sink sink, final List<SpellAbility> activations) {
+        final Widen w = new Widen(null, skip, false);
+        alternativesWide(ai, ((PlayerControllerAi) ai.getController()).getAi(), null, sink, w);
+        activations.addAll(w.activations);
+        return w.memory;
     }
 
     /** For the self-test only (D544): whether {@code key} is off for the rest of this step (the retry guard fired). */
@@ -988,13 +1006,13 @@ public final class SearchPolicy {
      * {@code SorcerySpeed} (equip, reconfigure, outlast, level up and the like), unless its restriction says
      * {@code InstantSpeed}.  Not a mana ability.
      */
-    static boolean sorcerySpeedActivation(final SpellAbility sa) {
+    public static boolean sorcerySpeedActivation(final SpellAbility sa) {
         return sa.isActivatedAbility() && !sa.isManaAbility() && sa.getRestrictions() != null
                 && (sa.isPwAbility() || sa.getRestrictions().isSorcerySpeed()) && !sa.getRestrictions().isInstantSpeed();
     }
 
     /** D544: the seat's AI memory sets, each copied. */
-    static Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> snapshotMemory(final Player ai) {
+    public static Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> snapshotMemory(final Player ai) {
         final Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> out = new java.util.EnumMap<>(forge.ai.AiCardMemory.MemorySet.class);
         for (final forge.ai.AiCardMemory.MemorySet m : forge.ai.AiCardMemory.MemorySet.values()) {
             final Set<Card> cur = forge.ai.AiCardMemory.getMemorySet(ai, m);
@@ -1004,7 +1022,7 @@ public final class SearchPolicy {
     }
 
     /** D544: the seat's AI memory sets put back as {@code snap} holds them; how many sets differed. */
-    static int restoreMemory(final Player ai, final AiController aic,
+    public static int restoreMemory(final Player ai, final AiController aic,
                              final Map<forge.ai.AiCardMemory.MemorySet, Set<Card>> snap) {
         int n = 0;
         for (final Map.Entry<forge.ai.AiCardMemory.MemorySet, Set<Card>> e : snap.entrySet()) {
@@ -1291,7 +1309,7 @@ public final class SearchPolicy {
     }
 
     /** D544: an attach activation of an equipment aimed at the creature it is already attached to. */
-    static boolean equipsItsHost(final SpellAbility sa) {
+    public static boolean equipsItsHost(final SpellAbility sa) {
         final Card host = sa.getHostCard();
         if (host == null || !(sa.isEquip() || sa.getApi() == forge.game.ability.ApiType.Attach && host.isEquipment())) {
             return false;
@@ -1360,8 +1378,9 @@ public final class SearchPolicy {
     /**
      * D540: one targeted part's aim is legal now -- a valid number of targets, and every target among the part's
      * candidates ({@code getAllCandidates(s, false)}, cards included) that {@code canTarget} accepts: Explorer's
-     * staleness test (D485, {@code Explorer.staleTargets}).  A target that is a spell is not legal here, because
-     * the search's windows have an empty stack.
+     * staleness test (D485, {@code Explorer.staleTargets}).  A target that is a spell or an ability is legal only when
+     * it is an item on the stack now that {@code canTarget} accepts (D544's stack windows; in D540's, whose stack is
+     * empty, no such target is ever legal, as before).
      */
     private static boolean partValid(final SpellAbility s) {
         if (!s.isTargetNumberValid()) {
@@ -1374,11 +1393,31 @@ public final class SearchPolicy {
         final Set<GameEntity> cands = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         cands.addAll(tr.getAllCandidates(s, false));
         for (final GameObject o : s.getTargets()) {
+            if (o instanceof SpellAbility) {
+                if (!onStack(s, (SpellAbility) o) || !s.canTarget(o)) {
+                    return false;
+                }
+                continue;
+            }
             if (!(o instanceof GameEntity) || !cands.contains(o) || !s.canTarget((GameEntity) o)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /** D544: {@code item} is one of the stack's items now (by identity). */
+    private static boolean onStack(final SpellAbility s, final SpellAbility item) {
+        final Card h = s.getHostCard();
+        if (h == null || h.getGame() == null) {
+            return false;
+        }
+        for (final forge.game.spellability.SpellAbilityStackInstance si : h.getGame().getStack()) {
+            if (si.getSpellAbility() == item) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean anyTargeting(final SpellAbility sa) {

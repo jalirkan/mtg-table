@@ -986,6 +986,7 @@ public final class AiBench {
             Bootstrap.installGui(cfg.forgeHomeDir());           // hard rule 1
             Bootstrap.initializeModel(false);
             stackWindowScenarios();
+            wideWindowScenarios();
             System.out.println("ai-bench selftest (--stack-windows): " + checks + " check(s), " + failures + " failure(s)");
             return failures == 0 ? 0 : 1;
         }
@@ -1534,6 +1535,7 @@ public final class AiBench {
         targetCostScenarios();
         searchCandidatesScenarios();
         stackWindowScenarios();
+        wideWindowScenarios();
     }
 
     /**
@@ -2097,6 +2099,332 @@ public final class AiBench {
             g.getStack().clearFrozen();
             g.getStack().clear();
         });
+    }
+
+    /**
+     * D544's three keys and the opponent's pass, on the engine.  stackwin: the search fires on a stack window (the
+     * opponent's creature spell, the seat holding Counterspell), never with the key off, and refuses a face-down stack
+     * unsearched; whether the opponent has already passed reads the window right (its spell; an empty stack in its
+     * turn; not a trigger in the seat's turn; not the seat's own declare-blockers step); in a rollout of a window it
+     * has passed in, the opponent is asked first and passes, then the seat (the priority events, in order), where today's
+     * install asks the seat first.  passwin: the opponent's end step and declare-attackers step and the seat's own
+     * declare-blockers step are searched with an aimed play listed, a step with none is not a window, and off nothing
+     * fires.  dactiv: an equip aimed at its own host is dropped, a source played this turn is left out, the sorcery-speed
+     * test takes equip and loyalty and not an instant-speed ability or a mana ability, and the AI memory the aims write is
+     * put back.  D541's review: declined=1 with instant=1 lists a declined spell in an instant-speed window.  The retry
+     * guard turns a key off for the rest of the step on a re-ask with the same stack, so no widened pick can be asked for
+     * 999 times.
+     */
+    static void wideWindowScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: the wide windows (D544, engine)");
+        final List<String> creatureSpell = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanhand=Grizzly Bears", "humanbattlefield=Forest;Forest",
+                "humanlibrary=Forest;Forest;Forest;Forest", "aihand=Counterspell", "aibattlefield=Island;Island",
+                "ailibrary=Island;Island;Island;Island");
+        final SearchConfig stackOn = SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,stackwin=1");
+        final SearchConfig keysOff = SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,declined=1,instant=1");
+        scenario("d544-stackwin-search", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, stackOn, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            castBearsAndPass(ai);
+            final String before = fingerprint(g);
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+            final Map<String, Integer> c = ctl.counts();
+            final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
+            check(c.getOrDefault("search.p.stackwin.windows", 0) == 1 && c.getOrDefault("search.p.stackwin.cands", 0) >= 2
+                            && c.getOrDefault("search.rollouts", 0) >= 2 && c.getOrDefault("search.rolloutErrors", 0) == 0
+                            && c.getOrDefault("search.p.stackwin.oppPassed", 0) == 1 && c.getOrDefault("search.wide.oppPassed", 0) >= 1
+                            && !c.containsKey("search.p.stackwin.refused"),
+                    "D544: stackwin=1 searches the opponent's spell on the stack, the stack carried and the opponent's pass given (pick "
+                            + pick + "; " + (rep == null ? "no report" : rep.summary()) + "; " + c + ")");
+            final List<String> toks = new ArrayList<>();
+            for (int i = 0; rep != null && i < rep.cands.size(); i++) {
+                toks.add(mtgtable.ai.SearchPolicy.token(rep.cands.get(i)));
+            }
+            final int csId = named(ai.getCardsIn(ZoneType.Hand), "Counterspell").getId();
+            check(toks.toString().contains(String.valueOf(csId)), "D544: Counterspell (card " + csId + ") aimed at the stack is a candidate "
+                    + "(Forge's answer first: " + toks + ")");
+            check(fingerprint(g).equals(before), "D544: the live game is untouched by the stack search");
+        });
+        scenario("d544-stackwin-off", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, keysOff, (ai, pol) -> {
+            ai.getGame().setAge(forge.game.GameStage.Play);
+            castBearsAndPass(ai);
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            ctl.chooseSpellAbilityToPlay();
+            boolean any = false;
+            for (final String k : ctl.counts().keySet()) {
+                any |= k.startsWith("search.p.stackwin.") || k.startsWith("search.p.passwin.") || k.startsWith("search.p.dactiv.")
+                        || k.startsWith("search.wide.");
+            }
+            check(!any && ctl.counts().getOrDefault("search.rollouts", 0) == 0,
+                    "D544: with the new keys off (declined=1,instant=1) a stack window is Forge's and nothing of D544's is counted ("
+                            + ctl.counts() + ")");
+        });
+        scenario("d544-stackwin-refused", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=MAIN1", "humanhand=Gathan Raiders", "humanbattlefield=Mountain;Mountain;Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aihand=Counterspell", "aibattlefield=Island;Island",
+                "ailibrary=Island;Island;Island;Island"), PolicyLobbyPlayerAi.Outlets.OFF, stackOn, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            forge.game.spellability.SpellAbility down = null;
+            final Card raiders = named(opp.getCardsIn(ZoneType.Hand), "Gathan Raiders");
+            for (final forge.game.spellability.SpellAbility sa : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    new ArrayList<>(raiders.getAllPossibleAbilities(opp, false)), opp)) {
+                down = down == null && sa.isSpell() && sa.isCastFaceDown() ? sa : down;
+            }
+            pushFree(opp, down, sa -> { });
+            g.getPhaseHandler().setPriority(ai);
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            ctl.chooseSpellAbilityToPlay();
+            final Map<String, Integer> c = ctl.counts();
+            check(c.getOrDefault("search.p.stackwin.refused.faceDown", 0) == 1 && c.getOrDefault("search.rollouts", 0) == 0
+                            && !c.containsKey("search.p.stackwin.windows"),
+                    "D544: a face-down spell on the stack refuses the window, unsearched (" + c + ")");
+        });
+        // whether the opponent has already passed
+        scenario("d544-opp-passed", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            ai.getGame().setAge(forge.game.GameStage.Play);
+            castBearsAndPass(ai);
+            check(mtgtable.ai.SearchPolicy.opponentPassed(ai) && mtgtable.ai.SearchPolicy.stackWindow(ai),
+                    "D544: the opponent's spell on top in its turn: a stack window, and the opponent has passed");
+        });
+        scenario("d544-opp-passed-trigger", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai",
+                "activephase=MAIN1", "humanhand=Flametongue Kavu", "humanbattlefield=Mountain;Mountain;Mountain;Mountain",
+                "humanlibrary=Mountain;Mountain;Mountain;Mountain", "aibattlefield=Grizzly Bears;Plains",
+                "ailibrary=Plains;Plains;Plains;Plains"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            final Player opp = ai.getWeakestOpponent();
+            forge.game.spellability.SpellAbility kavu = null;   // not its turn: Forge lists no play of it, so its spell itself
+            for (final forge.game.spellability.SpellAbility sa : named(opp.getCardsIn(ZoneType.Hand), "Flametongue Kavu").getSpellAbilities()) {
+                kavu = kavu == null && sa.isSpell() ? sa : kavu;
+            }
+            forge.ai.ComputerUtil.handlePlayingSpellAbility(opp, withActivator(kavu, opp), null);
+            g.getStack().resolveStack();
+            g.getStack().addAllTriggeredAbilitiesToStack();
+            check(g.getStack().size() == 1 && g.getStack().peek().isTrigger() && mtgtable.ai.SearchPolicy.stackWindow(ai)
+                            && !mtgtable.ai.SearchPolicy.opponentPassed(ai),
+                    "D544: the opponent's trigger on top in the seat's own turn: a stack window, and the opponent has NOT passed ("
+                            + stackOf(g) + ")");
+        });
+        // the priority order in a rollout of a window the opponent has passed in
+        scenario("d544-opp-pass-order", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            castBearsAndPass(ai);
+            for (final int flags : new int[] {mtgtable.ai.SearchPolicy.WIDE_STACK,
+                    mtgtable.ai.SearchPolicy.WIDE_STACK | mtgtable.ai.SearchPolicy.WIDE_PASSED}) {
+                final List<String> asked = new ArrayList<>();
+                mtgtable.ai.SearchPolicy.probeForTest((copy, aiC) -> copy.subscribeToEvents(new Object() {
+                    @com.google.common.eventbus.Subscribe
+                    public void priority(final forge.game.event.GameEventPlayerPriority e) {
+                        if (asked.size() < 4) {
+                            final Player p = copy.getPlayer(e.priority().getId());
+                            asked.add((p == null ? "?" : p.getName()) + "@" + copy.getStack().size());
+                        }
+                    }
+                }));
+                mtgtable.ai.SearchPolicy.wideForTest(flags);
+                try {
+                    mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(null), 7,
+                            new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), new CountSink(), false, null);
+                } finally {
+                    mtgtable.ai.SearchPolicy.wideForTest(0);
+                    mtgtable.ai.SearchPolicy.probeForTest(null);
+                }
+                final String o = opp(ai).getName() + "@1";
+                final String me = ai.getName() + "@1";
+                final boolean passed = (flags & mtgtable.ai.SearchPolicy.WIDE_PASSED) != 0;
+                final boolean ok = asked.size() >= 3 && (passed ? asked.get(0).equals(o) && asked.get(1).equals(me) && !asked.get(2).endsWith("@1")
+                        : asked.get(0).equals(me) && asked.get(1).equals(o));
+                check(ok, "D544: " + (passed ? "the opponent passed already: asked first, it passes and the seat's pass resolves the spell"
+                        : "today's install: the seat first, then the opponent once more on the same stack") + " (priority " + asked + ")");
+            }
+        });
+
+        // passwin: the opponent's end step, its declare-attackers step, the seat's own declare-blockers step
+        final SearchConfig passOn = SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,passwin=1");
+        final String[][] steps = {
+            {"END_OF_TURN", "human", "humanbattlefield=Forest", "aibattlefield=Grizzly Bears;Plains"},
+            {"COMBAT_DECLARE_ATTACKERS", "human", "humanbattlefield=Hill Giant|Attacking;Forest", "aibattlefield=Grizzly Bears;Plains"},
+            {"COMBAT_DECLARE_BLOCKERS", "ai", "humanbattlefield=Forest", "aibattlefield=Grizzly Bears|Attacking;Plains"}};
+        for (final String[] st : steps) {
+            for (final boolean on : new boolean[] {true, false}) {
+                final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=" + st[1], "activephase=" + st[0],
+                        st[2], "humanlibrary=Forest;Forest;Forest;Forest", "aihand=Ephemerate", st[3], "ailibrary=Plains;Plains;Plains;Plains");
+                scenario("d544-passwin-" + st[0] + (on ? "" : "-off"), board, PolicyLobbyPlayerAi.Outlets.OFF, on ? passOn : keysOff, (ai, pol) -> {
+                    final Game g = ai.getGame();
+                    g.setAge(forge.game.GameStage.Play);
+                    if (g.getPhaseHandler().getCombat() == null && st[0].startsWith("COMBAT")) {
+                        check(false, "D544: the board holds a combat at " + st[0]);
+                        return;
+                    }
+                    g.getPhaseHandler().setPriority(ai);
+                    final boolean window = mtgtable.ai.SearchPolicy.passWindow(ai);
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                    final Map<String, Integer> c = ctl.counts();
+                    if (on) {
+                        check(window && c.getOrDefault("search.p.passwin.windows", 0) == 1 && c.getOrDefault("search.rollouts", 0) >= 2
+                                        && c.getOrDefault("search.rolloutErrors", 0) == 0
+                                        && c.getOrDefault("search.p.passwin.oppPassed", 0) == ("ai".equals(st[1]) ? 0 : 1),
+                                "D544: passwin=1 searches " + st[0] + " (" + st[1] + "'s turn) with Ephemerate aimed; the opponent "
+                                        + ("ai".equals(st[1]) ? "has not passed (the seat is active)" : "has passed") + " (pick " + pick + "; " + c + ")");
+                    } else {
+                        check(c.getOrDefault("search.rollouts", 0) == 0 && !c.containsKey("search.p.passwin.windows"),
+                                "D544: with passwin off " + st[0] + " is Forge's (" + c + ")");
+                    }
+                });
+            }
+        }
+        scenario("d544-passwin-no-aim", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=END_OF_TURN",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest", "aihand=Counterspell",
+                "aibattlefield=Island;Island", "ailibrary=Island;Island;Island;Island"), PolicyLobbyPlayerAi.Outlets.OFF, passOn, (ai, pol) -> {
+            ai.getGame().setAge(forge.game.GameStage.Play);
+            ai.getGame().getPhaseHandler().setPriority(ai);
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            ctl.chooseSpellAbilityToPlay();
+            final Map<String, Integer> c = ctl.counts();
+            check(!c.containsKey("search.p.passwin.windows") && c.getOrDefault("search.rollouts", 0) == 0,
+                    "D544: an end step with no aimed play (a Counterspell, nothing to counter) is not a pass window (" + c + ")");
+        });
+
+        // dactiv
+        final List<String> equipped = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "aibattlefield=Grizzly Bears|Id:31;Bonesplitter|AttachedTo:31;Forest;Forest;Llanowar Elves",
+                "ailibrary=Forest;Forest;Forest;Forest");
+        scenario("d544-dactiv-test", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "aibattlefield=Bonesplitter;Fanatical Firebrand;Llanowar Elves;Liliana of the Veil|Counters:LOYALTY=3;Forest",
+                "ailibrary=Forest;Forest;Forest;Forest"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final StringBuilder seen = new StringBuilder();
+            boolean ok = true;
+            for (final Card c : ai.getCardsIn(ZoneType.Battlefield)) {
+                for (final forge.game.spellability.SpellAbility sa : c.getSpellAbilities()) {
+                    if (!sa.isActivatedAbility()) {
+                        continue;
+                    }
+                    final boolean sorcery = mtgtable.ai.SearchPolicy.sorcerySpeedActivation(sa);
+                    final boolean want = (sa.isPwAbility() || sa.isEquip()) && !sa.isManaAbility();
+                    ok &= sorcery == want;
+                    seen.append(c.getName()).append(sa.isPwAbility() ? " loyalty" : sa.isEquip() ? " equip" : sa.isManaAbility() ? " mana" : " ability")
+                            .append('=').append(sorcery).append("; ");
+                }
+            }
+            check(ok && seen.toString().contains("loyalty=true") && seen.toString().contains("equip=true"),
+                    "D544: the sorcery-speed test takes equip and loyalty, not Firebrand's ping nor a mana ability (" + seen
+                            + " on " + names(ai.getCardsIn(ZoneType.Battlefield)) + ")");
+        });
+        scenario("d544-dactiv-same-host", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "aibattlefield=Grizzly Bears|Id:31;Bonesplitter|AttachedTo:31;Forest;Forest", "ailibrary=Forest;Forest;Forest;Forest"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final CountSink sink = new CountSink();
+            final List<forge.game.spellability.SpellAbility> acts = new ArrayList<>();
+            mtgtable.ai.SearchPolicy.dactivListingForTest(ai, new java.util.HashSet<>(), sink, acts);
+            check(acts.isEmpty() && sink.get("search.p.dactiv.sameHost") == 1,
+                    "D544: Bonesplitter's equip, its only creature the one it is on, is aimed there and dropped (" + labelsOf(acts) + "; "
+                            + sink.counts + ")");
+        });
+        scenario("d544-dactiv-once-per-source", equipped, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Card bs = named(ai.getCardsIn(ZoneType.Battlefield), "Bonesplitter");
+            final CountSink sink = new CountSink();
+            final List<forge.game.spellability.SpellAbility> acts = new ArrayList<>();
+            mtgtable.ai.SearchPolicy.dactivListingForTest(ai, new java.util.HashSet<>(List.of(bs.getId())), sink, acts);
+            boolean any = false;
+            for (final forge.game.spellability.SpellAbility sa : acts) {
+                any |= sa.getHostCard() == bs;
+            }
+            check(!any && sink.get("search.p.dactiv.sameHost") == 0 && sink.get("search.p.dactiv.noTarget") == 0,
+                    "D544: a source the widening played this turn lists no activation, and is not aimed (" + labelsOf(acts) + "; "
+                            + sink.counts + ")");
+            // the memory the aims write is put back
+            final Map<forge.ai.AiCardMemory.MemorySet, java.util.Set<Card>> before = mtgtable.ai.SearchPolicy.snapshotMemory(ai);
+            final CountSink sink2 = new CountSink();
+            final List<forge.game.spellability.SpellAbility> acts2 = new ArrayList<>();
+            final Map<forge.ai.AiCardMemory.MemorySet, java.util.Set<Card>> snap =
+                    mtgtable.ai.SearchPolicy.dactivListingForTest(ai, new java.util.HashSet<>(), sink2, acts2);
+            final boolean wrote = !mtgtable.ai.SearchPolicy.snapshotMemory(ai).equals(before);
+            final forge.ai.AiController aic = ((forge.ai.PlayerControllerAi) ai.getController()).getAi();
+            forge.ai.AiCardMemory.rememberCard(aic, bs, forge.ai.AiCardMemory.MemorySet.ATTACHED_THIS_TURN);
+            final int n = mtgtable.ai.SearchPolicy.restoreMemory(ai, aic, snap == null ? before : snap);
+            check(n >= 1 && mtgtable.ai.SearchPolicy.snapshotMemory(ai).equals(snap == null ? before : snap)
+                            && !forge.ai.AiCardMemory.isRememberedCard(aic, bs, forge.ai.AiCardMemory.MemorySet.ATTACHED_THIS_TURN),
+                    "D544: the AI memory sets are put back as they were before the aims (the aims " + (wrote ? "wrote" : "did not write")
+                            + " to them; " + n + " set(s) restored; listed " + labelsOf(acts2) + "; " + sink2.counts + ")");
+        });
+        scenario("d544-dactiv-search", equipped, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=p,dactiv=1"), (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+            final Map<String, Integer> c = ctl.counts();
+            check(c.getOrDefault("search.rolloutErrors", 0) == 0 && c.getOrDefault("search.fallback.unmappable", 0) == 0
+                            && (c.containsKey("search.p.dactiv.listed") || c.containsKey("search.p.dactiv.sameHost")
+                            || c.containsKey("search.p.dactiv.noTarget")),
+                    "D544: dactiv=1 looks at the equip Forge declines in the seat's main phase, no error (pick " + pick + "; " + c + ")");
+        });
+
+        // D541's review: declined=1 and instant=1 together list a declined spell in an instant-speed window
+        scenario("d544-declined-instant", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human", "activephase=END_OF_TURN",
+                "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "humangraveyard=Hill Giant;Grizzly Bears", "ailibrary=Forest;Forest;Forest;Forest", "aihand=Giant Growth",
+                "aibattlefield=Scavenging Ooze;Forest;Forest;Forest"), PolicyLobbyPlayerAi.Outlets.OFF, keysOff, (ai, pol) -> {
+            ai.getGame().setAge(forge.game.GameStage.Play);
+            ai.getGame().getPhaseHandler().setPriority(ai);
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+            final Map<String, Integer> c = ctl.counts();
+            check(c.getOrDefault("search.p.instant.windows", 0) == 1 && c.getOrDefault("search.p.declined.listed", 0) >= 1
+                            && c.getOrDefault("search.rolloutErrors", 0) == 0
+                            && c.getOrDefault("search.p.declined.instantWindows", 0) == c.getOrDefault("search.p.declined.windows", 0),
+                    "D544 (D541's review): both keys -- an instant-speed window searched with a declined spell listed, counted as "
+                            + "declined.instantWindows when it made the cut (pick " + pick + "; " + c + ")");
+        });
+
+        // the retry guard on a stack: a pick asked for again on the same stack turns the key off for the step
+        scenario("d544-retry-guard", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, stackOn, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            castBearsAndPass(ai);
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final mtgtable.ai.SearchPolicy sp = ctl.search();
+            final forge.game.spellability.SpellAbility cs = playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Counterspell"), sa -> true);
+            final boolean first = sp.wantsPriority(ai, null);
+            sp.noteWidenedForTest(ai, "stackwin", cs);   // as if the search picked it and the cast never happened
+            final boolean again = sp.wantsPriority(ai, null);
+            final boolean third = sp.wantsPriority(ai, null);
+            check(first && !again && !third && ctl.counts().getOrDefault("search.p.stackwin.retry", 0) == 1,
+                    "D544: re-asked on the same stack with nothing played, the stack key is off for the rest of the step -- the "
+                            + "second and every later ask are Forge's, so no pick is asked for 999 times (" + ctl.counts() + ")");
+        });
+        scenario("d544-retry-guard-moved", creatureSpell, PolicyLobbyPlayerAi.Outlets.OFF, stackOn, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            castBearsAndPass(ai);
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final mtgtable.ai.SearchPolicy sp = ctl.search();
+            final forge.game.spellability.SpellAbility cs = playOf(ai, named(ai.getCardsIn(ZoneType.Hand), "Counterspell"), sa -> true);
+            sp.noteWidenedForTest(ai, "stackwin", cs);
+            cs.resetTargets();
+            cs.getTargets().add(g.getStack().peekAbility());
+            pushFree(ai, cs, sa -> { });                                       // the pick happened: the stack moved
+            check(!ctl.counts().containsKey("search.p.stackwin.retry") && !sp.widenOffForTest(ai, "stackwin"),
+                    "D544: once the stack has moved the next ask is a new window, not a retry (" + stackOf(g) + "; " + ctl.counts() + ")");
+        });
+    }
+
+    /** D544: the opponent casts the Grizzly Bears in its hand, paid, and the seat is handed priority. */
+    private static void castBearsAndPass(final Player ai) {
+        final Player o = opp(ai);
+        forge.ai.ComputerUtil.handlePlayingSpellAbility(o, playOf(o, named(o.getCardsIn(ZoneType.Hand), "Grizzly Bears"), sa -> true), null);
+        ai.getGame().getPhaseHandler().setPriority(ai);
+    }
+
+    private static Player opp(final Player ai) {
+        return ai.getWeakestOpponent();
     }
 
     /** D544: {@code sa} put on the stack as it stands (no payment): its setup applied, then Forge's own push. */
