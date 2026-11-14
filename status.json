@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-14T05:06:17-05:00",
- "heartbeat": "2026-11-14T05:06:17-05:00",
+ "updated": "2026-11-14T05:10:52-05:00",
+ "heartbeat": "2026-11-14T05:10:52-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.35,
-  "memUsedGb": 6.3,
+  "load1": 11.24,
+  "memUsedGb": 14.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4790,
+  "swapUsedMb": 4797,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -27,7 +27,7 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-14T05:00:48-05:00",
-   "elapsed": 329,
+   "elapsed": 604,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -39,7 +39,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-14T05:00:48-05:00",
-   "memGb": 0.01,
+   "memGb": 7.99,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -80,7 +80,7 @@
     "bs.registered": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 329
+    "elapsed_s": 590
    },
    "liveHeadline": [
     "cm.played",
