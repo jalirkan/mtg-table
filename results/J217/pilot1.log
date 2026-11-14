@@ -1,0 +1,366 @@
+==== J217 pilot1 started 2026-11-14T05:01:13-05:00 in unit lab-J217-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+1
+lint-bridge-selftest OK: 33 rules, 79 firing cases (each fired its own rule and no other), 93 checks
+bridge lint OK (97 file(s) under bridge/src, 4 under tools/; 33 rules)
+compiling 97 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+/home/justin-a/code/lab/mtg-table/bridge/src/mtgtable/ai/LenientGameCopier.java:544: warning: [deprecation] copyCopiableCharacteristics(Card,SpellAbility,SpellAbility) in CardCopyService has been deprecated
+                    new CardCopyService(o).copyCopiableCharacteristics(out, null, null);
+                                          ^
+1 warning
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 270 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 285 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2329 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:43980): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:43990): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:43998 (1 watching)
+WS CONNECT /127.0.0.1:44004 (connection #1)
+WS REFUSED /127.0.0.1:44006: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:44016 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:44016 (1 watching)
+WS DISCONNECT /127.0.0.1:44004 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:44018 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:44018 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:46986 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:51564 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:51564: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 33 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:47954: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:47962: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:47966: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:47978: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:48004: no valid pairing token
+WS SITE REFUSED /127.0.0.1:48120: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48128: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48140: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48154: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48170: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48172: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48178: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48184: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48194: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48200: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48210: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:48214: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:48220: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:48230: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:48236: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:48238 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:48238 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:48246 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:48246 (0 watching)
+WS CONNECT /127.0.0.1:48250 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:48250 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:48256): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:48268): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:48284 (1 watching)
+WS CONNECT /127.0.0.1:52114 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:52114 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:52126 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:52126 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:34271 (/127.0.0.1:52142): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:41240: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:57780: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:57782: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:57790: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:57798: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:57804 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:57804 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:57812): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:33343 (/127.0.0.1:57820): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38112: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38128: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38142: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38148: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38152: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38162: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38168: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38176: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38178: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38184: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38192: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38200: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38210: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38216: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:59978: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:59980: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:59986: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:60020)
+TABLE SEAT 1 upgrade from /127.0.0.1:60032
+WS CONNECT /127.0.0.1:60032 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:60042
+WS SEAT 1 TAKEN OVER by /127.0.0.1:60042 (the older connection /127.0.0.1:60032 is closed 4002)
+WS CONNECT /127.0.0.1:60042 (connection #2)
+WS DISCONNECT /127.0.0.1:60042 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:60044
+WS CONNECT /127.0.0.1:60044 (connection #1)
+WS DISCONNECT /127.0.0.1:60044 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:60058: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60072: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60086: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60092: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60098: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60100: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60114: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60118: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60134: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:60150: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:60166
+WS CONNECT /127.0.0.1:60166 (connection #2)
+WS DISCONNECT /127.0.0.1:60166 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+WS CONNECT /127.0.0.1:45954 (connection #1)
+WS DISCONNECT /127.0.0.1:45954 -- cancelling 0 pending ask(s)
+WS CONNECT /127.0.0.1:45966 (connection #2)
+WS DISCONNECT /127.0.0.1:45966 -- cancelling 0 pending ask(s)
+StalledGameSelfTest: 156 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 7.3 us + predict 3.1 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 132 check(s), 0 failure(s)
+grade utf8 probe: UTF-8 stdout under LC_ALL=C
+hidden has neither ManaCost nor Color
+decision selftest: 504 check(s), 0 failure(s)
+distill selftest: 38 check(s), 0 failure(s)
+build OK
+{"ok":1,"checks":504,"failures":0}
+== ai-bench selftest: what the priority search considers (D540, engine)
+  ok   D540: the board: Forge declines Giant Growth in a first main phase with no combat (canPlaySa CantPlayAi)
+  ok   D540: the aimed plays come after today's, and are counted (today []; widened [Giant Growth [Target creature gets +3/+3 until end of turn.]]; aimed [Giant Growth [Target creature gets +3/+3 until end of turn.]]; {search.p.declined.listed=1, search.p.declined.noTarget=1})
+  ok   D540: Giant Growth is a candidate aimed at the seat's own Bears (aimed by declined=1, targets [Grizzly Bears (12)]; today's list lacks it)
+  ok   D540: a Counterspell with an empty stack is never a candidate, and its missing aim is counted ([Giant Growth [Target creature gets +3/+3 until end of turn.]]; {search.p.declined.listed=1, search.p.declined.noTarget=1})
+  ok   D540: the aimed Giant Growth maps onto a copy, its target the copy's Bears (got [Grizzly Bears (12)])
+  ok   D540: the search with declined=1 fires on the board -- a declined Giant Growth searched, the Counterspell dropped (pick null; {search.copyUs=9891, search.p.considered=1, search.p.declined.cands=1, search.p.declined.listed=1, search.p.declined.noTarget=1, search.p.declined.windows=1, search.p.ms=104, search.p.us=104800, search.playUs=91749, search.rollouts=24, search.rounds=12})
+  ok   D540: the real game is untouched: both cards still in hand
+  ok   D540: with the keys off, nothing of D540's is counted ({})
+  ok   D540: land:6 (Forest, ) maps onto a copy's land ability (got Forest (6): )
+  ok   D540: land:7 (Island, ) maps onto a copy's land ability (got Island (7): )
+  ok   D540: land:8 (Island, ) maps onto a copy's land ability (got Island (8): )
+  ok   D540: the land listing names Forest and Island ([Forest, Island])
+  ok   D540: lands=1 rolls Forge's land out against the other name (two Islands are one): two candidates, a land played ([Play land]; {search.copyUs=7728, search.p.considered=1, search.p.lands.cands=2, search.p.lands.windows=1, search.p.ms=81, search.p.us=81842, search.playUs=71273, search.rollouts=24, search.rounds=12})
+  ok   D540: with lands off the land drop is Forge's, unsearched ([Play land]; {search.p.skipLand=1})
+  ok   D540: the seat holds priority at the step after the install -- a forced Bolt at END_OF_TURN (human's turn 5): after the install turn 5 END_OF_TURN, active the opponent, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=472, search.playUs=2474}
+  ok   D540: the candidate is played and the step proceeds to the end of the turn -- a forced Bolt at END_OF_TURN (human's turn 5): after the install turn 5 END_OF_TURN, active the opponent, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=472, search.playUs=2474}
+  ok   D540: the seat holds priority at the step after the install -- a forced pass at END_OF_TURN (human's turn 5): after the install turn 5 END_OF_TURN, active the opponent, priority the seat; at the leaf turn 6 UNTAP; Bolt in Hand; Bears alive; {search.copyUs=588, search.playUs=315}
+  ok   D540: the candidate is played and the step proceeds to the end of the turn -- a forced pass at END_OF_TURN (human's turn 5): after the install turn 5 END_OF_TURN, active the opponent, priority the seat; at the leaf turn 6 UNTAP; Bolt in Hand; Bears alive; {search.copyUs=588, search.playUs=315}
+  ok   D540: the real game is untouched at END_OF_TURN
+  ok   D540: the seat holds priority at the step after the install -- a forced Bolt at UPKEEP (ai's turn 5): after the install turn 5 UPKEEP, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=472, search.playUs=5059}
+  ok   D540: the candidate is played and the step proceeds to the end of the turn -- a forced Bolt at UPKEEP (ai's turn 5): after the install turn 5 UPKEEP, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=472, search.playUs=5059}
+  ok   D540: the seat holds priority at the step after the install -- a forced pass at UPKEEP (ai's turn 5): after the install turn 5 UPKEEP, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=488, search.playUs=5695}
+  ok   D540: the candidate is played and the step proceeds to the end of the turn -- a forced pass at UPKEEP (ai's turn 5): after the install turn 5 UPKEEP, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=488, search.playUs=5695}
+  ok   D540: the real game is untouched at UPKEEP
+  ok   D540: the seat holds priority at the step after the install -- a forced Bolt at COMBAT_BEGIN (ai's turn 5): after the install turn 5 COMBAT_BEGIN, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=504, search.playUs=3826}
+  ok   D540: the candidate is played and the step proceeds to the end of the turn -- a forced Bolt at COMBAT_BEGIN (ai's turn 5): after the install turn 5 COMBAT_BEGIN, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=504, search.playUs=3826}
+  ok   D540: the seat holds priority at the step after the install -- a forced pass at COMBAT_BEGIN (ai's turn 5): after the install turn 5 COMBAT_BEGIN, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=484, search.playUs=3589}
+  ok   D540: the candidate is played and the step proceeds to the end of the turn -- a forced pass at COMBAT_BEGIN (ai's turn 5): after the install turn 5 COMBAT_BEGIN, active the seat, priority the seat; at the leaf turn 6 UNTAP; Bolt in Graveyard; Bears dead; {search.copyUs=484, search.playUs=3589}
+  ok   D540: the real game is untouched at COMBAT_BEGIN
+  ok   D540: the board: Forge's own answer at the opponent's end step is a play, Scavenging Ooze's activation (got [{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on Scavenging Ooze and you gain 1 life.  ])
+  ok   D540: instant=1 fires at the opponent's end step where Forge plays: one window searched, Forge's play against pass at least (pick [{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on Scavenging Ooze and you gain 1 life.  ]; {search.copyUs=9362, search.p.considered=1, search.p.instant.cands=2, search.p.instant.windows=1, search.p.ms=69, search.p.us=69322, search.playUs=56213, search.rollouts=24, search.rounds=12})
+  ok   D540: with instant off the opponent's end step is never searched (pick [{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on Scavenging Ooze and you gain 1 life.  ]; {})
+== ai-bench selftest: the stack carry (D544, engine)
+  ok   d544 (a): the board: the opponent's Grizzly Bears is on the stack, paid ([spell Grizzly Bears#1 by Human -> []])
+  ok   d544 (a): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Grizzly Bears])
+  ok   d544 (a): the carry rebuilds the stack item by item (live [spell Grizzly Bears#1 by Human -> []]; copy [spell Grizzly Bears#1 by Human -> []])
+  ok   d544 (a): pass rolls out to the horizon with Grizzly Bears in Battlefield, Counterspell in Hand (after the install: stack [spell Grizzly Bears#1 by Human -> []], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Human) in Battlefield; Counterspell (Ai) in Hand; stack []; {search.copyUs=435, search.playUs=2035})
+  ok   d544 (a): cast Counterspell -> [stack:Grizzly Bears#1] rolls out to the horizon with Grizzly Bears in Graveyard, Counterspell in Graveyard (after the install: stack [spell Grizzly Bears#1 by Human -> []], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Human) in Graveyard; Counterspell (Ai) in Graveyard; stack []; {search.copyUs=457, search.playUs=2560})
+  ok   d544 (a): the live game is untouched (same fingerprint)
+  ok   d544 (b): the board: the opponent's Lightning Bolt on the seat's Bears is on the stack ([spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]])
+  ok   d544 (b): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Lightning Bolt])
+  ok   d544 (b): the carry rebuilds the stack item by item (live [spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]]; copy [spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]])
+  ok   d544 (b): pass rolls out to the horizon with Grizzly Bears in Graveyard, Lightning Bolt in Graveyard (after the install: stack [spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Graveyard; Lightning Bolt (Human) in Graveyard; stack []; {search.copyUs=991, search.playUs=2304})
+  ok   d544 (b): cast Ephemerate -> [Grizzly Bears#12] rolls out to the horizon with Grizzly Bears in Battlefield, Lightning Bolt in Graveyard (after the install: stack [spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Battlefield; Lightning Bolt (Human) in Graveyard; stack []; {search.copyUs=611, search.playUs=5240})
+  ok   d544 (b): the live game is untouched (same fingerprint)
+  ok   d544 (c1): the board: Fanatical Firebrand's ability on the seat's Elves is on the stack, the Firebrand sacrificed ([ability Fanatical Firebrand#5 by Human -> [Llanowar Elves#12]]; Firebrand in Graveyard)
+  ok   d544 (c1): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [])
+  ok   d544 (c1): the carry rebuilds the stack item by item (live [ability Fanatical Firebrand#5 by Human -> [Llanowar Elves#12]]; copy [ability Fanatical Firebrand#5 by Human -> [Llanowar Elves#12]])
+  ok   d544 (c1): pass rolls out to the horizon with Llanowar Elves in Graveyard, Fanatical Firebrand in Graveyard (after the install: stack [ability Fanatical Firebrand#5 by Human -> [Llanowar Elves#12]], priority Ai; at the leaf: turn 6 UNTAP; Llanowar Elves (Ai) in Graveyard; Fanatical Firebrand (Human) in Graveyard; stack []; {search.copyUs=770, search.playUs=2587})
+  ok   d544 (c1): cast Ephemerate -> [Llanowar Elves#12] rolls out to the horizon with Llanowar Elves in Battlefield, Fanatical Firebrand in Graveyard (after the install: stack [ability Fanatical Firebrand#5 by Human -> [Llanowar Elves#12]], priority Ai; at the leaf: turn 6 UNTAP; Llanowar Elves (Ai) in Battlefield; Fanatical Firebrand (Human) in Graveyard; stack []; {search.copyUs=719, search.playUs=5723})
+  ok   d544 (c1): the live game is untouched (same fingerprint)
+  ok   d544 (c2): the board: Flametongue Kavu's enters trigger is on the stack ([trigger Flametongue Kavu#1 by Human -> [Grizzly Bears#15]])
+  ok   d544 (c2): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [])
+  ok   d544 (c2): the carry rebuilds the stack item by item (live [trigger Flametongue Kavu#1 by Human -> [Grizzly Bears#15]]; copy [trigger Flametongue Kavu#1 by Human -> [Grizzly Bears#15]])
+  ok   d544 (c2): pass rolls out to the horizon with Grizzly Bears in Graveyard, Flametongue Kavu in Battlefield (after the install: stack [trigger Flametongue Kavu#1 by Human -> [Grizzly Bears#15]], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Graveyard; Flametongue Kavu (Human) in Battlefield; stack []; {search.copyUs=546, search.playUs=2532})
+  ok   d544 (c2): cast Ephemerate -> [Grizzly Bears#15] rolls out to the horizon with Grizzly Bears in Battlefield, Flametongue Kavu in Battlefield (after the install: stack [trigger Flametongue Kavu#1 by Human -> [Grizzly Bears#15]], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Battlefield; Flametongue Kavu (Human) in Battlefield; stack []; {search.copyUs=707, search.playUs=5781})
+  ok   d544 (c2): the live game is untouched (same fingerprint)
+  ok   d544 (d): the board: the seat's Bears, the opponent's Counterspell on it on top ([spell Counterspell#1 by Human -> [stack:Grizzly Bears#15], spell Grizzly Bears#15 by Ai -> []])
+  ok   d544 (d): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Grizzly Bears, Counterspell])
+  ok   d544 (d): the carry rebuilds the stack item by item (live [spell Counterspell#1 by Human -> [stack:Grizzly Bears#15], spell Grizzly Bears#15 by Ai -> []]; copy [spell Counterspell#1 by Human -> [stack:Grizzly Bears#15], spell Grizzly Bears#15 by Ai -> []])
+  ok   d544 (d): pass rolls out to the horizon with Grizzly Bears in Graveyard, Counterspell in Graveyard (after the install: stack [spell Counterspell#1 by Human -> [stack:Grizzly Bears#15], spell Grizzly Bears#15 by Ai -> []], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Graveyard; Counterspell (Human) in Graveyard; stack []; {search.copyUs=461, search.playUs=2032})
+  ok   d544 (d): cast Counterspell -> [stack:Counterspell#1] rolls out to the horizon with Grizzly Bears in Battlefield, Counterspell in Graveyard (after the install: stack [spell Counterspell#1 by Human -> [stack:Grizzly Bears#15], spell Grizzly Bears#15 by Ai -> []], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Battlefield; Counterspell (Human) in Graveyard; stack []; {search.copyUs=542, search.playUs=2941})
+  ok   d544 (d): the live game is untouched (same fingerprint)
+  ok   d544 (e): the board: Blaze with X = 3 on the seat's Hill Giant ([spell Blaze#1 by Human -> [Hill Giant#14] X=3])
+  ok   d544 (e): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Blaze])
+  ok   d544 (e): the carry rebuilds the stack item by item (live [spell Blaze#1 by Human -> [Hill Giant#14] X=3]; copy [spell Blaze#1 by Human -> [Hill Giant#14] X=3])
+  ok   d544 (e): pass rolls out to the horizon with Hill Giant in Graveyard (after the install: stack [spell Blaze#1 by Human -> [Hill Giant#14] X=3], priority Ai; at the leaf: turn 6 UNTAP; Hill Giant (Ai) in Graveyard; stack []; {search.copyUs=558, search.playUs=3011})
+  ok   d544 (e): the live game is untouched (same fingerprint)
+  ok   d544 (e'): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Blaze])
+  ok   d544 (e'): the carry rebuilds the stack item by item (live [spell Blaze#1 by Human -> [Hill Giant#14] X=1]; copy [spell Blaze#1 by Human -> [Hill Giant#14] X=1])
+  ok   d544 (e'): pass rolls out to the horizon with Hill Giant in Battlefield (after the install: stack [spell Blaze#1 by Human -> [Hill Giant#14] X=1], priority Ai; at the leaf: turn 6 UNTAP; Hill Giant (Ai) in Battlefield; stack []; {search.copyUs=449, search.playUs=2454})
+  ok   d544 (e'): the live game is untouched (same fingerprint)
+  ok   d544 (f'): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Burst Lightning])
+  ok   d544 (f'): the carry rebuilds the stack item by item (live [spell Burst Lightning#1 by Human -> [Hill Giant#14]]; copy [spell Burst Lightning#1 by Human -> [Hill Giant#14]])
+  ok   d544 (f'): pass rolls out to the horizon with Hill Giant in Battlefield (after the install: stack [spell Burst Lightning#1 by Human -> [Hill Giant#14]], priority Ai; at the leaf: turn 6 UNTAP; Hill Giant (Ai) in Battlefield; stack []; {search.copyUs=717, search.playUs=4188})
+  ok   d544 (f'): the live game is untouched (same fingerprint)
+  ok   d544 (f): the board: a kicked Burst Lightning on the seat's Hill Giant ([spell Burst Lightning#1 by Human -> [Hill Giant#14]])
+  ok   d544 (f): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Burst Lightning])
+  ok   d544 (f): the carry rebuilds the stack item by item (live [spell Burst Lightning#1 by Human -> [Hill Giant#14]]; copy [spell Burst Lightning#1 by Human -> [Hill Giant#14]])
+  ok   d544 (f): pass rolls out to the horizon with Hill Giant in Graveyard (after the install: stack [spell Burst Lightning#1 by Human -> [Hill Giant#14]], priority Ai; at the leaf: turn 6 UNTAP; Hill Giant (Ai) in Graveyard; stack []; {search.copyUs=624, search.playUs=3849})
+  ok   d544 (f): the live game is untouched (same fingerprint)
+  ok   d544 (g): the board: Fling on the seat's Hill Giant, the opponent's Hill Giant sacrificed ([spell Fling#3 by Human -> [Hill Giant#21]]; paid {Sacrificed={true=[Hill Giant (16)]}, SacrificedCards={true=[Hill Giant (16)]}})
+  ok   d544 (g): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Fling])
+  ok   d544 (g): the carry rebuilds the stack item by item (live [spell Fling#3 by Human -> [Hill Giant#21]]; copy [spell Fling#3 by Human -> [Hill Giant#21]])
+  ok   d544 (g): pass rolls out to the horizon with Hill Giant in Graveyard (after the install: stack [spell Fling#3 by Human -> [Hill Giant#21]], priority Ai; at the leaf: turn 6 UNTAP; Hill Giant (Ai) in Graveyard; stack []; {search.copyUs=1761, search.playUs=36136})
+  ok   d544 (g): the live game is untouched (same fingerprint)
+  ok   d544 (h): the board: Izzet Charm has a damage mode
+  ok   d544 (h): the board: Izzet Charm's damage mode on the seat's Bears is on the stack ([spell Izzet Charm#1 by Human -> [Grizzly Bears#15]])
+  ok   d544 (h): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Izzet Charm])
+  ok   d544 (h): the carry rebuilds the stack item by item (live [spell Izzet Charm#1 by Human -> [Grizzly Bears#15]]; copy [spell Izzet Charm#1 by Human -> [Grizzly Bears#15]])
+  ok   d544 (h): pass rolls out to the horizon with Grizzly Bears in Graveyard (after the install: stack [spell Izzet Charm#1 by Human -> [Grizzly Bears#15]], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Graveyard; stack []; {search.copyUs=967, search.playUs=5533})
+  ok   d544 (h): the live game is untouched (same fingerprint)
+  ok   d544 (m): the board: the Clue's draw on the stack, the token sacrificed ([ability Clue Token#5 by Human -> []])
+  ok   d544 (m): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [])
+  ok   d544 (m): the carry rebuilds the stack item by item (live [ability Clue Token#5 by Human -> []]; copy [ability Clue Token#5 by Human -> []])
+  ok   d544 (m): pass rolls out to the horizon with Lightning Bolt in Hand (after the install: stack [ability Clue Token#5 by Human -> []], priority Ai; at the leaf: turn 6 UNTAP; Lightning Bolt (Human) in Hand; stack []; {search.copyUs=937, search.playUs=6980})
+  ok   d544 (m): the live game is untouched (same fingerprint)
+  ok   d544 (n): the board: Fling on the seat's Elves, a Goblin token sacrificed ([spell Fling#1 by Human -> [Llanowar Elves#13]]; paid {Sacrificed={true=[Goblin Token (6)]}, SacrificedCards={true=[Goblin Token (6)]}})
+  ok   d544 (n): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Fling])
+  ok   d544 (n): the carry rebuilds the stack item by item (live [spell Fling#1 by Human -> [Llanowar Elves#13]]; copy [spell Fling#1 by Human -> [Llanowar Elves#13]])
+  ok   d544 (n): pass rolls out to the horizon with Llanowar Elves in Graveyard (after the install: stack [spell Fling#1 by Human -> [Llanowar Elves#13]], priority Ai; at the leaf: turn 6 UNTAP; Llanowar Elves (Ai) in Graveyard; stack []; {search.copyUs=827, search.playUs=4355})
+  ok   d544 (n): the live game is untouched (same fingerprint)
+  ok   d544 (o): the board: prowess on top of the Bolt ([trigger Monastery Swiftspear#6 by Human -> [], spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]])
+  ok   d544 (o): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [Lightning Bolt])
+  ok   d544 (o): the carry rebuilds the stack item by item (live [trigger Monastery Swiftspear#6 by Human -> [], spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]]; copy [trigger Monastery Swiftspear#6 by Human -> [], spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]])
+  ok   d544 (o): pass rolls out to the horizon with Grizzly Bears in Graveyard, Lightning Bolt in Graveyard (after the install: stack [trigger Monastery Swiftspear#6 by Human -> [], spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]], priority Ai; at the leaf: turn 6 UNTAP; Grizzly Bears (Ai) in Graveyard; Lightning Bolt (Human) in Graveyard; stack []; {search.copyUs=640, search.playUs=6325})
+  ok   d544 (o): the live game is untouched (same fingerprint)
+  ok   d544 (p): the board: Sentinel's attack trigger on the stack at declare attackers ([trigger Sentinel of the Nameless City#5 by Human -> []]; phase COMBAT_DECLARE_ATTACKERS)
+  ok   d544 (p): with the carry off a copy is today's -- no stack instance, the Stack zone's cards only (copy [], Stack zone [])
+  ok   d544 (p): the carry rebuilds the stack item by item (live [trigger Sentinel of the Nameless City#5 by Human -> []]; copy [trigger Sentinel of the Nameless City#5 by Human -> []])
+  ok   d544 (p): pass rolls out to the horizon with Map Token in Battlefield (after the install: stack [trigger Sentinel of the Nameless City#5 by Human -> []], priority Ai; at the leaf: turn 6 UNTAP; Map Token (Human) in Battlefield; stack []; {search.copyUs=449, search.playUs=3052})
+  ok   d544 (p): the live game is untouched (same fingerprint)
+  ok   d544 (q): the board: the Bolt on top, aimed at the Bears as they were, and the Bears back on the battlefield as a new object ([spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]]; Bears in Ai's Battlefield)
+  ok   d544 (q) a target flickered in response: the carry refuses (stale): live stale, on a copy stale ([spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]])
+  ok   d544 (q) a target flickered in response: the refusal's detail is ids and words, and names no card ("the live stack")
+  ok   d544 (r): the board: the Pyromancer's ability on the Bears on the stack, the opponent's crime counted ([ability Prodigal Pyromancer#5 by Human -> [Grizzly Bears#12]]; crimes 1)
+  ok   d544 (r): the carry accepts the stack (accepted)
+  ok   d544 (r): after the carry each player's crimes this turn are the original's, and no crime trigger runs on the copy (Human live 1 off 1 carried 1; Ai live 0 off 0 carried 0; copy stack [ability Prodigal Pyromancer#5 by Human -> [Grizzly Bears#12]], waiting false)
+  ok   d544 (r): after the carry the Pyromancer's activations this turn and this game are the live game's, never one more, and the stack's list of abilities activated this turn is no longer than the live one's (live 1/1/1, the carry off 0/0/0, carried 1/1/1)
+  ok   d544 (s): the board: Underworld Dreams' trigger on the opponent's draw on the stack ([trigger Underworld Dreams#10 by Ai -> []]; hand 0 -> 1)
+  ok   d544 (s) a triggering object in the opponent's hand: the live test lets it through and the carry refuses (hidden): live null, on a copy hidden ([trigger Underworld Dreams#10 by Ai -> []])
+  ok   d544 (s) a triggering object in the opponent's hand: the refusal's detail is ids and words, and names no card ("card 10: Card is a card in a hidden zone")
+  ok   d544 (i): the board: Gathan Raiders has a face-down cast
+  ok   d544 (i) face-down: the carry refuses (faceDown): live faceDown, on a copy faceDown ([spell #1 by Human -> []])
+  ok   d544 (i) face-down: the refusal's detail is ids and words, and names no card ("the live stack")
+  ok   d544 (j) copied spell: the carry refuses (copied): live copied, on a copy copied ([spell Lightning Bolt#19 by Human -> [Hill Giant#16], spell Lightning Bolt#2 by Human -> [Hill Giant#16]])
+  ok   d544 (j) copied spell: the refusal's detail is ids and words, and names no card ("the live stack")
+  ok   d544 (k) split second: the carry refuses (splitSecond): live splitSecond, on a copy splitSecond ([spell Sudden Shock#3 by Human -> [Hill Giant#16]])
+  ok   d544 (k) split second: the refusal's detail is ids and words, and names no card ("the live stack")
+  ok   d544 (l) frozen: the carry refuses (frozen): live frozen, on a copy frozen ([spell Sudden Shock#3 by Human -> [Hill Giant#16]])
+  ok   d544 (l) frozen: the refusal's detail is ids and words, and names no card ("the live stack")
+== ai-bench selftest: the wide windows (D544, engine)
+  ok   D544: stackwin=1 searches the opponent's spell on the stack, the stack carried and the opponent's pass given (pick [Counter target spell.]; search p: 12 rounds, 24 playouts, 96 ms, horizon 0, rule margin margin 20, forge -121+-0 (d 0+-0); 0+-0 (d 121+-0), overrode with 1; {search.copyUs=15730, search.p.changed=1, search.p.changed.fromPass=1, search.p.considered=1, search.p.declined.cands=1, search.p.declined.changed=1, search.p.declined.listed=1, search.p.declined.windows=1, search.p.ms=96, search.p.stackwin.cands=2, search.p.stackwin.changed=1, search.p.stackwin.oppPassed=1, search.p.stackwin.windows=1, search.p.us=96763, search.playUs=77458, search.rollouts=24, search.rounds=12, search.wide.oppPassed=1})
+  ok   D544: Counterspell (card 8) aimed at the stack is a candidate (Forge's answer first: [pass, cast:8])
+  ok   D544: the live game is untouched by the stack search
+  ok   D544: with the new keys off (declined=1,instant=1) a stack window is Forge's and nothing of D544's is counted ({})
+  ok   D544: a face-down spell on the stack refuses the window, unsearched ({search.p.declined.listed=0, search.p.stackwin.refused=1, search.p.stackwin.refused.faceDown=1})
+  ok   D544: the opponent's spell on top in its turn: a stack window, and the opponent has passed
+  ok   D544: the opponent's trigger on top in the seat's own turn: a stack window, and the opponent has NOT passed ([trigger Flametongue Kavu#1 by Human -> [Grizzly Bears#14]])
+  ok   D544 (the skeptic's read): in the seat's own turn the opponent's Bolt after the cast is a granted pass, the seat's own Growth on top is not, and the Bolt on top again after the Growth resolved is not (empty false, cast true, own false, after the resolution false; [spell Lightning Bolt#1 by Human -> [Grizzly Bears#12]])
+  ok   D544 (the re-review): in the opponent's turn a pass is granted on its second Bolt after the first resolved, on the same stack asked again, and on the Bolt after the seat's Growth resolved; the seat's own Growth on top is not (empty true, first true, second true, again true, own false, after the resolution true; life 17; [spell Lightning Bolt#2 by Human -> [Grizzly Bears#14]])
+  ok   D544: today's install: the seat first, then the opponent once more on the same stack (priority [Ai@1, Human@1, Human@0, Ai@0])
+  ok   D544: the opponent passed already: asked first, it passes and the seat's pass resolves the spell (priority [Human@1, Ai@1, Human@0, Ai@0])
+  ok   D544: passwin=1 searches END_OF_TURN (human's turn) with Ephemerate aimed; the opponent has passed (pick null; {search.copyUs=7271, search.p.considered=1, search.p.declined.cands=1, search.p.declined.listed=1, search.p.declined.windows=1, search.p.ms=41, search.p.passwin.cands=2, search.p.passwin.oppPassed=1, search.p.passwin.windows=1, search.p.us=41799, search.playUs=32300, search.rollouts=24, search.rounds=12, search.wide.oppPassed=1})
+  ok   D544: with passwin off END_OF_TURN is Forge's ({})
+  ok   D544: passwin=1 searches COMBAT_DECLARE_ATTACKERS (human's turn) with Ephemerate aimed; the opponent has passed (pick null; {search.copyUs=11580, search.p.considered=1, search.p.declined.cands=1, search.p.declined.listed=1, search.p.declined.windows=1, search.p.ms=97, search.p.passwin.cands=2, search.p.passwin.oppPassed=1, search.p.passwin.windows=1, search.p.us=97492, search.playUs=83244, search.rollouts=24, search.rounds=12, search.wide.oppPassed=1})
+  ok   D544: with passwin off COMBAT_DECLARE_ATTACKERS is Forge's ({})
+  ok   D544: passwin=1 searches COMBAT_DECLARE_BLOCKERS (ai's turn) with Ephemerate aimed; the opponent has not passed (the seat is active) (pick null; {search.copyUs=7678, search.p.considered=1, search.p.declined.cands=1, search.p.declined.listed=1, search.p.declined.windows=1, search.p.ms=57, search.p.passwin.cands=2, search.p.passwin.windows=1, search.p.us=57189, search.playUs=47593, search.rollouts=24, search.rounds=12})
+  ok   D544: with passwin off COMBAT_DECLARE_BLOCKERS is Forge's ({})
+  ok   D544: an end step with no aimed play (a Counterspell, nothing to counter) is not a pass window ({search.p.declined.listed=0, search.p.declined.noTarget=1})
+  ok   D544: the sorcery-speed test takes equip and loyalty, not Firebrand's ping nor a mana ability (Bonesplitter equip=true; Fanatical Firebrand ability=false; Llanowar Elves mana=false; Liliana of the Veil loyalty=true; Liliana of the Veil loyalty=true; Liliana of the Veil loyalty=true; Forest mana=false;  on [Bonesplitter, Fanatical Firebrand, Llanowar Elves, Liliana of the Veil, Forest])
+  ok   D544: Bonesplitter's equip, its only creature the one it is on, is aimed there and dropped ([]; {search.p.dactiv.listed=0, search.p.dactiv.sameHost=1})
+  ok   D544: a source the widening played this turn lists no activation, and is not aimed ([]; {})
+  ok   D544: the AI memory sets are put back as they were before the aims (the aims wrote to them; 1 set(s) restored; listed []; {search.p.dactiv.listed=0, search.p.dactiv.sameHost=1})
+  ok   D544: dactiv=1 looks at the equip Forge declines in the seat's main phase, no error (pick null; {search.p.dactiv.listed=0, search.p.dactiv.memoryRestored=1, search.p.dactiv.sameHost=1})
+  ok   D544 (D541's review): both keys -- an instant-speed window searched with a declined spell listed, counted as declined.instantWindows when it made the cut (pick [{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on Scavenging Ooze and you gain 1 life.  ]; {search.copyUs=15013, search.p.considered=1, search.p.declined.cands=1, search.p.declined.instantWindows=1, search.p.declined.listed=1, search.p.declined.windows=1, search.p.instant.cands=3, search.p.instant.windows=1, search.p.ms=157, search.p.us=157242, search.playUs=137551, search.rollouts=36, search.rounds=12})
+  ok   D544: re-asked on the same stack with nothing played, the stack key is off for the rest of the step -- the second and every later ask are Forge's, so no pick is asked for 999 times ({search.p.stackwin.retry=1})
+  ok   D544: once the stack has moved the next ask is a new window, not a retry ([spell Counterspell#8 by Ai -> [stack:Grizzly Bears#1], spell Grizzly Bears#1 by Human -> []]; {})
+  ok   the attack scored by the model, a legal declaration ({distill.a.scored=1, search.a.changed=1, search.a.considered=1, search.a.ms=0, search.a.us=445})
+  ok   the distilled seat wrote no row
+ai-bench selftest: 476 check(s), 0 failure(s)
+{"ok":1,"checks":476,"failures":0}
+✔ solve: a small linear system (1.122655ms)
+✔ Bradley-Terry recovers known Elo differences with the anchor fixed at 1500 (4.011354ms)
+✔ an unbeaten player gets a finite rating, a player with no games is unrated at the prior (0.207422ms)
+✔ bootstrap over mirror blocks: intervals cover the truth and are in the Hessian's range (23.274794ms)
+✔ SPRT bounds are the Wald bounds (0.17409ms)
+✔ SPRT: a clearly stronger A is accepted (H1), a weaker one rejected (H0) (9.40729ms)
+✔ SPRT: at the H0 boundary (A = B), H1 is accepted about as rarely as alpha (605.346474ms)
+✔ SPRT: the game limit gives inconclusive; too few pairs never decide (0.406379ms)
+✔ SPRT (D373): defaults are 100 pairs and a 0.05 floor; the old 8 / 0.01 stay reachable when asked for (2.611975ms)
+✔ SPRT (D373): H0 reads "not shown >= elo1 better", never "no gain" (0.266585ms)
+✔ pairScores: two games of a block are one observation; draws drop out (0.08445ms)
+✔ grid and sample (0.241297ms)
+✔ successive halving finds the strongest of eight synthetic configs, with the same deals for all (1.716028ms)
+✔ league promotion: SPRT H1 AND non-inferior against forge-default (0.130538ms)
+✔ the Forge non-inferiority test: stated margin 30 Elo, alpha 5%, power 90% (59.54517ms)
+✔ scheduler: a new player first, against forge-default (0.527058ms)
+✔ scheduler: the anchor share, then the most informative pair (0.223854ms)
+✔ deal slots: fixed by the block number; hosts get different bases (0.159653ms)
+✔ the committed registry: anchors, hashes, an unmerged kind is unavailable, not a crash (28.731093ms)
+✔ search kind: params map onto the bench's +search syntax; defaults fill the hash (0.373647ms)
+✔ search kind, D350–D351: the new switches stay out of the hash and the seat config at their defaults (21.704881ms)
+✔ search kind, D388–D390: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys (23.183ms)
+✔ D412: search-v2 = search-v1 + anytime=1, which the ladder already rates as search-v1-anytime (the live seat until D539) (21.649276ms)
+✔ D539: the live seat is search-v3 = search-v2 + what=pa, which the ladder already rates as search-v2-no-b (21.385317ms)
+✔ addPlayer never overwrites (0.173629ms)
+✔ results: ai-bench lines become ladder lines; dedup across files; torn lines skipped; mirror blocks (1.961784ms)
+✔ ladder.json schema 1 and the HTML page (2.391207ms)
+✔ dev / confirm deck sets: each cube's drafts alternate by seed; the split is a function of the drafts (0.197133ms)
+✔ experiment log: a start with no end is abandoned; ends join their starts (0.173288ms)
+✔ search-eval (D354): the search with leaf=eval:<model>, pinned to the model file by its content hash (0.80289ms)
+✔ search-distill (J126): search-v2's candidates scored by the distilled model, pinned by its content hash (0.754919ms)
+✔ J126: the match tally times each side's decisions (search.<kind>.us), per kind and over p + a + b (0.510065ms)
+✔ J128 (D437): search-v2-evalleaf is search-v2 (search-v1-anytime) plus leaf=eval:<evaluator v2> and nothing else (23.206604ms)
+✔ J128 (D437): the match tally counts the evaluator's leaves and their mean cost (search.leaf.eval, .evalNs) (0.610526ms)
+✔ D468: the match tally counts rollouts the step clock ended (search.stepTimeouts and the prior's), 0 when none (0.471943ms)
+✔ D470: the match tally counts rollouts whose forced answer was unavailable (search.unavailable and the prior's), 0 when none (0.462816ms)
+✔ match (D398): the pair-score interval, in Elo too; no interval under 2 pairs (0.301611ms)
+✔ match (D398): the interval covers the truth about 95% of the time on mirrored synthetic pairs (8.55697ms)
+✔ match (D398): search counters from ai-bench lines -- searched, changed, fallbacks by reason, a game-clustered budget rate (0.728339ms)
+✔ the registry (D398): search-v1-reckless is search-v1 on Reckless.ai and nothing else (22.382324ms)
+✔ D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-anytime) plus their switches and nothing else (21.944956ms)
+✔ D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled (22.827416ms)
+✔ D517: search-v2-routlets and -ranked are search-v2 (search-v1-anytime) plus one knob; -ms750-r6 and -ms375-r3 scale its budget and round cap down (22.579316ms)
+✔ D523: search-v2-rrandom and -rrandom-self are search-v2 (search-v1-anytime) plus rollout=random / random-self (21.873922ms)
+✔ D525: search-v2-rrandom3 and -rrandom3-held are search-v2 (search-v1-anytime) plus rollout=random3 / random3-held (22.877271ms)
+✔ D527: search-v2-rrandom4 is search-v2 (search-v1-anytime) plus rollout=random4, and -m40 is it plus margin=40 (21.851519ms)
+✔ D528: search-v2-rrandom4-m60 is search-v2-rrandom4 plus margin=60, and its baseline policy-outlet is search-v2 with the search off (21.540791ms)
+✔ D530: search-v2-rrandom4-lcb-m60 and -lcb-m40 are search-v2-rrandom4-m60 and -m40 plus D350's override=lcb at z 1, and nothing else (23.265847ms)
+✔ D531: search-v2-rrandom4them-lcb-m40 is search-v2-rrandom4-lcb-m40 with rollout=random4-them, and nothing else (23.11434ms)
+✔ D532: search-v2-rrandom4them-m40 and search-v2-rrandom4them are random4-them on the margin rule at 40 and at search-v2's own 20, and nothing else (21.71483ms)
+✔ D533: search-v2-rmix4them-m40 and search-v2-rmix4them are D532's two arms with rollout=mix4-them, and differ from each other in the margin alone (23.196806ms)
+✔ D535: the six kind arms are search-v2 with what= alone changed, and no second name carries a corner's hash (22.542888ms)
+✔ D537: the three horizon arms are search-v2 with only the horizon (and, for t1-x3, the clock) changed (21.755276ms)
+✔ D540: the three candidate arms are search-v3 (search-v2-no-b) with one key each, and the keys are off everywhere else (22.729081ms)
+✔ D541: search-v3-declined-instant is search-v3-declined with instant=on and nothing else, at its own hash (21.753984ms)
+✔ D545: search-v3-declined-instant-t1-x3 is search-v3-declined-instant with turns=1 and a 4.5 s clock and nothing else, at its own hash (21.473474ms)
+✔ D544: search-v3-wide is search-v3-declined-instant with stackwin, passwin and dactiv on and nothing else, at its own hash (23.443683ms)
+✔ D417: the match tally counts each decision kind, and searched/changed stay p + a + b (0.38585ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1379.051174
