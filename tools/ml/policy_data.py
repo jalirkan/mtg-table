@@ -453,7 +453,9 @@ def human_dirs_of(given: list[str], repo: str) -> list[str]:
 
     With MTG_TABLE_ML_NO_DEFAULT_HUMAN=1 in the environment there is no default: only the directories
     given.  The tests set it (and the gate's step 12h exports it), because a checkout the owner has
-    played in holds real games under var/ml/human/ and a test must read the committed fixtures only."""
+    played in holds real games under var/ml/human/ and a test must read the committed fixtures only.
+    Only the value "1" is the switch.  human_eval.py and human_collect.py default to the same folder
+    through human_collect.DEFAULT_OUT and do not ask here: a test of either passes its folders."""
     if given:
         return given
     if os.environ.get(NO_DEFAULT_HUMAN_ENV) == "1":

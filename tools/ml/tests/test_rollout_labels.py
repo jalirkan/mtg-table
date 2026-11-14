@@ -24,7 +24,7 @@ sys.path.insert(0, ML)
 
 import rollout_labels as RL  # noqa: E402
 
-# No default var/ml/human/ in anything this module runs, child processes included: a checkout the owner
+# No default var/ml/human/ in this process or its child processes: a checkout the owner
 # has played in holds real games there, and these tests read the committed fixtures only
 # (policy_data.human_dirs_of; the gate's step 12h exports the same).
 os.environ["MTG_TABLE_ML_NO_DEFAULT_HUMAN"] = "1"
