@@ -9,9 +9,9 @@ line, PLAN's rows and this file. No file under `bridge/src`, `tools/ai-bench` or
 registered player's hash is unchanged, the live seat does not move, and the two hashes were computed by the ladder's
 own `resolvePlayer` and `configHash` (`node tools/ai-ladder/cli.ts cfg`, and `list`, whose output is main's with these
 two lines added). `node tools/decisions.mjs next` printed D547 on this lane. Written while lab job J217 held the
-machine alone: nothing here has been built or played on the lane yet (*Verification*).*
+machine alone; built, self-tested and piloted on the lane after J217 ended (*Verification*).*
 
-**Status: registered; text, config and the ladder test only, unbuilt and unpiloted on the lane (*Verification*);
+**Status: registered; built, self-tested and both pilots dry-run on the lane (*Verification*);
 unplayed. J219 and J220 play it, one after the other, each alone.**
 
 **2026-11-14**
@@ -356,9 +356,23 @@ no Java, no build, no game):**
   reader 5 of 5, verdict 56 of 56 (the trace's named case and the "no cost" flag among them), recording reader 15 of
   15, the block, rollout and gate readers each ok; J220's 5, 55 and 15 of theirs and the other three ok. `node tools/runner/cli.ts check` on each: `lint: clean`, `machine-checked`; the pilot 7 blocks and
   50 checks, the commands 2 blocks and 25 checks.
-- Not run: `./tools/check-forge.sh`, `./bridge/build.sh` (the lint, its self-test, the decision self-test and its
-  count), the ai-bench self-test, `./tools/ai-ladder.sh list` through the shell, the two pilot dry-runs, the
-  independent review and the full gate.
+- Not run then: `./tools/check-forge.sh`, `./bridge/build.sh` (the lint, its self-test, the decision self-test and
+  its count), the ai-bench self-test, `./tools/ai-ladder.sh list` through the shell, the two pilot dry-runs and the
+  full gate. All but the gate were run after J217 ended, below; the gate is the merge commit's.
+
+**Verification after J217 (2026-11-14 14:29-14:45 EST on `c35992ada`, the lab idle):**
+
+- `./tools/check-forge.sh` OK (sha256 `3c0a7c38...8e5dd9`); `./bridge/build.sh` rc 0: the lint's self-test OK (33
+  rules, 79 firing cases, 93 checks), the eval self-test 8,039 checks, the grade self-test 132, **the decision
+  self-test 514 check(s), 0 failure(s)** (the count both drafts' bar names), the distill self-test 38; the ai-bench
+  self-test 476 check(s), 0 failure(s).
+- `./tools/ai-ladder.sh list` through the shell: `search-v3-declined-instant` `af6771947a25`, `-t1-x3`
+  `9aeacaff9142`, `-a1` `dbf415e66452`, `-t1-x2` `5319a60d7e3b`, as registered; `node --test
+  web/test/ai-ladder.test.ts` 60 of 60.
+- The two pilots, dry-run from this lane (`./tools/runner.sh dry-run <job> --root <lane> --pilot-only --workers 6
+  --keep`, each draft pinned to `c35992ada`): J219's seven blocks ok (40, 0, 0, 0, 0, 152 and 81 s), J220's ok (44,
+  0, 0, 0, 0, 394 and 187 s); **49 of 50 checks pass on each**, and the one that fails is `merged == 1`, which is
+  false by construction off `main` and is the merge's to make true.
 
 **Follow-up.** J219 and J220 play the two matches at this lane's merge, J219 first; each `report.md` carries its
 reading and description, and `summary.md` (the PC session) words them. A SHOWN or SMALL GAIN goes to the owner as a
