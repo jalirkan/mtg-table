@@ -445,10 +445,19 @@ def load(out: str, split: str) -> dict[str, Any]:
     return res
 
 
+NO_DEFAULT_HUMAN_ENV = "MTG_TABLE_ML_NO_DEFAULT_HUMAN"
+
+
 def human_dirs_of(given: list[str], repo: str) -> list[str]:
-    """`--human` directories, else var/ml/human/ when it exists (D347's documented place)."""
+    """`--human` directories, else var/ml/human/ when it exists (D347's documented place).
+
+    With MTG_TABLE_ML_NO_DEFAULT_HUMAN=1 in the environment there is no default: only the directories
+    given.  The tests set it (and the gate's step 12h exports it), because a checkout the owner has
+    played in holds real games under var/ml/human/ and a test must read the committed fixtures only."""
     if given:
         return given
+    if os.environ.get(NO_DEFAULT_HUMAN_ENV) == "1":
+        return []
     d = os.path.join(repo, DEFAULT_HUMAN)
     return [d] if os.path.isdir(d) else []
 

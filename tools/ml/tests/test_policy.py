@@ -228,6 +228,24 @@ class PolicyDatasetTest(unittest.TestCase):
         out, st = self._build(RUN, extra=[human], human_dirs=[human], train_human=True)
         self.assertNotIn("human", st["splits"])
 
+    def test_the_default_human_folder_and_the_switch_that_turns_it_off(self):
+        """var/ml/human/ under --repo is read by default (D347); MTG_TABLE_ML_NO_DEFAULT_HUMAN=1 -- what the
+        tests and the gate set -- leaves only the directories given, and a given --human always wins."""
+        from unittest import mock
+        repo = os.path.join(self.tmp, "repo")
+        default = os.path.join(repo, P.DEFAULT_HUMAN)
+        os.makedirs(default)
+        with mock.patch.dict(os.environ):
+            os.environ.pop(P.NO_DEFAULT_HUMAN_ENV, None)
+            self.assertEqual(P.human_dirs_of([], repo), [default])
+            self.assertEqual(P.human_dirs_of([], self.tmp), [])            # no such folder: no default
+            self.assertEqual(P.human_dirs_of(["x"], repo), ["x"])
+            os.environ[P.NO_DEFAULT_HUMAN_ENV] = "1"
+            self.assertEqual(P.human_dirs_of([], repo), [])
+            self.assertEqual(P.human_dirs_of(["x"], repo), ["x"])
+            os.environ[P.NO_DEFAULT_HUMAN_ENV] = "0"                        # only "1" turns it off
+            self.assertEqual(P.human_dirs_of([], repo), [default])
+
     def test_dataset_py_keeps_human_games_out_of_training(self):
         import dataset as D
         human = os.path.join(self.tmp, "human")

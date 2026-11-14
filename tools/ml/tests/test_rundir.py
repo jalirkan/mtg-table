@@ -27,6 +27,11 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "tools", "ml"))
 sys.path.insert(0, HERE)
 import encode as E  # noqa: E402
+
+# No default var/ml/human/ in anything this module runs, child processes included: a checkout the owner
+# has played in holds real games there, and these tests read the committed fixtures only
+# (policy_data.human_dirs_of; the gate's step 12h exports the same).
+os.environ["MTG_TABLE_ML_NO_DEFAULT_HUMAN"] = "1"
 from test_encode import scramble_hidden  # noqa: E402
 
 try:

@@ -2277,7 +2277,9 @@ s12h_ml() {
   else
     echo "numpy ABSENT: the dataset and baseline tests are skipped (pip install numpy)"
   fi
-  python3 -m unittest discover -s tools/ml/tests 2>&1 \
+  # no default var/ml/human/: a checkout the owner has played in holds real games there, and these
+  # tests read the committed fixtures only (policy_data.human_dirs_of)
+  MTG_TABLE_ML_NO_DEFAULT_HUMAN=1 python3 -m unittest discover -s tools/ml/tests 2>&1 \
     || die "tools/ml tests (12h: the ML encoder broke -- if it names a hidden-information feature, the encoder read a card the viewer may not see)"
 }
 
