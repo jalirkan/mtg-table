@@ -1,0 +1,2 @@
+==== J217 pilot2 started 2026-11-14T05:02:08-05:00 in unit lab-J217-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+{"ok":1,"name":"search-v3-declined-instant","hash":"af6771947a25","cfg":"Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1","isLive":0,"why":"D543's recommendation STANDS"}
