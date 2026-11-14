@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-13T23:20:37-05:00",
- "heartbeat": "2026-11-13T23:20:37-05:00",
+ "updated": "2026-11-13T23:24:11-05:00",
+ "heartbeat": "2026-11-13T23:24:11-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 8.71,
-  "memUsedGb": 10.3,
+  "load1": 8.06,
+  "memUsedGb": 10.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5499,
+  "swapUsedMb": 5176,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -27,19 +27,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-13T10:09:26-05:00",
-   "elapsed": 47471,
-   "done": 3352,
+   "elapsed": 47685,
+   "done": 3360,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 215.7,
-   "eta": "2026-11-14T06:03:27-05:00",
-   "workers": 5,
+   "ratePerHour": 224.1,
+   "eta": "2026-11-14T05:49:45-05:00",
+   "workers": 6,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-13T23:19:53-05:00",
-   "memGb": 5.44,
+   "dataUpdated": "2026-11-13T23:20:59-05:00",
+   "memGb": 5.68,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -78,9 +78,9 @@
     "bs.registered": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 47427,
+    "elapsed_s": 47685,
     "j218_err": 0,
-    "j218_games": 3352
+    "j218_games": 3360
    },
    "liveHeadline": [
     "cm.played",
@@ -115,12 +115,6 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [
-    {
-     "at": "2026-11-13T11:00:11-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0
-    },
     {
      "at": "2026-11-13T11:05:15-05:00",
      "kind": "raise",
@@ -233,6 +227,12 @@
      "at": "2026-11-13T23:16:02-05:00",
      "kind": "drop",
      "workers": 5,
+     "pressure": 0
+    },
+    {
+     "at": "2026-11-13T23:24:11-05:00",
+     "kind": "raise",
+     "workers": 6,
      "pressure": 0
     }
    ],
