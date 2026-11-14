@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-14T05:03:06-05:00",
- "heartbeat": "2026-11-14T05:03:06-05:00",
+ "updated": "2026-11-14T05:03:21-05:00",
+ "heartbeat": "2026-11-14T05:03:21-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.16,
+  "load1": 2.97,
   "memUsedGb": 6.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4796,
+  "swapUsedMb": 4795,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -25,9 +25,9 @@
    "id": "J217",
    "title": "D544's wide windows: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v3-wide (search-v3-declined-instant with stackwin=1, passwin=1 and dactiv=1, a new player, b95340935592) against B = search-v3-declined-instant (af6771947a25), fixed by D544 point 10 from J216's read: D543's recommendation STANDS (J216 SMALL GAIN alone, +8.3 Elo [+2.4, +14.1]); the live seat has not moved, in a ladder folder of its own under --host j217 on deal blocks no job has played, 725,900,000-725,900,599, read by D519's four readings at 4,800 games as D544 writes them for this match, with D544's completeness parts and exposure conditions. Never pooled with J215 or J216. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "pilot 6/8",
+   "phase": "pilot 7/8",
    "started": "2026-11-14T05:00:48-05:00",
-   "elapsed": 138,
+   "elapsed": 153,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -116,7 +116,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J217-pilot6"
+   "detail": "lab-J217-pilot7"
   }
  ],
  "queue": [],
