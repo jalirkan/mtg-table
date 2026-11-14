@@ -1429,6 +1429,62 @@ test('D544: search-v3-wide is search-v3-declined-instant with stackwin, passwin 
   assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
 });
 
+test('D547: search-v3-declined-instant-a1 is the pair with aturns=1, search-v3-declined-instant-t1-x2 is D545\'s t1-x3 at a 3 s clock, each at its own hash', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const PAIR = 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1';
+  const pairRaw = raw.players.find((p) => p.name === 'search-v3-declined-instant')!;
+  const x3Raw = raw.players.find((p) => p.name === 'search-v3-declined-instant-t1-x3')!;
+  const pair = by.get('search-v3-declined-instant')!;
+  // the hashes were computed by the ladder's own resolvePlayer and configHash on the lane (ai-ladder cfg and list)
+  // -- the attack arm (J219): aturns=1 and nothing else, so attacks see the crack-back and priority keeps turns=0
+  const ar = raw.players.find((p) => p.name === 'search-v3-declined-instant-a1')!;
+  const a = by.get('search-v3-declined-instant-a1');
+  assert.ok(a?.cfg, 'search-v3-declined-instant-a1 is registered and playable');
+  assert.equal(ar.kind, pairRaw.kind);
+  assert.deepEqual(ar.params, { ...pairRaw.params, aturns: 1 }, "its params are search-v3-declined-instant's with aturns=1");
+  assert.equal(a!.resolved.aturns, 1, 'attacks roll to the end of the next turn');
+  assert.equal(a!.resolved.turns, 0, 'priority rollouts keep the pair\'s horizon');
+  assert.equal(a!.resolved.budgetMs, 1500, 'the pair\'s clock');
+  const aRest: Record<string, unknown> = { ...a!.resolved };
+  delete aRest.aturns;
+  assert.deepEqual(aRest, pair.resolved, "every other resolved param is search-v3-declined-instant's");
+  assert.equal(a!.cfg, PAIR.replace('seed=0,', 'seed=0,aturns=1,'), "its seat config is the pair's with aturns=1");
+  assert.equal(a!.cfg, 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,aturns=1,anytime=1,declined=1,instant=1');
+  assert.equal(a!.hash, 'dbf415e66452', "search-v3-declined-instant-a1's config hash (D547)");
+  assert.equal(reg.filter((y) => y.hash === 'dbf415e66452').length, 1, 'one registered player has the hash dbf415e66452');
+  assert.match(ar.note ?? '', /D547/);
+  assert.match(ar.note ?? '', /never the live seat/);
+  // -- the cheaper clock (J220): D545's t1-x3 at budgetMs=3000 and nothing else, aturns still unset
+  const xr = raw.players.find((p) => p.name === 'search-v3-declined-instant-t1-x2')!;
+  const x = by.get('search-v3-declined-instant-t1-x2');
+  assert.ok(x?.cfg, 'search-v3-declined-instant-t1-x2 is registered and playable');
+  assert.equal(xr.kind, x3Raw.kind);
+  assert.deepEqual(xr.params, { ...x3Raw.params, budgetMs: 3000 }, "its params are search-v3-declined-instant-t1-x3's with budgetMs=3000");
+  assert.deepEqual(xr.params, { ...pairRaw.params, turns: 1, budgetMs: 3000 }, "and so the pair's with turns=1 and budgetMs=3000");
+  assert.ok(!('aturns' in xr.params), 'aturns is left unset, so attacks follow turns (SearchConfig.horizonFor)');
+  assert.ok(!('aturns' in x!.resolved), 'aturns stays at its default, out of the hash and the seat config');
+  const xRest: Record<string, unknown> = { ...x!.resolved };
+  delete xRest.budgetMs;
+  const x3Rest: Record<string, unknown> = { ...by.get('search-v3-declined-instant-t1-x3')!.resolved };
+  delete x3Rest.budgetMs;
+  assert.deepEqual(xRest, x3Rest, "every other resolved param is search-v3-declined-instant-t1-x3's");
+  assert.equal(x!.resolved.maxRounds, 12, 'the round cap stays 12');
+  assert.equal(x!.cfg, PAIR.replace('ms=1500,', 'ms=3000,').replace('turns=0,', 'turns=1,'), "its seat config is the pair's with ms=3000 and turns=1");
+  assert.equal(x!.cfg, 'Default+outlets+search:ms=3000,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1');
+  assert.doesNotMatch(x!.cfg!, /aturns|lands/, 'no aturns key and no lands key in the seat config');
+  assert.equal(x!.hash, '5319a60d7e3b', "search-v3-declined-instant-t1-x2's config hash (D547)");
+  assert.equal(reg.filter((y) => y.hash === '5319a60d7e3b').length, 1, 'one registered player has the hash 5319a60d7e3b');
+  assert.match(xr.note ?? '', /D547/);
+  assert.match(xr.note ?? '', /never the live seat/);
+  // the players they are built from, and J212's attack arm, keep their hashes
+  assert.equal(pair.hash, 'af6771947a25');
+  assert.equal(by.get('search-v3-declined-instant-t1-x3')!.hash, '9aeacaff9142');
+  assert.equal(by.get('search-v2-a1')!.hash, '3cf65e94df28');
+  assert.equal(by.get('search-v2-no-b')!.hash, '59505e241363');
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
