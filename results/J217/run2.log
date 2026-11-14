@@ -1,0 +1,49 @@
+==== J217 run2 started 2026-11-14T14:23:21-05:00 in unit lab-J217-run2, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"purpose":"match:j217:20261114T100618-312950","games":4800,"blocks":600,"min":725900000,"max":725900599,"fullBlocks":600,"otherGames":0,"registered":1}
+{"bIsLive":0,"bResolved":1,"match":1,"names":1,"hashes":1,"setOk":1,"kindsOk":1,"blocks":1,"cfgs":1,"exposureRead":1,"bClean":1,"aLandsClean":1,"played":4800,"planned":4800,"errors":0,"timeouts":1,"pairs":2400,"score":0.51,"lo":0.5021,"hi":0.5179,"elo":6.9,"eloLo":1.5,"eloHi":12.4,"aSearched":124282,"bSearched":113705,"aP":99656,"aA":24626,"aB":0,"bP":89294,"bA":24411,"bB":0,"aMs":906.988,"bMs":913.264,"aMsP":917.401,"aMsA":864.849,"bMsP":926.328,"bMsA":865.475,"notPlayed":0,"incomplete":0,"notRead":0,"complete":1,"exposed":1,"shown":0,"smallGain":1,"inconclusive4800":0,"notShown":0,"liveSeatCandidate":1,"unionClosed":0,"unionRemoved":0,"measuredLoss":0,"measuredGain":1,"indistinguishable":0,"exGames":4800,"stackwinWindows":6205,"stackwinWindowsPerGame":1.293,"stackwinCands":13111,"stackwinCandsPerWindow":2.11,"stackwinChanged":719,"stackwinChangedPerGame":0.15,"stackwinRetry":0,"stackwinRetryPerGame":0,"stackwinFloor":1,"passwinWindows":1992,"passwinWindowsPerGame":0.415,"passwinCands":4309,"passwinCandsPerWindow":2.16,"passwinChanged":191,"passwinChangedPerGame":0.04,"passwinRetry":0,"passwinRetryPerGame":0,"passwinFloor":1,"dactivWindows":8184,"dactivWindowsPerGame":1.705,"dactivCands":8551,"dactivCandsPerWindow":1.04,"dactivChanged":430,"dactivChangedPerGame":0.09,"dactivRetry":7,"dactivRetryPerGame":0.001,"dactivFloor":1,"unionChanged":1340,"unionChangedPerGame":0.279,"refused":598,"refusalShare":0.088,"ownAim":63,"sameHost":9105,"dactivListed":9113,"memoryRestored":18279,"stackwinOppPassed":5818,"passwinOppPassed":753,"declinedInstantWindows":494,"bNew":0,"bD540":10,"aLands":0,"aSecPerGame":23.484,"bSecPerGame":21.634,"costRatio":1.0855,"written":1,"games":4800,"bar":240,"first":725900000,"last":725900599,"liveSeatChanged":0}
+# J217: search-v3-wide against search-v3-declined-instant (search-v3-declined-instant, D541's pair), 4,800 games (D398; D544; D519's four readings)
+
+B is search-v3-declined-instant (af6771947a25) by D544 point 10: D543's recommendation STANDS.
+
+**Outcome under the pre-registered rule (D544 points 12 to 15):**
+
+- search-v3-wide: SMALL GAIN (a measured gain): 6.9 Elo [1.5, 12.4], score 0.51 [0.5021, 0.5179], against search-v3-declined-instant (search-v3-declined-instant: the three keys' increment); stackwin 6205 windows (1.293 a game, floor 0.25), 2.11 candidates a window, 719 changes, 0 retries a game; passwin 1992 windows (0.415 a game, floor 0.1), 2.16 candidates a window, 191 changes, 0 retries a game; dactiv 8184 windows (1.705 a game, floor 0.25), 1.04 candidates a window, 430 changes, 0.001 retries a game; the union 1340 changes over 4800 games (0.279 a game; 0.25 is the rate); stack windows refused 598 (a share of 0.088); 23.484 against 21.634 search seconds a game (x1.0855), 906.988 against 913.264 ms a searched decision; a live-seat candidate for the owner, under a separate decision and a seat-queue row (D509); the live seat is unchanged
+
+**Live-seat candidate for the owner (SHOWN or SMALL GAIN):** 1. **The union closed (NOT SHOWN):** 0. **The union removed (a measured loss):** 0. **NOT READ:** 0. **NOT PLAYED:** 0. **INCOMPLETE (owed a repost):** 0. **The live seat:** unchanged by this job (liveSeatChanged 0).
+
+| match | played / planned | complete | outcome | described | score [95%] | Elo [95%] | pairs | draws, errors, timeouts | hours |
+|---|---|---|---|---|---|---|---|---|---|
+| search-v3-wide vs search-v3-declined-instant | 4800 / 4800 | true | SMALL GAIN | a measured gain | 0.51 [0.5021, 0.5179] | 6.9 [1.5, 12.4] | 2400 | 0, 0, 1 | 9.28 |
+
+Beside it, never pooled and never read against it (D544 point 17): J215, search-v3-declined-instant against search-v2-no-b on blocks 519,900,000-519,900,599, SMALL GAIN, +6.9 Elo [+1.4, +12.5]; J216, the same pair on the dev set, as D543 read it.
+
+**The exposure, the three keys (D544 point 13; the union's changes decide NOT READ, a key under its floor is named unexposed, the rest is description; on every match it was read on, a cut-short one included):**
+
+| key | games read | windows | a game | floor | at the floor | candidates | a window | changed | a game | retries | a game |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| stackwin | 4800 | 6205 | 1.293 | 0.25 | yes | 13111 | 2.11 | 719 | 0.15 | 0 | 0 |
+| passwin | 4800 | 1992 | 0.415 | 0.1 | yes | 4309 | 2.16 | 191 | 0.04 | 0 | 0 |
+| dactiv | 4800 | 8184 | 1.705 | 0.25 | yes | 8551 | 1.04 | 430 | 0.09 | 7 | 0.001 |
+
+The union: 1340 changed decisions, 0.279 a game (0.25 is the rate; read: yes). Stack windows refused 598, a share of 0.088 of those met, by reason: triggering 145, unmappable 326, stale 44, paid 20, hidden 8, modes 8, trigger 31, faceDown 14, manaSpent 2. Aims at the seat's own stack item dropped 63; equips aimed at their host dropped 9105; declined activations listed 9113; memory sets put back 18279; windows the opponent had passed in: stack 5818, pass 753; declined spells in instant-speed windows (D541's review) 494 (A's search.p.declined.* counters include the stack and pass windows, which list the aimed declined spells whether or not declined is on, so they are never compared with B's). Changes: stackwin's and passwin's count every change in their window, a switch to pass included; dactiv's only a pick of a widened activation. B's D544 counters above 0: 0; B's D540 counters above 0: 10 (B's own keys). A's lands counters above 0: 0.
+
+**The cost, A against B on the same games (description only; the seconds are this machine's, D388):**
+
+| search s a game A / B (x) | ms a decision A / B | ms p, a A | ms p, a B | searched p, a, b A | searched p, a, b B | from pass, to other, to pass a p decision A | same, B | land windows left to Forge a game A / B | rollouts a decision A / B | fewer than 2 rounds A / B |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 23.484 / 21.634 (x1.0855) | 906.988 / 913.264 | 917.401, 864.849 | 926.328, 865.475 | 99656, 24626, 0 | 89294, 24411, 0 | 7.9%, 5.9%, 4.7% | 8.0%, 6.4%, 5.1% | 7.19 / 7.19 | 15.27 / 15.56 | 3.49% / 3.30% |
+
+| side | decisions searched (games) | changed Forge: p | a | b | all | budget fallbacks [95%] | other fallbacks | step timeouts |
+|---|---|---|---|---|---|---|---|---|
+| search-v3-wide | 124282 (4798) | 18418/99656 (18.5%) | 3525/24626 (14.3%) | - | 21943/124282 (17.7%) | 716 = 0.6% [0.5%, 0.7%] | unmappable 77 | 44 |
+| search-v3-declined-instant | 113705 (4798) | 17382/89294 (19.5%) | 3573/24411 (14.6%) | - | 20955/113705 (18.4%) | 624 = 0.5% [0.4%, 0.7%] | unmappable 79 | 39 |
+
+Rule parts: B resolved 1, names 1, the confirm set 1 (line set tools/ai-bench/pairs-confirm.txt), hashes 1, seat configs 1, the registered blocks 1 (600 blocks 725900000 to 725900599, 4800 games, 0 of another match), priority and attacks searched and no block on both sides 1, the exposure read on this match 1, B clean 1, A's lands counters clean 1, the union at the rate 1; complete 1. SHOWN 0, SMALL GAIN 1, INCONCLUSIVE AT 4,800 0, NOT SHOWN 0, NOT READ 0, NOT PLAYED 0, INCOMPLETE 0. Described: indistinguishable 0, a measured loss 0, a measured gain 1. Match id j217:20261114T100618-312950, host j217, set tools/ai-bench/pairs-confirm.txt.
+
+## The pilot (D544 point 19): the gate and the recorded windows
+
+The gate: played.
+
+| games (ladder + recorded) | stackwin windows (ladder + recorded) | passwin windows | dactiv windows | refused (share) | errors and timeouts | retries, three keys (a game) | recorded searched p: own main / stack / instant or pass / land | own item on top | ms by candidate count (decisions) | ladder search s a game A / B |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 4 + 4 | 2 + 3 | 1 + 1 | 1 + 15 | 1 (0.167) | 0 | 0 (0) | 63 / 3 / 8 / 0 | 0 | 2: 565.8 (32); 3: 812.3 (20); 4: 1134.1 (14); 5: 981.4 (8) | 13.259 / 12.016 |

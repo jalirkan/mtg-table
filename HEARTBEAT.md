@@ -2,17 +2,19 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-14T14:23:21-05:00
+- time: 2026-11-14T14:23:36-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
-- running: J217 commands 2/2, 4800/4800 games, 510.9/h, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 4.01; memory 6.6/30.5 GB, swap 5507 MB, pressure 0% (lab budget 23.4 GB)
+- state: idle
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 3.56; memory 6.6/30.5 GB, swap 5507 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J218 done at 2026-11-14T05:00:47-05:00: cm.played 4800 · cm.score 0.523 · cm.lo 0.514 · cm.hi 0.532 · cm.elo 15.9 · cm.eloLo 9.4 · cm.eloHi 22.5 · v.shown 1 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 0 · v.measuredLoss 0 · v.measuredGain 1 · v.liveSeatCandidate 1 · v.horizonClosed 0 · v.aSecPerGame 70.374 · v.bSecPerGame 22.34 · v.costRatio 3.15 · v.aMs 2800.372 · v.bMs 900.107 · v.aRolloutsPerDecision 18.47 · v.bRolloutsPerDecision 15.81 · v.aShortShare 0.024 · v.bShortShare 0.031 · v.playMsRatio 2.842 · bs.min 655900000 · bs.max 655900599
+- last finished: J217 done at 2026-11-14T14:23:35-05:00: cm.played 4800 · cm.score 0.51 · cm.lo 0.502 · cm.hi 0.518 · cm.elo 6.9 · cm.eloLo 1.5 · cm.eloHi 12.4 · v.shown 0 · v.smallGain 1 · v.inconclusive4800 0 · v.notShown 0 · v.notRead 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 0 · v.measuredLoss 0 · v.measuredGain 1 · v.bIsLive 0 · v.stackwinWindowsPerGame 1.293 · v.passwinWindowsPerGame 0.415 · v.dactivWindowsPerGame 1.705 · v.unionChangedPerGame 0.279 · v.refusalShare 0.088 · v.aSecPerGame 23.484 · v.bSecPerGame 21.634 · v.costRatio 1.086 · v.liveSeatCandidate 1 · v.unionClosed 0 · v.unionRemoved 0
 
 ## Messages
+
+- FOLLOW-UP READY [J217@2026-11-14T14:23:35-05:00] (the runner, for the cloud session): J217 is done; write and post the template morning-read. It decides: D544 points 12 to 15, from the match line and its batch counters alone. A complete match that is not NOT READ reads exactly one of D519's four readings at 4,800 games: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 4,800 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15). SHOWN or SMALL GAIN names search-v3-wide a live-seat candidate for the owner under a separate decision; NOT SHOWN closes these three keys as a union on the confirm set; a measured loss removes the union. NOT READ when the three keys together changed fewer than 0.25 decisions a game on A's side. Nothing here changes the live seat. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J218@2026-11-14T05:00:47-05:00] (the runner, for the cloud session): J218 is done; write and post the template morning-read. It decides: D545 points 3 to 5, from the match line and its batch counters alone. A complete match reads exactly one of D519's four readings at 4,800 games: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 4,800 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15); complete includes the line's and every row's set being tools/ai-bench/pairs-dev.txt, no lands counter above 0 on either side, and A's ms of play a finished rollout at least 1.3 times B's. INCOMPLETE (owed a repost alone under a new job id) for any failed part; NOT PLAYED when the pilot's gate kept the match out. SHOWN or SMALL GAIN names search-v3-declined-instant-t1-x3 a live-seat candidate for the owner under a separate decision and a seat-queue row, its cost beside it, and the cheaper clock (ms=3000) is the next depth lane, not this job's; INCONCLUSIVE AT 4,800 is information; NOT SHOWN closes the horizon track at practical clocks (no arm deepening the Forge rollouts at three times the clock or less without a new decision). This job never changes the live seat: B is the config the owner adopted on 2026-11-13, which D546 (a separate lane, merged after this job's pin) makes the live seat as search-v4. Ledger: LEDGER.md. Delete this line once posted.
 

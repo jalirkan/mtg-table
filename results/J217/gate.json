@@ -1,0 +1,22 @@
+{
+ "written": 1,
+ "play": 1,
+ "reason": null,
+ "ladderGames": 4,
+ "benchGames": 4,
+ "games": 8,
+ "errorsTimeouts": 0,
+ "ladderStackwinWindows": 2,
+ "benchStackwinWindows": 3,
+ "stackwinWindows": 5,
+ "ladderPasswinWindows": 1,
+ "benchPasswinWindows": 1,
+ "passwinWindows": 2,
+ "ladderDactivWindows": 1,
+ "benchDactivWindows": 15,
+ "dactivWindows": 16,
+ "refused": 1,
+ "refusalShare": 0.167,
+ "retry": 0,
+ "retryPerGame": 0
+}
