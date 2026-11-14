@@ -1,18 +1,18 @@
 {
  "schema": 1,
- "updated": "2026-11-14T15:08:56-05:00",
- "heartbeat": "2026-11-14T15:08:56-05:00",
+ "updated": "2026-11-14T15:09:51-05:00",
+ "heartbeat": "2026-11-14T15:09:51-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.08,
-  "memUsedGb": 6.5,
+  "load1": 4.86,
+  "memUsedGb": 6.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5776,
-  "pressure": 0,
+  "swapUsedMb": 5775,
+  "pressure": 3.18,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 3,
@@ -25,9 +25,9 @@
    "id": "J219",
    "title": "The attack arm (D547): one fixed 4,800-game match (2,400 mirrored pairs, D398, tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-declined-instant-a1 (dbf415e66452, a new player: search-v3-declined-instant with aturns=1 and nothing else -- attack rollouts see the crack-back, priority rollouts and the 1.5 s clock are the live seat's) against B = search-v3-declined-instant (af6771947a25, the live seat as search-v4 since D546), in a ladder folder of its own under --host j219 on deal blocks no job has played, 758,900,000-758,900,599, at --game-timeout 1800, read by D519's four readings at 4,800 games as D547 writes them for this match, with D547's completeness parts (A's ms of play a rollout at least 1.05 times B's: an attacks-only horizon). Never pooled. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "pilot 1/7",
+   "phase": "pilot 2/7",
    "started": "2026-11-14T15:08:31-05:00",
-   "elapsed": 25,
+   "elapsed": 80,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -74,13 +74,13 @@
     "bs.blocks": 0,
     "bs.fullBlocks": 0,
     "bs.games": 0,
+    "bs.games_per_h": 0,
     "bs.offSet": -1,
     "bs.otherGames": -1,
     "bs.registered": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 0,
-    "j219_err": 0
+    "dst.checks": 514
    },
    "liveHeadline": [
     "cm.played",
@@ -117,7 +117,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J219-pilot1"
+   "detail": "lab-J219-pilot2"
   }
  ],
  "queue": [],
