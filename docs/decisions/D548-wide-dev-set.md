@@ -9,7 +9,8 @@ D544's player against the live seat's config at J217's hashes with `--pairs tool
 job's pilot checks by content how the code differs from J217's pin (point 2). This file and PLAN's rows are the whole
 change. `node tools/decisions.mjs next` printed D548 on this lane (D547 is in the lane it branches from).*
 
-**Status: registered; text only; unbuilt and unpiloted on the lane (*Verification*); unplayed. J221 plays it, after
+**Status: registered; text only; reviewed independently, the review's blocker (the pilot's deck pairs) and three
+text fixes made on the lane (*Verification*); unbuilt and unpiloted on the lane; unplayed. J221 plays it, after
 J219 and before J220.**
 
 **2026-11-14**
@@ -46,7 +47,8 @@ J219 and before J220.**
   `passwin=1` or `dactiv=1`): J217's 4,800 and its pilot's 4 ladder and 4 recorded games, all on the confirm set, and
   D544's exposure run, 240 games of this same pair on the dev set (host `d544-exposure`, blocks
   8,900,000–8,900,029, at the lane's `04bafbfb3`, before the review's fixes), whose score line the ladder printed and
-  D544 did not read; this lane did not read it either, and no block of it is J221's.
+  D544 did not read. This lane read that run's window counts by deck pair, to choose the pilot's two pairs (point
+  13), and not its scores; no block of it is J221's.
 - **The precedent.** J215 read D541's pair SMALL GAIN on the confirm set; D543 played the same pair once on the dev
   set at J215's size (J216, SMALL GAIN +8.3 [+2.4, +14.1]) and registered a pooled line and the PC session's
   recommendation before any game; the recommendation STOOD on J216 alone, the owner said yes, and D546 moved the seat
@@ -56,7 +58,7 @@ J219 and before J220.**
 
 1. **The match: J217's, on the dev set.** One fixed 4,800-game match (D398: 2,400 mirrored pairs, 600 batches of 8,
    no stopping rule), alone (D521), at `--game-timeout 1800`, `--pairs tools/ai-bench/pairs-dev.txt`, stopping itself
-   at `--hours 20`:
+   at `--hours 19`:
    - A = `search-v3-wide` (`b95340935592`):
      `Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1`;
    - B = `search-v3-declined-instant` (`af6771947a25`, the live seat's config since D546, search-v4):
@@ -103,8 +105,13 @@ J219 and before J220.**
    run and on a retry. Of the 369,856 ladder result rows under the lab checkout's `var/` (303 result files with rows,
    read 2026-11-14 after J217; the rows lie on 34 bases; the other three lab checkouts' `var/` are links to it) and
    the 343 under this machine's `mtg-table*` checkouts' `var/` (26 files), none is on base 199. No job file in
-   `pc-jobs/jobs/` or `drafts/` names `j221` or a block on base 199 or 240, and no result under `pc-results/results/`
-   names `j221`. The pilot's host is `j221-pilot`, base 240,000,000, on which no row lies either. 600 consecutive
+   `pc-jobs/jobs/` or `drafts/` names `j221` or a block on base 199 or 175, and no result under `pc-results/results/`
+   names `j221`. **The pilot's host is `j221-pilot2`, base 175,000,000**, on which no row lies either (the same two
+   scans, repeated after the review: 0 of 369,856 and 0 of 343; no job, draft or result names `j221-pilot2`). It is
+   chosen for the deck pair its first block deals (point 13): every `hostBase` is a multiple of 1,000,000, and
+   1,000,000 mod 30 is 10, so at one batch pair a pilot's first block deals only dev pair 0, 10 or 20;
+   `j221-pilot`'s (base 240,000,000, block 240,900,000) deals pair 0, `fair-fight-900000000`, and `j221-pilot2`'s
+   (175,900,000) deals pair 10, `pauper-900000000`. 600 consecutive
    blocks give each of the dev set's 30 deck pairs exactly 40 batches, 160 games, in both seat orders (`batchPairs`,
    computed on the lane).
 5. **The match is complete** when its line names A and B in that order at their hashes, says `complete: true`,
@@ -117,7 +124,10 @@ J219 and before J220.**
    mirrored pairs, rebuilt from the result rows with the ladder's own `pairScores`, `blockKey` and `matchSummary`,
    reproduce the line's `pairs`, `score`, `lo` and `hi`**. An incomplete match gets no reading and is reposted alone
    under a new job id after its cause is found. (D544 point 12's parts with this match's names, and D543 point 4's
-   two additions: the dev set and the rebuilt pairs.)
+   two additions: the dev set and the rebuilt pairs.) **Timed-out games count as the rows record them; the pairs
+   reader's `toLoss` decides nothing.** (`tools/ai-ladder/results.ts`'s header says a timeout is `w: "d"`, a draw, but
+   J217's one timed-out row says `w: "a"`: the row carries the winner Forge's outcome named, *Context*; the line, the
+   rebuilt pairs and every reading use `w` as written.)
 6. **Exposure and NOT READ, D544 point 13's.** Summed over the match's batch lines on A's side, per game played:
    each key's windows against D544 point 13's floor (`search.p.stackwin.windows` 0.25 a game,
    `search.p.passwin.windows` 0.10, `search.p.dactiv.windows` 0.25); a key under its floor is reported as unexposed,
@@ -216,15 +226,40 @@ J219 and before J220.**
     exactly 514 checks (the count the full gate printed on `2a13482a9`, its run `20261113-095630-3556457`, as D547's
     drafts check it); the ai-bench self-test at 0 failures and exactly 476 checks (J217's pilot's count at its pin;
     nothing under `tools/ai-bench` changed since); the ladder test; the four players at their hashes and seat configs;
-    point 2's code check; `hostBase('j221')` 199,000,000 and the pilot host's 240,000,000; the job's readers tested
-    on synthetic files (the verdict's 61 cases include the pooled line and each recommendation on both sides of its
-    bars); a 4-game ladder match of A against B under `--host j221-pilot --pairs tools/ai-bench/pairs-dev.txt` and a
-    4-game recorded run of A against Forge Default on the dev set's first pair (`fair-fight-900000000`). **The match
-    is played only if** D544 point 19's gate holds on the dev decks: over those 8 games `search.p.stackwin.windows`
-    and `search.p.dactiv.windows` are each above 0 (`search.p.passwin.windows` is reported and may be 0), none of the 8
+    point 2's code check; `hostBase('j221')` 199,000,000, the pilot host's 175,000,000 and the pair its first block
+    deals (dev pair 10, `pauper-900000000`); the job's readers tested on synthetic files (the verdict's 61 cases
+    include the pooled line and each recommendation on both sides of its bars); a 4-game ladder match of A against B
+    under `--host j221-pilot2 --pairs tools/ai-bench/pairs-dev.txt`, so on `pauper-900000000`, and a 4-game recorded
+    run of A against Forge Default on `modern-era-900000002`, chosen by name. **The match is played only if** D544
+    point 19's gate holds on the dev decks: over those 8 games `search.p.stackwin.windows` and
+    `search.p.dactiv.windows` are each above 0 (`search.p.passwin.windows` is reported and may be 0), none of the 8
     ended in an engine error or a timeout, the three keys' retries together are at most 2 a game, and the refusal
     share of stack windows is below one half; otherwise the job writes the match as NOT PLAYED with the condition it
-    failed, and the recommendation is OPEN. A D544 counter above 0 in B, a lands counter above 0 in A, or a searched
+    failed, and the recommendation is OPEN.
+    **The two pairs, chosen from D544's dev-set exposure run** (240 games of this pair, A = `search-v3-wide`, 8 games
+    of each dev deck pair, read from its batch lines in `mtg-table-d544/var/d544-exposure/batches/`; its window counts
+    were read, its scores were not used to choose). A game "opened" a key when A's `search.p.<key>.windows` was above
+    0 in it:
+
+    | dev pair | stack windows open (of 8) | declined activations open (of 8) | pass windows open | stack windows refused |
+    |---|---|---|---|---|
+    | 0 `fair-fight-900000000` (the first line; `j221-pilot`'s pair) | 1 | 2 | 1 | 1 of 5 |
+    | 10 `pauper-900000000` (`j221-pilot2`'s pair: the ladder pilot) | 7 | 2 | 6 | 1 of 34 |
+    | 6 `modern-era-900000002` (the recorded run) | 5 | 6 | 4 | 1 of 15 |
+
+    With the first line for the recorded run and `j221-pilot` for the ladder pilot, all 8 pilot games would have been
+    on pair 0, where (treating games as independent at these rates) no stack window in 8 has a chance of about 0.34
+    and no declined-activation window about 0.10: NOT PLAYED about 0.41 of the time. The recorded run takes the pair
+    with the lowest chance of a zero on both counters in 4 games, `modern-era-900000002` ((3/8)⁴ = 0.020 and (2/8)⁴
+    = 0.004; `vintage-900000002` and `modern-era-900000000` are as good, and this one also opened pass windows in 4 of
+    8). The ladder pilot can only reach pairs 0, 10 and 20, and pair 10 opens stack windows most (7 of 8; pair 20,
+    `synergy-900000000`, 5 of 8). **The gate still reads both runs**, as D544 point 19 wrote it: it exists to show the
+    new windows open on the dev set at all, in the match's own setting (A against B) as well as against Forge, and
+    reading only the recorded run would drop the 4 games against B; with both runs on pairs where the windows open, the
+    chance the window conditions keep the match out is about **0.1%** ((1/8)⁴ × (3/8)⁴ ≈ 0.000005 for stack windows,
+    (6/8)⁴ × (2/8)⁴ ≈ 0.0012 for declined activations). That estimate rests on 8 games a pair, at the unfixed build
+    `04bafbfb3` and against B, where the recorded run plays Forge Default; the error, retry and refusal conditions are
+    not in it (that run's games on these two pairs had no error, timeout or retry, and refused 2 of the 49 stack windows met). A D544 counter above 0 in B, a lands counter above 0 in A, or a searched
     priority decision on a stack whose top item is the seat's own stops the night as a pilot failure.
 14. **Time and the game timeout.**
     - **The timeout, 1,800 s.** It cuts only a stuck game and changes nothing a game plays by. On the dev set J216's
@@ -240,11 +275,14 @@ J219 and before J220.**
       46.5 s a game: **9.99 h by the fit**; the last three 1.5 s matches ran 4.8–6.5% under it (J215 8.45 h against 9.04,
       J216 8.6 against 9.06, J217 9.28 against 9.75), so **about 9.5 h** (range 9–10.5 h) at 7 workers and about 11.1 h
       at 6. The pilot about 10 minutes.
-    - **The stop.** `--hours 20` under a 20.5 h step timeout. A memory-stop retry is a new attempt (the runner sets the
-      step's elapsed time to 0 at every unit start, and the match step empties its folder and starts the ladder again
-      with its own `--hours`), with one worker fewer, and the third memory stop fails the job: a full replay fits at
-      5 workers (about 14 h by the fit) and at 4 (about 17.5 h). A match that reaches its own stop is `complete: false`
-      and gets no reading.
+    - **The stop.** `--hours 19` under a 20.5 h step timeout. The ladder starts a batch only while its expected time
+      (the mean of the last eight batches) fits before the stop, and a batch then runs to its end, so the step needs
+      room after the stop for a batch that meets a long game: 1.5 h is about three games at the 1,800 s cap and its
+      30 s grace (`--hours 20` left 0.5 h, less than one such game beside the batch's other games). A memory-stop retry
+      is a new attempt (the runner sets the step's elapsed time to 0 at every unit start, and the match step empties
+      its folder and starts the ladder again with its own `--hours`), with one worker fewer, and the third memory stop
+      fails the job: a full replay fits at 5 workers (about 14 h by the fit) and at 4 (about 17.5 h, 18.1 h at J218's
+      excess over the fit). A match that reaches its own stop is `complete: false` and gets no reading.
     - With J219 (about 10.5 h) and J220 (about 14 h), the three hold the machine alone about 34 h.
 
 **Under D509: the atlas's seat and the live seat are unchanged.** No file under `bridge/src`, `tools/ai-bench` or
@@ -264,7 +302,13 @@ D540's.
 - **Replaying the confirm set on new blocks.** It answers the noise in the deals, which J217's interval already
   carries, not the selection on the decks.
 - **A fresh third deck set** (D543's Rejected): still a lane of its own and not ready; the dev set exists, is drafted
-  the same way and has seen the three keys only in D544's unread 240-game exposure run.
+  the same way and has seen the three keys only in D544's 240-game exposure run, whose scores nobody read.
+- **The pilot on the dev set's first line and `j221-pilot`** (as J216 and J217 placed theirs): all 8 gate games on
+  `fair-fight-900000000`, where the windows opened least, NOT PLAYED about 0.41 of the time (point 13).
+- **A gate that reads only the recorded run**: it would drop the only pilot games against B; moving the ladder
+  pilot's host keeps D544's 8-game gate as written (point 13).
+- **A step timeout raised instead of `--hours` lowered** (21 h): the same margin, and a longer hold on the machine
+  when something hangs; `--hours 19` still fits a full replay at 4 workers.
 - **2,400 games.** A half-width of about ±8.3 Elo at the dev set's width cannot tell +5 from 0.
 - **Pooling without a J221 reading of its own, or reading only the pooled line.** J217's +6.9, a selected draw, sits
   inside any two-match pool (points 8 and 10); J221 alone is the test that the gain travels.
@@ -287,15 +331,16 @@ D540's.
   error, and the time J218's B and J217's ratio.
 - **That the keys fire on the dev decks as on the confirm decks.** D544's 240-game run measured 0.292 changed
   decisions a game on the dev set, at the unfixed build; J217, at the fixed build, 0.279 on the confirm set. The NOT
-  READ rate is 0.25. The pilot's gate needs stackwin and dactiv each above 0 in 8 games of one deck pair
-  (`fair-fight-900000000`, and whichever pair the pilot host's first block deals); on that pair the counts are
-  unmeasured, so the gate could keep the match out on one pair's decks (NOT PLAYED, OPEN).
+  READ rate is 0.25. The pilot's gate needs stackwin and dactiv each above 0 over its 8 games; on its two pairs,
+  `pauper-900000000` (stack windows open in 7 of 8 of that run's games, declined activations in 2 of 8) and
+  `modern-era-900000002` (5 and 6 of 8), the window conditions fail about 0.1% of the time (point 13), an estimate
+  from 8 games a pair at the unfixed build, against B where the recorded run plays Forge Default.
 - **How J217's timed-out game came to be scored as A's win**: the ladder recorded the winner Forge's outcome named
   with `timeout: true`; whether the game ended during `AiBench`'s 30-second grace after the cap or the draw it sets
   lost a race is not read here. Counted as A's loss it changes no reading (*Context*).
 - **The pooled line's form**: the stratified mean and standard error, not one `matchSummary` over 4,800 pairs; and its
   upward lean from the selection (point 8), which no number here corrects.
-- **That bases 199 and 240 are unplayed everywhere**: read from the lab checkout's and this machine's checkouts' result
+- **That bases 199 and 175 are unplayed everywhere**: read from the lab checkout's and this machine's checkouts' result
   rows and the job files on 2026-11-14; the job's block reader checks the match's own folder only.
 - One opponent: the live seat's config.
 
@@ -309,24 +354,31 @@ build and no game by the coordinator's brief):**
   `git diff 2a13482a9 c35992ada` there: `players.json` alone; the non-comment changed lines: the six of point 2.
 - `node tools/ai-ladder/cli.ts list` (node only) at `c35992ada` against the same over `git archive 9fb702f tools`:
   identical but for D547's two added players and the evaluator-leaf player's "unavailable" text; the two match players
-  at `b95340935592` and `af6771947a25`. `hostBase` under node: `j221` 199,000,000, `j221-pilot` 240,000,000, 40
-  batches for each of the dev set's 30 pairs.
-- The block scan (point 4) and the key scan (*Context*), by Python over the rows.
+  at `b95340935592` and `af6771947a25`. `hostBase` under node: `j221` 199,000,000, `j221-pilot2` 175,000,000 (its first block
+  175,900,000 deals dev pair 10 at one batch pair; `j221-pilot` 240,000,000 would deal pair 0), 40 batches for each of
+  the dev set's 30 pairs.
+- The block scan (point 4, bases 199 and 175, the second after the review), the key scan (*Context*) and the pilot
+  pairs' window counts (point 13, from `mtg-table-d544/var/d544-exposure/batches/`), by Python over the rows.
 - J217's se 0.0040138 and its pair counts, J216's 0.0043192, J215's 0.0040995 (D543's literal, reproduced) and J218's
   0.0047743, rebuilt with the ladder's `blockKey`, `pairScores` and `matchSummary` under node from the lab checkout's
   rows (read-only); the power table by Python from those widths.
 - The J221 draft (`pc-jobs` `drafts/J221-wide-dev-set.md`, untracked, its `repos:` sha 40 zeros for the merge
-  commit): `./tools/runner.sh check` `lint: clean`, `machine-checked`, the pilot 7 blocks and 60 checks, the commands
+  commit): `./tools/runner.sh check` `lint: clean`, `machine-checked`, the pilot 7 blocks and 61 checks, the commands
   2 blocks and 30 checks. Its node-only pilot blocks run in this worktree (the ladder's `list` through `node
   tools/ai-ladder/cli.ts`): the players check `ok` 1, the base `ok` 1, the code check `exact1` 1, `exact2` 1,
   `codeLinesOk` 1 (6 lines), `playersOk` 1 (notes changed: 2; appended: D547's two); the exposure reader 8 of 8, the
   verdict 61 of 61, the recording reader 14 of 14, the pairs reader 7 of 7, the block, rollout and gate readers each
   `ok`. The readers over J217's own files (read-only, out to a scratch folder): the pairs reader agrees with J217's line
   (`agree` 1, se 0.0040138, 1 timeout); the verdict reads J217's match INCOMPLETE, "NOT THE DEV SET", as it must.
+- **After the independent review** (2026-11-14): the pilot host moved to `j221-pilot2` and the recorded run to
+  `modern-era-900000002` (point 13), the timed-out games' scoring said (point 5), `--hours 19` (point 14), and the
+  unverified list's pilot sentence rewritten with the measured counts. The same node-only checks again: decisions
+  check, ladder test, claude-md test, public check, `runner.sh check` and the draft's node-only pilot blocks (the base
+  now also checks `pilotPair` 10, `pauper-900000000`); results in the commit message.
 - **Not run on the lane — the coordinator's**: `./tools/check-forge.sh`; `./bridge/build.sh` (expect the decision
   self-test at 514 checks and 0 failures); `./tools/ai-bench.sh --selftest` (476 and 0); the pilot dry-run, on a
   scratch copy of the draft pinned to this lane's head (`./tools/runner.sh dry-run <copy> --root
-  /home/justin-a/code/mtg-table-d548 --pilot-only --max-seconds 7200 --workers 6`, expected 59 of 60 checks, `merged
+  ~/code/mtg-table-d548 --pilot-only --max-seconds 7200 --workers 6`, expected 60 of 61 checks, `merged
   == 1` the one that fails off main); the independent review; the full gate at the merge.
 
 **Follow-up.** J221 plays the match at this lane's merge, after J219; its `report.md` carries J221's reading, the
