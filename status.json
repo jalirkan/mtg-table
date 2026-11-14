@@ -1,45 +1,45 @@
 {
  "schema": 1,
- "updated": "2026-11-14T05:00:34-05:00",
- "heartbeat": "2026-11-14T05:00:34-05:00",
+ "updated": "2026-11-14T05:00:48-05:00",
+ "heartbeat": "2026-11-14T05:00:48-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.29,
+  "load1": 3,
   "memUsedGb": 6.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 4800,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 7,
   "coresTotal": 14
  },
  "running": [
   {
-   "publicTitle": "The search one turn deeper on held-out decks: 4,800 games",
-   "publicEst": "~17 h (one day)",
-   "id": "J218",
-   "title": "The search's horizon on the pair (D545): one fixed 4,800-game match (2,400 mirrored pairs, D398, tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-declined-instant-t1-x3 (9aeacaff9142, a new player: search-v3-declined-instant with turns=1 and ms=4500, aturns unset so attacks follow turns -- J212's two positive depth points, t1-x3 +9.8 and a1 +5.2 Elo at 1,200 games, together) against B = search-v3-declined-instant (af6771947a25, D543 point 6's base: J216 SMALL GAIN, the recommendation STANDS), in a ladder folder of its own under --host j218 on deal blocks no job has played, 655,900,000-655,900,599, at --game-timeout 1800, read by D519's four readings at 4,800 games as D545 writes them for this match, with D545's completeness parts. Never pooled. This job never changes the live seat",
+   "publicTitle": "The search on the stack and in quiet steps: one 4,800-game match",
+   "publicEst": "~10 h (one night)",
+   "id": "J217",
+   "title": "D544's wide windows: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v3-wide (search-v3-declined-instant with stackwin=1, passwin=1 and dactiv=1, a new player, b95340935592) against B = search-v3-declined-instant (af6771947a25), fixed by D544 point 10 from J216's read: D543's recommendation STANDS (J216 SMALL GAIN alone, +8.3 Elo [+2.4, +14.1]); the live seat has not moved, in a ladder folder of its own under --host j217 on deal blocks no job has played, 725,900,000-725,900,599, read by D519's four readings at 4,800 games as D544 writes them for this match, with D544's completeness parts and exposure conditions. Never pooled with J215 or J216. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-11-13T10:09:26-05:00",
-   "elapsed": 67868,
-   "done": 4792,
+   "phase": "prepare",
+   "started": "2026-11-14T05:00:48-05:00",
+   "elapsed": 0,
+   "done": 0,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 214.9,
-   "eta": "2026-11-14T05:02:48-05:00",
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 1,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-14T04:59:17-05:00",
-   "memGb": 0.01,
+   "dataUpdated": "2026-11-14T05:00:48-05:00",
+   "memGb": null,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -52,35 +52,35 @@
     "v.smallGain": 0,
     "v.inconclusive4800": 0,
     "v.notShown": 0,
+    "v.notRead": 0,
     "v.notPlayed": 0,
     "v.incomplete": 1,
     "v.indistinguishable": 0,
     "v.measuredLoss": 0,
     "v.measuredGain": 0,
-    "v.liveSeatCandidate": 0,
-    "v.horizonClosed": 0,
+    "v.bIsLive": 0,
+    "v.stackwinWindowsPerGame": 0,
+    "v.passwinWindowsPerGame": 0,
+    "v.dactivWindowsPerGame": 0,
+    "v.unionChangedPerGame": 0,
+    "v.refusalShare": 0,
     "v.aSecPerGame": 0,
     "v.bSecPerGame": 0,
     "v.costRatio": 0,
-    "v.aRolloutsPerDecision": 0,
-    "v.bRolloutsPerDecision": 0,
-    "v.aShortShare": 0,
-    "v.bShortShare": 0,
-    "v.playMsRatio": 0,
-    "bs.min": 0,
-    "bs.max": 0,
+    "v.liveSeatCandidate": 0,
+    "v.unionClosed": 0,
+    "v.unionRemoved": 0,
     "bs.blocks": 0,
     "bs.fullBlocks": 0,
     "bs.games": 0,
-    "bs.games_per_h": 0,
-    "bs.offSet": -1,
+    "bs.max": 0,
+    "bs.min": 0,
     "bs.otherGames": -1,
     "bs.registered": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 67856,
-    "j218_err": 0,
-    "j218_games": 4792
+    "elapsed_s": 0,
+    "j217_err": 0
    },
    "liveHeadline": [
     "cm.played",
@@ -94,163 +94,75 @@
     "v.smallGain",
     "v.inconclusive4800",
     "v.notShown",
+    "v.notRead",
     "v.notPlayed",
     "v.incomplete",
     "v.indistinguishable",
     "v.measuredLoss",
     "v.measuredGain",
-    "v.liveSeatCandidate",
-    "v.horizonClosed",
+    "v.bIsLive",
+    "v.stackwinWindowsPerGame",
+    "v.passwinWindowsPerGame",
+    "v.dactivWindowsPerGame",
+    "v.unionChangedPerGame",
+    "v.refusalShare",
     "v.aSecPerGame",
     "v.bSecPerGame",
     "v.costRatio",
-    "v.aRolloutsPerDecision",
-    "v.bRolloutsPerDecision",
-    "v.aShortShare",
-    "v.bShortShare",
-    "v.playMsRatio",
-    "bs.min",
-    "bs.max"
+    "v.liveSeatCandidate",
+    "v.unionClosed",
+    "v.unionRemoved"
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-11-13T20:01:28-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 4.2
-    },
-    {
-     "at": "2026-11-13T20:15:45-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0.1
-    },
-    {
-     "at": "2026-11-13T21:18:44-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0.9
-    },
-    {
-     "at": "2026-11-13T21:23:52-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-13T22:48:47-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0.1
-    },
-    {
-     "at": "2026-11-13T22:55:49-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-13T23:03:58-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-13T23:16:02-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-13T23:24:11-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-13T23:30:40-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-14T02:43:07-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 10
-    },
-    {
-     "at": "2026-11-14T02:51:28-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-14T03:11:59-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 5.7
-    },
-    {
-     "at": "2026-11-14T03:18:19-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-14T03:53:58-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 2.8
-    },
-    {
-     "at": "2026-11-14T03:55:50-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.9
-    },
-    {
-     "at": "2026-11-14T04:09:48-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-14T04:15:12-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-14T04:22:41-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 1.4
-    },
-    {
-     "at": "2026-11-14T04:36:32-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J218-run2"
+   "pressureEvents": [],
+   "detail": "lab-J217-prepare"
   }
  ],
- "queue": [
-  {
-   "publicTitle": "The search on the stack and in quiet steps: one 4,800-game match",
-   "publicEst": "~10 h (one night)",
-   "id": "J217",
-   "title": "D544's wide windows: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v3-wide (search-v3-declined-instant with stackwin=1, passwin=1 and dactiv=1, a new player, b95340935592) against B = search-v3-declined-instant (af6771947a25), fixed by D544 point 10 from J216's read: D543's recommendation STANDS (J216 SMALL GAIN alone, +8.3 Elo [+2.4, +14.1]); the live seat has not moved, in a ladder folder of its own under --host j217 on deal blocks no job has played, 725,900,000-725,900,599, read by D519's four readings at 4,800 games as D544 writes them for this match, with D544's completeness parts and exposure conditions. Never pooled with J215 or J216. This job never changes the live seat",
-   "cpu": "heavy",
-   "est": "~10 h at 7 workers (an estimate; range 9.5-11 h), 13.8 h at worst (the pilot and the match's own stop). From this host at 7 workers, alone, a 1,200-game match against the search's family takes about 0.47 h + 0.0436 h x both sides' search seconds a game (D537 point 11's fit; residual sd 0.15 h), about 9.01 h for J211 at four times the games against its 8.57. B searched about 21.7 s a game as search-v3-declined-instant (J215) and 19 s as search-v2-no-b; A about B-as-declined-instant's plus the three keys', about 24-26 s (D544 point 20). Both sides 46-48 s a game (B = search-v3-declined-instant) or 43-45 s (B = the live seat): the match about 9.5-10.3 h. Pilot about 15 minutes (the build, the self-tests with D544's scenarios, 8 games). About 11.5 h if memory pressure holds the night at 6 workers; the match stops itself at --hours 13.5 under the step's 14 h timeout, and a match that reaches its own stop reports complete: false and gets no reading"
-  }
- ],
+ "queue": [],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "The search one turn deeper on held-out decks: 4,800 games",
+   "publicEst": "~17 h (one day)",
+   "id": "J218",
+   "title": "The search's horizon on the pair (D545): one fixed 4,800-game match (2,400 mirrored pairs, D398, tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-declined-instant-t1-x3 (9aeacaff9142, a new player: search-v3-declined-instant with turns=1 and ms=4500, aturns unset so attacks follow turns -- J212's two positive depth points, t1-x3 +9.8 and a1 +5.2 Elo at 1,200 games, together) against B = search-v3-declined-instant (af6771947a25, D543 point 6's base: J216 SMALL GAIN, the recommendation STANDS), in a ladder folder of its own under --host j218 on deal blocks no job has played, 655,900,000-655,900,599, at --game-timeout 1800, read by D519's four readings at 4,800 games as D545 writes them for this match, with D545's completeness parts. Never pooled. This job never changes the live seat",
+   "status": "done",
+   "finished": "2026-11-14T05:00:47-05:00",
+   "headline": "cm.played 4800 · cm.score 0.523 · cm.lo 0.514 · cm.hi 0.532 · cm.elo 15.9 · cm.eloLo 9.4 · cm.eloHi 22.5 · v.shown 1 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 0 · v.measuredLoss 0 · v.measuredGain 1 · v.liveSeatCandidate 1 · v.horizonClosed 0 · v.aSecPerGame 70.374 · v.bSecPerGame 22.34 · v.costRatio 3.15 · v.aMs 2800.372 · v.bMs 900.107 · v.aRolloutsPerDecision 18.47 · v.bRolloutsPerDecision 15.81 · v.aShortShare 0.024 · v.bShortShare 0.031 · v.playMsRatio 2.842 · bs.min 655900000 · bs.max 655900599",
+   "numbers": {
+    "cm.played": 4800,
+    "cm.score": 0.5229,
+    "cm.lo": 0.5136,
+    "cm.hi": 0.5323,
+    "cm.elo": 15.9,
+    "cm.eloLo": 9.4,
+    "cm.eloHi": 22.5,
+    "v.shown": 1,
+    "v.smallGain": 0,
+    "v.inconclusive4800": 0,
+    "v.notShown": 0,
+    "v.notPlayed": 0,
+    "v.incomplete": 0,
+    "v.indistinguishable": 0,
+    "v.measuredLoss": 0,
+    "v.measuredGain": 1,
+    "v.liveSeatCandidate": 1,
+    "v.horizonClosed": 0,
+    "v.aSecPerGame": 70.374,
+    "v.bSecPerGame": 22.34,
+    "v.costRatio": 3.1501,
+    "v.aMs": 2800.372,
+    "v.bMs": 900.107,
+    "v.aRolloutsPerDecision": 18.47,
+    "v.bRolloutsPerDecision": 15.81,
+    "v.aShortShare": 0.0243,
+    "v.bShortShare": 0.0308,
+    "v.playMsRatio": 2.842,
+    "bs.min": 655900000,
+    "bs.max": 655900599
+   }
+  },
   {
    "publicTitle": "The search gain on a held-out deck set: 4,800 games",
    "publicEst": "~9 h (one night)",
@@ -1898,17 +1810,6 @@
    "headline": "",
    "numbers": {},
    "detail": "timeout: step run3 ran past 10800 s"
-  },
-  {
-   "publicTitle": "Move atlas 4a: the cut design on random library decks",
-   "publicEst": "~9 to 11 h",
-   "id": "J166",
-   "title": "The move atlas, rung 4a -- the cut design (D480) in the wide shape, on decks nobody designed: 13 spines, each a pair of random library decks of one band drawn as the census draws them (D447; deck seeds 2001-2013, bands cycled pauper, peasant, legacy, powered), the baseline game Forge vs Forge at a fresh game seed (2101-2113), 8 decisions a spine from those with 3+ options, every option 200 times random with the 25-branch screen and early stopping at 50/100/150, the Forge map at 40 on spines 1, 7 and 13 only, the checks on the workers; the labels marked `training: true` with `pool: \"random-<band>\"`, and a held-out VALIDATION draw (13 more pairs, deck seeds 2201-2213) written as deck files only and never branched; a new data folder lab-j166; on 325c2dd8. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new deck population, tool and design, and are never pooled with J156's, J157's, J158's or J162's",
-   "status": "failed",
-   "finished": "2026-10-25T03:05:48-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "timeout: step run4 ran past 10800 s"
   }
  ],
  "runner": {
