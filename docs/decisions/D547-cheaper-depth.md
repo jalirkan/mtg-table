@@ -125,7 +125,10 @@ unplayed. J219 and J220 play it, one after the other, each alone.**
      above what two sides of one config differ by over 4,800 shared games. That the horizon applied by kind — attacks
      at 1, priority at 0 — is shown per decision by the pilot's records (point 10), which carry the horizon each
      decision's rollouts were given (`SearchPolicy.horizonFor(kind)` → the report's `horizon`).
-   An incomplete match gets no reading and is reposted alone under a new job id after its cause is found. There is
+   An incomplete match gets no reading and is reposted alone under a new job id after its cause is found, with one
+   named exception: **a complete, valid-looking match whose play-time trace reads under its bar** (J219 1.05, J220
+   1.3) is INCOMPLETE and is **not reposted unchanged**. Either the bar was wrong or the horizon did not apply, and a
+   repost would only repeat it; it is owed a new decision that says which, and what the next match changes. There is
    no NOT READ: the horizon applies to every searched decision of its kind, which the pilot's records and the trace
    hold.
 4. **The readings, written before any game: D519's four at 4,800 games, for each match by itself, exactly one for a
@@ -146,8 +149,8 @@ unplayed. J219 and J220 play it, one after the other, each alone.**
      a game and their ratio, and ms a searched decision on each side (J212: ×1.13). The cost is reported and is never
      part of the reading (D519 point 5).
    - **INCONCLUSIVE AT 4,800**: information, not confirmed again (D519 point 3).
-   - **NOT SHOWN**: the attack horizon alone is not where J218's gain is. At J216's width on this set (0.0043192) it is
-     worth less than about +11.8 Elo over the pair (the highest upper end a lower end at 0.5 allows; +13.1 at J218's
+   - **NOT SHOWN**: the attack horizon alone is not shown to carry J218's gain: at J216's width on this set
+     (0.0043192) it is worth less than about +11.8 Elo over the pair (the highest upper end a lower end at 0.5 allows; +13.1 at J218's
      0.0048). It does not say attacks are worth nothing: a true +5 reads NOT SHOWN about three times in five (62%; 68%
      at J218's width) and a true +8 about one time in four (24%; 33%). No attacks-only arm at 1.5 s is played again
      without a new decision saying what is different.
@@ -159,18 +162,30 @@ unplayed. J219 and J220 play it, one after the other, each alone.**
      ratio, ms a searched decision on each side), beside `t1-x3`'s J218 numbers and cost. Which of the two, if
      either, is the owner's choice; this decision does not compare them (point 8).
    - **INCONCLUSIVE AT 4,800**: information, not confirmed again.
-   - **NOT SHOWN**: at this rollout cost the gain needs the 4.5 s clock: at J215's width on this set (0.0041) `t1-x2`
-     is worth less than about +11.2 Elo over the pair (+13.1 at J218's width), and **the next depth lane is a cheaper
-     deep rollout, not a clock between** (no clock between 3 s and 4.5 s at `turns=1` is played without a new
-     decision saying what is different). It does not say J218's gain was not real (another clock, another deck set,
-     another code version), and `t1-x3` stays the candidate J218 made it, at its cost.
+   - **NOT SHOWN**: the deeper horizon is not shown at 3 s on the confirm set: at J215's width on this set (0.0041)
+     `t1-x2` is worth less than about +11.2 Elo over the pair (+13.1 at J218's width). **The clock and the deck set
+     are not separated**: J220 changes both against J218, and `t1-x3` has never been played on the confirm set, so a
+     NOT SHOWN does not say that the gain needs the 4.5 s clock, nor that it was the dev set's. The policy that
+     follows is still that **the next depth lane is a cheaper deep rollout, not a clock between** (no clock between
+     3 s and 4.5 s at `turns=1` is played without a new decision saying what is different). It does not say J218's
+     gain was not real (another clock, another deck set, another code version), and `t1-x3` stays the candidate J218
+     made it, at its cost.
+   - **The question this match answers, and why it moved.** D545 point 5 registered the cheaper clock as "whether
+     most of the gain survives at about twice the thinking time". Played on the confirm set, J220 answers instead
+     "is the 3 s deep player a gain on the confirm set": the clock and the deck set change together, so survival
+     against J218 cannot be read from it. The confirm set is kept on purpose: a seat change needs a reading on the
+     confirm set in any case (it is the set promotion reads, D318), so a gain there is the better evidence for the
+     seat and answers the adoption question in one match, and it gives the deeper horizon a reading on each deck
+     set. The price is that a NOT SHOWN cannot tell the clock from the deck set.
    - **No reading of either match changes the live seat**: these jobs move no seat. The live seat is search-v4 (B's
      config, D546); a candidate from either match is a new seat-queue row under its own decision, and each job says
-     so.
+     so. If the owner adopts J218's player before these run, B stays pinned by its hash (`af6771947a25`) and the
+     readings stay valid as written, but their premise, cheaper arms played before an adoption, no longer holds:
+     each then reads a cheaper player against the old seat, not an alternative to an open choice.
 7. **What a reading does not say.** J219's: not what the priority rollouts' depth is worth (no match here plays
    `turns=1` with `aturns=0` on the pair) and not what the attack horizon is worth at another clock. J220's: not how
-   much of J218's +15.9 survives (they are different deck sets; J218 is not this match's reference), and not which
-   kind's depth carries it. Neither says anything against `search-v2-no-b` or against J212's points, nor anything
+   much of J218's +15.9 survives, and not whether the clock or the deck set made a difference from J218 (both
+   change; J218 is not this match's reference), and not which kind's depth carries it. Neither says anything against `search-v2-no-b` or against J212's points, nor anything
    beyond its own 30 deck pairs of six cubes and this one opponent.
 8. **Never pooled.** J219 and J220 are never pooled with each other, with J218, with J212 or with J215, J216 or J217:
    other players, other deals or other deck sets, and since D544 another code version under the same configs. They
@@ -182,7 +197,8 @@ unplayed. J219 and J220 play it, one after the other, each alone.**
    complete rounds a searched decision (over all kinds together, as the counters keep them); the share decided on
    fewer than 2 paired rounds (`search.anytime.short`); budget fallbacks and their rate; ms of play and of copy a
    finished rollout, and the play-time ratio against its bar; the priority overrides by direction a priority
-   decision; the land windows left to Forge a game; both sides' `declined` and `instant` windows, candidates, changes
+   decision; D519 point 5's "no cost" flag (A's ms a searched decision within 5% of B's, `aMs × 100 ≤ 105 × bMs`),
+   deciding nothing; the land windows left to Forge a game; both sides' `declined` and `instant` windows, candidates, changes
    and retries a game; the games per deck pair; J218's row and J212's rows as they were; and the errors and timeouts,
    with the score recomputed counting every timed-out game as A's loss (for J220, whose A thinks about twice as long,
    that is where a timeout would bias; the PC session's summary computes it from the result rows, the job's report
@@ -218,15 +234,21 @@ unplayed. J219 and J220 play it, one after the other, each alone.**
       search deeper at the same 1.5 s, and J212's a1 searched ×1.13 its base's seconds, so A about 25.2–26.8 s (×1.13
       to ×1.20) and both sides about 47.5–49.1 s a game: **about 10.2–10.4 h** by the fit, 10.6–10.8 h at J218's
       excess; so about 10.5 h (range 9.5–11.5 h) at 7 workers and about 12.3 h at 6. The match stops itself at
-      `--hours 20` under a step timeout of 20.5 h, room for a memory-stop retry that replays the match from its first
-      block at 5 workers (about 14.7 h by the fit). The pilot about 10 minutes.
+      `--hours 20` under a step timeout of 20.5 h: a full replay from the first block fits at 5 workers (about 14.7 h
+      by the fit) and at 4 (about 18.4 h). The pilot about 10 minutes.
     - **J220**: B about 21.9 s a game on the confirm set (J215's A, the same config). A at 3 s: J218's A spent 2,800
       ms a searched decision of its 4,500 (62%) and B 900 of 1,500 (60%), so the share of the budget a decision uses
       held from 1.5 s to 4.5 s, and at 3 s A should spend about 1,870 ms a decision, about 47 s a game on J218's 25.1
       decisions a game (×2.1); ×1.9–×2.3 is A about 41.6–50.4 s, both sides about 63.5–72.3 s: **about 13.0–14.5 h**
       by the fit, 13.4–15.0 h at J218's excess; so about 14 h (range 13–15.5 h) at 7 workers and about 16.5 h at 6.
-      `--hours 27` under a 27.5 h step timeout (a replay from the first block at 5 workers, about 19.6 h). The pilot
-      about 15 minutes.
+      `--hours 27` under a 27.5 h step timeout: a full replay fits at 5 workers (about 19.6 h) and at 4 (about
+      24.5 h). The pilot about 15 minutes.
+    - **How a memory-stop retry is timed** (read in `tools/runner/runner.ts`): a retry starts a new unit, and the
+      runner sets the step's elapsed time to 0 at every unit start (`stepElapsedMs`; the `timeout:` is checked
+      against it), and the match step empties its folder and starts the ladder again with its own `--hours`. So each
+      attempt has the whole budget, however late the first one stopped; the retry runs with one worker fewer than
+      the stopped run had (`retryCap`), and the third memory stop fails the job. A stopped and retried job holds the
+      machine for both attempts together: up to about 10 h plus the replay for J219, 14 h plus the replay for J220.
     - Together about 25 h of the machine alone, J219 first. A match that reaches its own stop is `complete: false`
       and gets no reading.
 
@@ -284,8 +306,11 @@ search rollout does. No wire, `Snap`, `CardView` or thread change.
 - **A clock between 3 s and 4.5 s now** (`ms=3750`). Played before `ms=3000`, a gain there would not say whether the
   cheaper clock fails; `ms=3000` is the registered follow-up, and a NOT SHOWN there points at the rollout's cost.
 - **`a1` at a larger clock.** The question is whether part of the gain is nearly free; at a larger clock it is not.
-- **Both matches on one deck set.** J219 on the confirm set would read a1 on the set J212 chose it on; J220 on the
-  dev set would read the cheaper clock on the set J218 read, so a gain there would be the same deck set twice.
+- **J220 on the dev set.** It would hold the deck set to J218's and so read the clock alone (new blocks redraw the
+  deals; a deck-specific effect is real, which is why that comparison would be cleaner). Rejected because a seat
+  change needs a reading on the confirm set anyway: the confirm match answers the adoption question in one match,
+  where a dev match would need a second on the confirm set before any adoption.
+- **J219 on the confirm set.** It would read a1 on the set J212 chose its point on.
 - **One match with both arms, or 1,200-game screens first.** A 1,200-game screen repeats J212's shape (±11 Elo,
   every interval holding 0); each question needs its own resolvable answer.
 - **Against `search-v3-declined-instant-t1-x3`.** Each arm's question is what it buys over the live seat at its
@@ -300,13 +325,15 @@ search rollout does. No wire, `Snap`, `CardView` or thread change.
 - **The costs**: J219's from J212's a1 on another base and opponent; J220's from a linear reading of J218's ms a
   decision. The pilots' 4 ladder games and the matches measure them.
 - **J219's trace bar**: 1.05 is set from J212's ×1.197 at a 22.6% attack share and the pair's 21.2%; no attacks-only
-  match on the pair has been played. A valid match below 1.05 would be INCOMPLETE and owed a repost under a decision
-  that says so; the pilot's ladder ratio, reported beside its gate, is the first reading of it.
+  match on the pair has been played. A valid-looking match below 1.05 is INCOMPLETE and is not reposted unchanged
+  (point 3): it is owed a new decision saying what was wrong; the pilot's ladder ratio, reported beside its gate, is
+  the first reading of it.
 - **J219's starvation**: J212's a1 at 1.5 s was short of two rounds on 7.7% of its decisions; the gate's 15% bar
   catches a clock that never reached the player, not that.
-- **The decision self-test count at this lane's merge**: D544's merge printed 504 and D546 rewrote the live-seat
-  checks; the lane has not been built (J217 held the machine), so the drafts carry a floor of 504 marked as a
-  placeholder, to be made the exact count after the build.
+- **The decision self-test count at this lane's merge**: the drafts check `== 514`, the count the full gate printed
+  on `2a13482a9` (its run `20261113-095630-3556457`, `decision selftest: 514 check(s), 0 failure(s)`, twice); this
+  lane changes no bridge source, but it has not been built (J217 held the machine), and the lane's own build is
+  compared with it after J217.
 - **That B plays as J218's B did**: argued by D544 (keys off, no engine call added or removed) and D546 (`parseLive`
   only), not measured; nothing here reads against J218's B.
 - **That the four bases are unplayed everywhere**: read from the lab checkout's and this machine's checkouts' result
@@ -324,10 +351,10 @@ no Java, no build, no game):**
   tools/decisions.mjs check` OK (461 decisions; next D548); `./tools/public-check.sh` OK; the bases and the 40 batches
   a deck pair computed with `tools/ai-ladder/schedule.ts` under node; the block scan above.
 - The two drafts (`pc-jobs` `drafts/J219-attack-horizon.md` and `drafts/J220-cheaper-clock.md`, J218's job made each
-  match's; their `repos:` sha a placeholder of 40 zeros for the merge commit, their decision self-test bar a marked
-  floor of 504): their readers, run alone in a scratch folder under node — J219's exposure reader 5 of 5, verdict 54
-  of 54, recording reader 15 of 15, the block, rollout and gate readers each ok; J220's 5, 53 and 15 of theirs and the
-  other three ok. `node tools/runner/cli.ts check` on each: `lint: clean`, `machine-checked`; the pilot 7 blocks and
+  match's; their `repos:` sha a placeholder of 40 zeros for the merge commit, their decision self-test bar the
+  count of 514, *What is unverified*): their readers, run alone in a scratch folder under node — J219's exposure
+  reader 5 of 5, verdict 56 of 56 (the trace's named case and the "no cost" flag among them), recording reader 15 of
+  15, the block, rollout and gate readers each ok; J220's 5, 55 and 15 of theirs and the other three ok. `node tools/runner/cli.ts check` on each: `lint: clean`, `machine-checked`; the pilot 7 blocks and
   50 checks, the commands 2 blocks and 25 checks.
 - Not run: `./tools/check-forge.sh`, `./bridge/build.sh` (the lint, its self-test, the decision self-test and its
   count), the ai-bench self-test, `./tools/ai-ladder.sh list` through the shell, the two pilot dry-runs, the
