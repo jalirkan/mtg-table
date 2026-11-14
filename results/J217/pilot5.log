@@ -1,0 +1,10 @@
+==== J217 pilot5 started 2026-11-14T05:02:50-05:00 in unit lab-J217-pilot5, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+ok   every key above its floor, the union at 3 changes in 8 games, B clean (a new counter at 0 is clean)
+ok   B with search.p.stackwin.windows 1 in one game: bNew 1
+ok   B with search.p.declined.windows 4 in one game: bD540 1, bNew 0
+ok   A with search.p.lands.windows 1 in one game: A not lands-clean
+ok   the union at exactly 0.25 a game (2 in 8) is exposed; passwin 1 in 8 is above 0.10; dactiv 0 is under its floor
+ok   the union at 1 change in 8 is not exposed
+ok   2 stack windows refused against 6 searched: a share of 0.25, by reason
+ok   A with no attack search: kindsOk 0
+{"ok":1,"cases":8,"passed":8}
