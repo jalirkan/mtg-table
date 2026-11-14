@@ -277,9 +277,10 @@ J219 and before J220.**
       at 6. The pilot about 10 minutes.
     - **The stop.** `--hours 19` under a 20.5 h step timeout. The ladder starts a batch only while its expected time
       (the mean of the last eight batches) fits before the stop, and a batch then runs to its end, so the step needs
-      room after the stop for a batch that meets a long game: 1.5 h is about three games at the 1,800 s cap and its
-      30 s grace (`--hours 20` left 0.5 h, less than one such game beside the batch's other games). A memory-stop retry
-      is a new attempt (the runner sets the step's elapsed time to 0 at every unit start, and the match step empties
+      room after the stop for a batch that meets a long game: 1.5 h is just under three games (three are
+      5,490 s) at the 1,800 s cap and its 30 s grace (`--hours 20` left 0.5 h, less than one such game beside the
+      batch's other games). A memory-stop retry is a new attempt (the runner sets the step's elapsed time to 0 at
+      every unit start, and the match step empties
       its folder and starts the ladder again with its own `--hours`), with one worker fewer, and the third memory stop
       fails the job: a full replay fits at 5 workers (about 14 h by the fit) and at 4 (about 17.5 h, 18.1 h at J218's
       excess over the fit). A match that reaches its own stop is `complete: false` and gets no reading.
