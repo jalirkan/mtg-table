@@ -11843,8 +11843,9 @@ It closes the cube lab's 62 with J218's read and adds its 64 and 65 ([the list](
 <a id="d548-wide-dev-set"></a>
 ## J217's match on the dev deck set: search-v3-wide against the live seat's config once more, and a pooled read (2026-11-14, D548)
 
-**Status: registered; text only, written after J217 with no Java on the lane, so unbuilt and unpiloted (D548's
-*Verification*); unplayed: J221 plays it at the merge's pin, after J219 and before J220.** Branch
+**Status: registered; text only, written after J217 with no Java on the lane; built and piloted on the lane after
+J219 (D548's *Verification after J219*: 514, 476, the pilot 60 of 61 checks, `merged == 1` the one off `main`);
+unplayed: J221 plays it at the merge's pin, after J219 and before J220.** Branch
 `pc/d548-wide-dev-set` off D547's lane head `c35992ada`, merging with it. `docs/decisions/D548-wide-dev-set.md` is the
 decision. Nothing under `bridge/src`, `tools/ai-ladder` or `tools/ai-bench`.
 

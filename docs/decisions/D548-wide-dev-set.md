@@ -10,8 +10,8 @@ job's pilot checks by content how the code differs from J217's pin (point 2). Th
 change. `node tools/decisions.mjs next` printed D548 on this lane (D547 is in the lane it branches from).*
 
 **Status: registered; text only; reviewed independently, the review's blocker (the pilot's deck pairs) and three
-text fixes made on the lane (*Verification*); unbuilt and unpiloted on the lane; unplayed. J221 plays it, after
-J219 and before J220.**
+text fixes made on the lane (*Verification*); built and piloted on the lane after J219 (*Verification after
+J219*); unplayed. J221 plays it, after J219 and before J220.**
 
 **2026-11-14**
 
@@ -381,6 +381,18 @@ build and no game by the coordinator's brief):**
   scratch copy of the draft pinned to this lane's head (`./tools/runner.sh dry-run <copy> --root
   ~/code/mtg-table-d548 --pilot-only --max-seconds 7200 --workers 6`, expected 60 of 61 checks, `merged
   == 1` the one that fails off main); the independent review; the full gate at the merge.
+
+**Verification after J219 (2026-11-15 01:14-01:21 EST on `831ecf0e0`, the lab idle; J219 read NOT SHOWN, -1.3 Elo
+[-6.8, +4.2], and moved no seat):**
+
+- `./tools/make-forge-home.sh` and `./tools/check-forge.sh` OK (sha256 `3c0a7c38...8e5dd9`); `./bridge/build.sh` rc
+  0: the lint's self-test OK (33 rules, 79 firing cases, 93 checks), the eval self-test 8,039 checks, the grade
+  self-test 132, **the decision self-test 514 check(s), 0 failure(s)** (the count the draft's bar names), the distill
+  self-test 38; `./tools/ai-bench.sh --selftest` 476 check(s), 0 failure(s).
+- The pilot, dry-run from this lane (`./tools/runner.sh dry-run <job> --root <lane> --pilot-only --max-seconds 7200
+  --workers 6 --keep`, the draft pinned to `831ecf0e0`): the seven blocks ok (37, 0, 0, 0, 0, 118 and 38 s); **60 of
+  61 checks pass**, and the one that fails is `merged == 1`, which is false by construction off `main` and is the
+  merge's to make true.
 
 **Follow-up.** J221 plays the match at this lane's merge, after J219; its `report.md` carries J221's reading, the
 pooled line and the recommendation, and `summary.md` (the PC session) words them, J221 alone first. Its row in PLAN
