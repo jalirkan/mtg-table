@@ -1,0 +1,208 @@
+==== J220 pilot1 started 2026-11-15T11:06:15-05:00 in unit lab-J220-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+1
+lint-bridge-selftest OK: 33 rules, 79 firing cases (each fired its own rule and no other), 93 checks
+bridge lint OK (97 file(s) under bridge/src, 4 under tools/; 33 rules)
+compiling 97 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+/home/justin-a/code/lab/mtg-table/bridge/src/mtgtable/ai/LenientGameCopier.java:544: warning: [deprecation] copyCopiableCharacteristics(Card,SpellAbility,SpellAbility) in CardCopyService has been deprecated
+                    new CardCopyService(o).copyCopiableCharacteristics(out, null, null);
+                                          ^
+1 warning
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 270 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 285 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2165 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:35064): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:35074): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:35086 (1 watching)
+WS CONNECT /127.0.0.1:35090 (connection #1)
+WS REFUSED /127.0.0.1:35100: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:35110 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:35110 (1 watching)
+WS DISCONNECT /127.0.0.1:35090 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:42908 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:42908 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:42914 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:51138 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:51138: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 32 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:44936: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:44948: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:44964: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:44980: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:45004: no valid pairing token
+WS SITE REFUSED /127.0.0.1:45174: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45190: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45202: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45204: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45210: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45220: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45228: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45238: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45244: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45248: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:45252: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:45258: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:45262: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:45272: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:45278: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:45288 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:45288 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:45302 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:45302 (0 watching)
+WS CONNECT /127.0.0.1:45304 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:45304 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:45310): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:45322): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:45324 (1 watching)
+WS CONNECT /127.0.0.1:45260 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:45260 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:45266 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:45266 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:38343 (/127.0.0.1:45280): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:37476: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:34016: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:34022: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:34034: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:34048: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:34054 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:34054 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:34056): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:35487 (/127.0.0.1:34062): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:47288: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:47304: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:47316: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:47324: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:47340: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:47352: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:47360: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:47362: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:47366: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:47382: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:47396: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:47410: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:47416: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:47426: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:49430: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49446: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49462: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:49482)
+TABLE SEAT 1 upgrade from /127.0.0.1:49488
+WS CONNECT /127.0.0.1:49488 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:49500
+WS SEAT 1 TAKEN OVER by /127.0.0.1:49500 (the older connection /127.0.0.1:49488 is closed 4002)
+WS CONNECT /127.0.0.1:49500 (connection #2)
+WS DISCONNECT /127.0.0.1:49500 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:49508
+WS CONNECT /127.0.0.1:49508 (connection #1)
+WS DISCONNECT /127.0.0.1:49508 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:49520: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49526: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49528: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49538: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49552: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49558: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49572: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49578: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49590: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:49598: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:49626
+WS CONNECT /127.0.0.1:49626 (connection #2)
+WS DISCONNECT /127.0.0.1:49626 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+WS CONNECT /127.0.0.1:39784 (connection #1)
+WS DISCONNECT /127.0.0.1:39784 -- cancelling 0 pending ask(s)
+WS CONNECT /127.0.0.1:39800 (connection #2)
+WS DISCONNECT /127.0.0.1:39800 -- cancelling 0 pending ask(s)
+StalledGameSelfTest: 156 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 5.9 us + predict 2.9 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 132 check(s), 0 failure(s)
+grade utf8 probe: UTF-8 stdout under LC_ALL=C
+hidden has neither ManaCost nor Color
+decision selftest: 514 check(s), 0 failure(s)
+distill selftest: 38 check(s), 0 failure(s)
+build OK
+{"ok":1,"checks":514,"failures":0}
+  ok   the attack scored by the model, a legal declaration ({distill.a.scored=1, search.a.changed=1, search.a.considered=1, search.a.ms=0, search.a.us=320})
+  ok   the distilled seat wrote no row
+ai-bench selftest: 476 check(s), 0 failure(s)
+✔ solve: a small linear system (1.381958ms)
+✔ Bradley-Terry recovers known Elo differences with the anchor fixed at 1500 (4.172613ms)
+✔ an unbeaten player gets a finite rating, a player with no games is unrated at the prior (0.185371ms)
+✔ bootstrap over mirror blocks: intervals cover the truth and are in the Hessian's range (23.666205ms)
+✔ SPRT bounds are the Wald bounds (0.187075ms)
+✔ SPRT: a clearly stronger A is accepted (H1), a weaker one rejected (H0) (12.531696ms)
+✔ SPRT: at the H0 boundary (A = B), H1 is accepted about as rarely as alpha (566.101119ms)
+✔ SPRT: the game limit gives inconclusive; too few pairs never decide (0.25875ms)
+✔ SPRT (D373): defaults are 100 pairs and a 0.05 floor; the old 8 / 0.01 stay reachable when asked for (0.60674ms)
+✔ SPRT (D373): H0 reads "not shown >= elo1 better", never "no gain" (0.248591ms)
+✔ pairScores: two games of a block are one observation; draws drop out (0.086794ms)
+✔ grid and sample (0.223804ms)
+✔ successive halving finds the strongest of eight synthetic configs, with the same deals for all (1.486937ms)
+✔ league promotion: SPRT H1 AND non-inferior against forge-default (0.109888ms)
+✔ the Forge non-inferiority test: stated margin 30 Elo, alpha 5%, power 90% (55.159876ms)
+✔ scheduler: a new player first, against forge-default (0.37981ms)
+✔ scheduler: the anchor share, then the most informative pair (0.157989ms)
+✔ deal slots: fixed by the block number; hosts get different bases (0.117322ms)
+✔ the committed registry: anchors, hashes, an unmerged kind is unavailable, not a crash (31.336283ms)
+✔ search kind: params map onto the bench's +search syntax; defaults fill the hash (0.31713ms)
+✔ search kind, D350–D351: the new switches stay out of the hash and the seat config at their defaults (20.87615ms)
+✔ search kind, D388–D390: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys (21.824928ms)
+✔ D412: search-v2 = search-v1 + anytime=1, which the ladder already rates as search-v1-anytime (the live seat until D539) (20.423694ms)
+✔ D539: the live seat is search-v3 = search-v2 + what=pa, which the ladder already rates as search-v2-no-b (20.422662ms)
+✔ D546: the live seat is search-v4 = search-v3 + declined=1,instant=1, which the ladder already rates as search-v3-declined-instant (20.97076ms)
+✔ addPlayer never overwrites (0.393946ms)
+✔ results: ai-bench lines become ladder lines; dedup across files; torn lines skipped; mirror blocks (1.996211ms)
+✔ ladder.json schema 1 and the HTML page (1.986794ms)
+✔ dev / confirm deck sets: each cube's drafts alternate by seed; the split is a function of the drafts (0.15312ms)
+✔ experiment log: a start with no end is abandoned; ends join their starts (0.12155ms)
+✔ search-eval (D354): the search with leaf=eval:<model>, pinned to the model file by its content hash (0.804854ms)
+✔ search-distill (J126): search-v2's candidates scored by the distilled model, pinned by its content hash (0.738409ms)
+✔ J126: the match tally times each side's decisions (search.<kind>.us), per kind and over p + a + b (0.653728ms)
+✔ J128 (D437): search-v2-evalleaf is search-v2 (search-v1-anytime) plus leaf=eval:<evaluator v2> and nothing else (21.699841ms)
+✔ J128 (D437): the match tally counts the evaluator's leaves and their mean cost (search.leaf.eval, .evalNs) (0.386813ms)
+✔ D468: the match tally counts rollouts the step clock ended (search.stepTimeouts and the prior's), 0 when none (0.320166ms)
+✔ D470: the match tally counts rollouts whose forced answer was unavailable (search.unavailable and the prior's), 0 when none (0.305589ms)
+✔ match (D398): the pair-score interval, in Elo too; no interval under 2 pairs (0.23773ms)
+✔ match (D398): the interval covers the truth about 95% of the time on mirrored synthetic pairs (6.363112ms)
+✔ match (D398): search counters from ai-bench lines -- searched, changed, fallbacks by reason, a game-clustered budget rate (0.394928ms)
+✔ the registry (D398): search-v1-reckless is search-v1 on Reckless.ai and nothing else (22.156737ms)
+✔ D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-anytime) plus their switches and nothing else (20.527921ms)
+✔ D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled (20.322633ms)
+✔ D517: search-v2-routlets and -ranked are search-v2 (search-v1-anytime) plus one knob; -ms750-r6 and -ms375-r3 scale its budget and round cap down (20.762686ms)
+✔ D523: search-v2-rrandom and -rrandom-self are search-v2 (search-v1-anytime) plus rollout=random / random-self (20.114929ms)
+✔ D525: search-v2-rrandom3 and -rrandom3-held are search-v2 (search-v1-anytime) plus rollout=random3 / random3-held (20.734883ms)
+✔ D527: search-v2-rrandom4 is search-v2 (search-v1-anytime) plus rollout=random4, and -m40 is it plus margin=40 (20.216311ms)
+✔ D528: search-v2-rrandom4-m60 is search-v2-rrandom4 plus margin=60, and its baseline policy-outlet is search-v2 with the search off (20.909674ms)
+✔ D530: search-v2-rrandom4-lcb-m60 and -lcb-m40 are search-v2-rrandom4-m60 and -m40 plus D350's override=lcb at z 1, and nothing else (20.595689ms)
+✔ D531: search-v2-rrandom4them-lcb-m40 is search-v2-rrandom4-lcb-m40 with rollout=random4-them, and nothing else (19.790865ms)
+✔ D532: search-v2-rrandom4them-m40 and search-v2-rrandom4them are random4-them on the margin rule at 40 and at search-v2's own 20, and nothing else (20.681342ms)
+✔ D533: search-v2-rmix4them-m40 and search-v2-rmix4them are D532's two arms with rollout=mix4-them, and differ from each other in the margin alone (19.995763ms)
+✔ D535: the six kind arms are search-v2 with what= alone changed, and no second name carries a corner's hash (22.265632ms)
+✔ D537: the three horizon arms are search-v2 with only the horizon (and, for t1-x3, the clock) changed (20.574048ms)
+✔ D540: the three candidate arms are search-v3 (search-v2-no-b) with one key each, and the keys are off everywhere else (20.118205ms)
+✔ D541: search-v3-declined-instant is search-v3-declined with instant=on and nothing else, at its own hash (20.242019ms)
+✔ D545: search-v3-declined-instant-t1-x3 is search-v3-declined-instant with turns=1 and a 4.5 s clock and nothing else, at its own hash (20.471805ms)
+✔ D544: search-v3-wide is search-v3-declined-instant with stackwin, passwin and dactiv on and nothing else, at its own hash (20.024207ms)
+✔ D547: search-v3-declined-instant-a1 is the pair with aturns=1, search-v3-declined-instant-t1-x2 is D545's t1-x3 at a 3 s clock, each at its own hash (20.542288ms)
+✔ D417: the match tally counts each decision kind, and searched/changed stay p + a + b (0.517631ms)
+ℹ tests 60
+ℹ suites 0
+ℹ pass 60
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1326.034999

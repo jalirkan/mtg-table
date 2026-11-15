@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-15T11:06:15-05:00
+- time: 2026-11-15T11:07:10-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
-- running: J220 pilot 1/7, 0/4800 games, 3 worker(s), 3 core(s)
+- running: J220 pilot 2/7, 0/4800 games, 3 worker(s), 3 core(s)
 - cores: 3 of 14 in use (the running jobs' widths; 16 threads)
-- load: 1.81; memory 6.9/30.5 GB, swap 5136 MB, pressure 0% (lab budget 23.4 GB)
+- load: 3.15; memory 6.8/30.5 GB, swap 5137 MB, pressure 0.05% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J221 done at 2026-11-15T11:02:28-05:00: cm.played 4800 · cm.score 0.505 · cm.lo 0.498 · cm.hi 0.512 · cm.elo 3.6 · cm.eloLo -1.3 · cm.eloHi 8.6 · v.shown 0 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 1 · v.notRead 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 1 · v.measuredLoss 0 · v.measuredGain 0 · v.pooledScore 0.508 · v.pooledLo 0.502 · v.pooledHi 0.513 · v.pooledElo 5.3 · v.pooledEloLo 1.6 · v.pooledEloHi 9 · v.recStands 1 · v.recWithdrawn 0 · v.recOpen 0 · v.recByAlone 0 · v.recByPooled 1 · v.stackwinWindowsPerGame 1.541 · v.passwinWindowsPerGame 0.418 · v.dactivWindowsPerGame 1.769 · v.unionChangedPerGame 0.303 · v.refusalShare 0.069 · v.aSecPerGame 23.376 · v.bSecPerGame 21.347 · v.costRatio 1.095 · v.noCost 1 · bs.min 199900000 · bs.max 199900599
