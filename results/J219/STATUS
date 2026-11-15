@@ -1,11 +1,11 @@
-running
+done
 runner: forgecoach-runner 5876b554
 started: 2026-11-14T15:08:31-05:00
-phase: commands 2/2
+finished: 2026-11-15T01:12:51-05:00
 mtg-table: 847e50a
 workers: 7 (sized 7: min(cores 7, memory 9, max_workers 7); peak 2.00 GB per worker (declared; measured 1.09), budget 21.4 GB)
 peak_worker_rss_gb: 1.09
-blocks_done: run1 exit 0 at 2026-11-15T01:12:37-05:00
+blocks_done: run1 exit 0 at 2026-11-15T01:12:37-05:00, run2 exit 0 at 2026-11-15T01:12:50-05:00
 pressure-1: 2026-11-14T15:24:30-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 2627/s, job 8.6/21.4 GB
 pressure-2: 2026-11-14T15:30:43-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 4/s, job 6.8/21.4 GB
 pressure-3: 2026-11-14T15:54:29-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 3451/s, job 8.5/21.4 GB

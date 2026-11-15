@@ -1,0 +1,50 @@
+# J219: search-v3-declined-instant-a1 against search-v3-declined-instant on the dev deck set, 4,800 games (D398; D547; D519's four readings)
+
+**Outcome under the pre-registered rule (D547 points 3, 4 and 5):**
+
+- search-v3-declined-instant-a1: NOT SHOWN on the dev set (indistinguishable): -1.3 Elo [-6.8, 4.2], score 0.4981 [0.4902, 0.506], against search-v3-declined-instant; the attack horizon alone is not shown to carry J218's gain (worth less than about +11.8 Elo at J216's width; no attacks-only arm at 1.5 s again without a new decision); 24.796 against 22.445 search seconds a game (x1.1047), 1012.42 against 914.255 ms a searched decision (a cost: more than 5% over B, D519 point 5); 14.59 against 15.56 rollouts a decision, 0.0724 against 0.0341 of decisions short of two rounds, 59.9 against 51 ms of play a rollout (x1.175; 1.05 is the trace's bar); the live seat is unchanged
+
+**What it earns:** a live-seat candidate for the owner 0; the attack horizon alone not shown to carry J218's gain 1. **NOT PLAYED:** 0. **INCOMPLETE:** 0 (owed a new decision, not a repost, when only the trace failed: 0). **Cost, deciding nothing (D519 point 5):** no cost (A within 5% of B's ms a decision) 0. **The live seat:** unchanged by this job (liveSeatChanged 0); adoption is the owner's.
+
+| match | set | played / planned | complete | outcome | described | score [95%] | Elo [95%] | pairs | draws, errors, timeouts | hours |
+|---|---|---|---|---|---|---|---|---|---|---|
+| J219 search-v3-declined-instant-a1 vs search-v3-declined-instant | tools/ai-bench/pairs-dev.txt | 4800 / 4800 | true | NOT SHOWN | indistinguishable | 0.4981 [0.4902, 0.506] | -1.3 [-6.8, 4.2] | 2400 | 1, 0, 0 | 9.96 |
+
+J218's player and J212's three depth arms, as they were (literals from pc-results/results/J218/ and J212/; J218 4,800 games on the dev set against search-v3-declined-instant at mtg-table 23854dd, J212 1,200 games each on the confirm set against search-v1-anytime; never pooled, never read against this match):
+
+| arm | Elo [95%] | reading | search s a game A / B | rollouts a decision A / B | fewer than 2 rounds A / B | ms of play a rollout A / B |
+|---|---|---|---|---|---|---|
+| J218 search-v3-declined-instant-t1-x3 (9aeacaff9142) | 15.9 [9.4, 22.5] | SHOWN | 70.4 / 22.3 | 18.47 / 15.81 | 2.43% / 3.08% | 140.4 / 49.4 |
+| search-v2-t1 (63c35e9f7d5b) | -1.7 [-14.6, 11.2] | NOT SHOWN | 27.8 / 20.6 | 11.47 / 15.79 | 11.8% / 2.8% | 92.1 / 49.7 |
+| search-v2-a1 (3cf65e94df28) | 5.2 [-5.7, 16.2] | INCONCLUSIVE AT 1,200 | 24.3 / 21.5 | 14.39 / 15.53 | 7.7% / 3.4% | 61.3 / 51.2 |
+| search-v2-t1-x3 (ce99b41f9898) | 9.8 [-1.7, 21.4] | INCONCLUSIVE AT 1,200 | 53.9 / 19.8 | 19.08 / 16.43 | 1.6% / 2.4% | 114.9 / 46.1 |
+
+**The depth and the cost, A against B on the same games (description only; the seconds are this machine's, D388):**
+
+| search s a game A / B (x) | ms a decision A / B | ms p, a A | ms p, a B | searched p, a, b A | searched p, a, b B | rollouts a decision A / B | complete rounds a decision A / B | fewer than 2 rounds A / B | ms of play a rollout A / B (x; 1.05 is the bar) | ms of copy a rollout A / B | rollouts the step cap cut A / B |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 24.796 / 22.445 (x1.1047) | 1012.42 / 914.255 | 932.446, 1311.813 | 932.08, 847.497 | 92778, 24783, 0 | 93005, 24833, 0 | 14.59 / 15.56 | 5.79 / 6.07 | 7.24% / 3.41% | 59.9 / 51 (x1.175) | 4.4 / 4.4 | 0 / 0 |
+
+| side | decisions searched (games) | changed Forge: p | a | b | all | budget fallbacks [95%] | other fallbacks | step timeouts | from pass, to other, to pass a p decision | land windows left to Forge a game |
+|---|---|---|---|---|---|---|---|---|---|---|
+| search-v3-declined-instant-a1 | 117561 (4798) | 17635/92778 (19.0%) | 4073/24783 (16.4%) | - | 21708/117561 (18.5%) | 1508 = 1.28% [1.10%, 1.46%] | unmappable 90 | 120 | 7.5%, 6.4%, 5.1% | 7.35 |
+| search-v3-declined-instant | 117838 (4798) | 17926/93005 (19.3%) | 3785/24833 (15.2%) | - | 21711/117838 (18.4%) | 833 = 0.71% [0.57%, 0.85%] | unmappable 100 | 79 | 7.5%, 6.5%, 5.2% | 7.36 |
+
+**The pair's two keys, on both sides (description only: both seats carry them):**
+
+| side | key | windows a game | candidates a window | changed a game | retries a game |
+|---|---|---|---|---|---|
+| A | declined | 3.615 | 1.16 | 0.422 | 0 |
+| A | instant | 1.977 | 2.28 | 0.273 | 0 |
+| B | declined | 3.638 | 1.17 | 0.428 | 0 |
+| B | instant | 2.008 | 2.28 | 0.282 | 0 |
+
+Rule parts: names 1, hashes 1, the dev set 1 (line set tools/ai-bench/pairs-dev.txt, 0 rows on another set), seat configs 1, the registered blocks 1 (600 blocks 758900000 to 758900599, 4800 games, 0 of another match; 30 deck pairs, 160 to 160 games each), priority and attacks searched and no block on both sides 1, the exposure read on this match 1, both sides' lands counters clean 1 (A 0, B 0 above 0), A's rollouts deeper 1 (x1.175); complete 1. SHOWN 0, SMALL GAIN 0, INCONCLUSIVE AT 4,800 0, NOT SHOWN 1, NOT PLAYED 0, INCOMPLETE 0. Described: indistinguishable 1, a measured loss 0, a measured gain 0. Match id j219:20261114T201450-3380677, host j219, set tools/ai-bench/pairs-dev.txt.
+
+## The pilot (D547 point 10): the gate, the recorded horizons and the longest game
+
+The gate: played.
+
+| games (ladder + recorded) | errors and timeouts | short of two rounds (A) | recorded horizon: p at 0, a at 1; off | play ms a rollout A / B (x, not gated) | retries, both keys (a game) | ladder search s a game A / B | ladder ms a decision A / B | recorded searched p: own main / land / instant-speed | on a stack | longest game, ladder / recorded (s) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 4 + 4 | 0 | 1 of 212 (0.47%) | 87, 28; 0 | 35.9 / 29.1 (x1.234) | 0 (0) | 18.465 / 15.707 | 761.447 / 668.377 | 78 / 0 / 9 | 0 | 53.5 / 46.3 |

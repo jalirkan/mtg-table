@@ -2,17 +2,19 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-15T01:12:37-05:00
+- time: 2026-11-15T01:12:52-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
-- running: J219 commands 2/2, 4800/4800 games, 478.8/h, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 8.14; memory 7/30.5 GB, swap 4981 MB, pressure 0% (lab budget 23.4 GB)
+- state: idle
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 6.98; memory 7/30.5 GB, swap 4981 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J217 done at 2026-11-14T14:23:35-05:00: cm.played 4800 · cm.score 0.51 · cm.lo 0.502 · cm.hi 0.518 · cm.elo 6.9 · cm.eloLo 1.5 · cm.eloHi 12.4 · v.shown 0 · v.smallGain 1 · v.inconclusive4800 0 · v.notShown 0 · v.notRead 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 0 · v.measuredLoss 0 · v.measuredGain 1 · v.bIsLive 0 · v.stackwinWindowsPerGame 1.293 · v.passwinWindowsPerGame 0.415 · v.dactivWindowsPerGame 1.705 · v.unionChangedPerGame 0.279 · v.refusalShare 0.088 · v.aSecPerGame 23.484 · v.bSecPerGame 21.634 · v.costRatio 1.086 · v.liveSeatCandidate 1 · v.unionClosed 0 · v.unionRemoved 0
+- last finished: J219 done at 2026-11-15T01:12:51-05:00: cm.played 4800 · cm.score 0.498 · cm.lo 0.49 · cm.hi 0.506 · cm.elo -1.3 · cm.eloLo -6.8 · cm.eloHi 4.2 · v.shown 0 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 1 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 1 · v.measuredLoss 0 · v.measuredGain 0 · v.liveSeatCandidate 0 · v.attackNotShown 1 · v.aSecPerGame 24.796 · v.bSecPerGame 22.445 · v.costRatio 1.105 · v.noCost 0 · v.owedDecision 0 · v.aMs 1012.42 · v.bMs 914.255 · v.aRolloutsPerDecision 14.59 · v.bRolloutsPerDecision 15.56 · v.aShortShare 0.072 · v.bShortShare 0.034 · v.playMsRatio 1.175 · bs.min 758900000 · bs.max 758900599
 
 ## Messages
+
+- FOLLOW-UP READY [J219@2026-11-15T01:12:51-05:00] (the runner, for the cloud session): J219 is done; write and post the template morning-read. It decides: D547 points 3, 4 and 5, from the match line and its batch counters alone. A complete match reads exactly one of D519's four readings at 4,800 games: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 4,800 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15); complete includes the line's and every row's set being tools/ai-bench/pairs-dev.txt, no lands counter above 0 on either side, and A's ms of play a finished rollout at least 1.05 times B's. INCOMPLETE (owed a repost alone under a new job id) for any failed part; NOT PLAYED when the pilot's gate kept the match out. SHOWN or SMALL GAIN names search-v3-declined-instant-a1 a live-seat candidate for the owner under a separate decision and a seat-queue row, its cost beside it; INCONCLUSIVE AT 4,800 is information; NOT SHOWN says the attack horizon alone is not shown to carry J218's gain (worth less than about +11.8 Elo; no attacks-only arm at 1.5 s again without a new decision). This job never changes the live seat. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J217@2026-11-14T14:23:35-05:00] (the runner, for the cloud session): J217 is done; write and post the template morning-read. It decides: D544 points 12 to 15, from the match line and its batch counters alone. A complete match that is not NOT READ reads exactly one of D519's four readings at 4,800 games: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 4,800 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15). SHOWN or SMALL GAIN names search-v3-wide a live-seat candidate for the owner under a separate decision; NOT SHOWN closes these three keys as a union on the confirm set; a measured loss removes the union. NOT READ when the three keys together changed fewer than 0.25 decisions a game on A's side. Nothing here changes the live seat. Ledger: LEDGER.md. Delete this line once posted.
 
