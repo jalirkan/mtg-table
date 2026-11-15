@@ -1,258 +1,77 @@
 {
  "schema": 1,
- "updated": "2026-11-15T11:02:14-05:00",
- "heartbeat": "2026-11-15T11:02:14-05:00",
+ "updated": "2026-11-15T11:02:29-05:00",
+ "heartbeat": "2026-11-15T11:02:29-05:00",
  "paused": false,
- "state": "running",
+ "state": "idle",
  "alerts": [],
- "idleSince": null,
- "idleReason": null,
+ "idleSince": "2026-11-15T11:02:29-05:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 6.38,
-  "memUsedGb": 5.2,
+  "load1": 6.04,
+  "memUsedGb": 5.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 5139,
-  "pressure": 0.44,
+  "pressure": 0.13,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 14
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "The search on the stack, on held-out decks: 4,800 games",
    "publicEst": "~10 h (one night)",
    "id": "J221",
    "title": "J217's match on the dev deck set (D548): one fixed 4,800-game match (2,400 mirrored pairs, D398, tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-wide (b95340935592, search-v3-declined-instant with stackwin=1, passwin=1 and dactiv=1) against search-v3-declined-instant (af6771947a25, the live seat's config as search-v4 since D546), J217's players at J217's hashes, in a ladder folder of its own under --host j221 on deal blocks no job has played, 199,900,000-199,900,599, at --game-timeout 1800, read by D519's four readings at 4,800 games for J221 alone with D544's completeness parts and exposure condition, the dev set and the rebuilt pairs added; plus a pooled read of J217 and J221 registered before any game; the outcome fixes whether the PC session recommends search-v3-wide to the owner (STANDS, WITHDRAWN or OPEN). Never pooled with J215, J216, J218, J219 or J220. This job never changes the live seat",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-11-15T01:31:06-05:00",
-   "elapsed": 34269,
-   "done": 4792,
-   "total": 4800,
-   "unit": "games",
-   "ratePerHour": 560,
-   "eta": "2026-11-15T11:03:06-05:00",
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-11-15T11:02:04-05:00",
-   "memGb": 0.01,
-   "live": {
-    "cm.played": 0,
-    "cm.score": 0,
-    "cm.lo": 0,
-    "cm.hi": 0,
-    "cm.elo": 0,
-    "cm.eloLo": 0,
-    "cm.eloHi": 0,
+   "status": "done",
+   "finished": "2026-11-15T11:02:28-05:00",
+   "headline": "cm.played 4800 · cm.score 0.505 · cm.lo 0.498 · cm.hi 0.512 · cm.elo 3.6 · cm.eloLo -1.3 · cm.eloHi 8.6 · v.shown 0 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 1 · v.notRead 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 1 · v.measuredLoss 0 · v.measuredGain 0 · v.pooledScore 0.508 · v.pooledLo 0.502 · v.pooledHi 0.513 · v.pooledElo 5.3 · v.pooledEloLo 1.6 · v.pooledEloHi 9 · v.recStands 1 · v.recWithdrawn 0 · v.recOpen 0 · v.recByAlone 0 · v.recByPooled 1 · v.stackwinWindowsPerGame 1.541 · v.passwinWindowsPerGame 0.418 · v.dactivWindowsPerGame 1.769 · v.unionChangedPerGame 0.303 · v.refusalShare 0.069 · v.aSecPerGame 23.376 · v.bSecPerGame 21.347 · v.costRatio 1.095 · v.noCost 1 · bs.min 199900000 · bs.max 199900599",
+   "numbers": {
+    "cm.played": 4800,
+    "cm.score": 0.5052,
+    "cm.lo": 0.4981,
+    "cm.hi": 0.5123,
+    "cm.elo": 3.6,
+    "cm.eloLo": -1.3,
+    "cm.eloHi": 8.6,
     "v.shown": 0,
     "v.smallGain": 0,
     "v.inconclusive4800": 0,
-    "v.notShown": 0,
+    "v.notShown": 1,
     "v.notRead": 0,
     "v.notPlayed": 0,
-    "v.incomplete": 1,
-    "v.indistinguishable": 0,
+    "v.incomplete": 0,
+    "v.indistinguishable": 1,
     "v.measuredLoss": 0,
     "v.measuredGain": 0,
-    "v.pooledScore": 0,
-    "v.pooledLo": 0,
-    "v.pooledHi": 0,
-    "v.pooledElo": 0,
-    "v.pooledEloLo": 0,
-    "v.pooledEloHi": 0,
-    "v.recStands": 0,
+    "v.pooledScore": 0.5076,
+    "v.pooledLo": 0.5023,
+    "v.pooledHi": 0.5129,
+    "v.pooledElo": 5.3,
+    "v.pooledEloLo": 1.6,
+    "v.pooledEloHi": 9,
+    "v.recStands": 1,
     "v.recWithdrawn": 0,
     "v.recOpen": 0,
     "v.recByAlone": 0,
-    "v.recByPooled": 0,
-    "v.stackwinWindowsPerGame": 0,
-    "v.passwinWindowsPerGame": 0,
-    "v.dactivWindowsPerGame": 0,
-    "v.unionChangedPerGame": 0,
-    "v.refusalShare": 0,
-    "v.aSecPerGame": 0,
-    "v.bSecPerGame": 0,
-    "v.costRatio": 0,
-    "v.noCost": 0,
-    "bs.min": 0,
-    "bs.max": 0,
-    "bs.blocks": 0
-   },
-   "liveHeadline": [
-    "cm.played",
-    "cm.score",
-    "cm.lo",
-    "cm.hi",
-    "cm.elo",
-    "cm.eloLo",
-    "cm.eloHi",
-    "v.shown",
-    "v.smallGain",
-    "v.inconclusive4800",
-    "v.notShown",
-    "v.notRead",
-    "v.notPlayed",
-    "v.incomplete",
-    "v.indistinguishable",
-    "v.measuredLoss",
-    "v.measuredGain",
-    "v.pooledScore",
-    "v.pooledLo",
-    "v.pooledHi",
-    "v.pooledElo",
-    "v.pooledEloLo",
-    "v.pooledEloHi",
-    "v.recStands",
-    "v.recWithdrawn",
-    "v.recOpen",
-    "v.recByAlone",
-    "v.recByPooled",
-    "v.stackwinWindowsPerGame",
-    "v.passwinWindowsPerGame",
-    "v.dactivWindowsPerGame",
-    "v.unionChangedPerGame",
-    "v.refusalShare",
-    "v.aSecPerGame",
-    "v.bSecPerGame",
-    "v.costRatio",
-    "v.noCost",
-    "bs.min",
-    "bs.max"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-11-15T05:24:46-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T05:33:34-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T06:34:34-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 2.1
-    },
-    {
-     "at": "2026-11-15T06:39:38-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T06:53:45-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 2.1
-    },
-    {
-     "at": "2026-11-15T07:03:20-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T08:17:37-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 3.2
-    },
-    {
-     "at": "2026-11-15T08:18:50-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.9
-    },
-    {
-     "at": "2026-11-15T08:24:18-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T08:25:04-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T08:32:13-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T08:39:59-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T09:43:12-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T09:48:19-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T10:00:08-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 2.2
-    },
-    {
-     "at": "2026-11-15T10:12:24-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T10:26:15-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T10:33:48-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-15T10:43:01-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 2.2
-    },
-    {
-     "at": "2026-11-15T10:48:49-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J221-run2"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+    "v.recByPooled": 1,
+    "v.stackwinWindowsPerGame": 1.541,
+    "v.passwinWindowsPerGame": 0.418,
+    "v.dactivWindowsPerGame": 1.769,
+    "v.unionChangedPerGame": 0.303,
+    "v.refusalShare": 0.069,
+    "v.aSecPerGame": 23.376,
+    "v.bSecPerGame": 21.347,
+    "v.costRatio": 1.095,
+    "v.noCost": 1,
+    "bs.min": 199900000,
+    "bs.max": 199900599
+   }
+  },
   {
    "publicTitle": "The search AI seeing the counter-attack: 4,800 games",
    "publicEst": "~11 h (one night)",
@@ -1958,32 +1777,6 @@
    "headline": "",
    "numbers": {},
    "detail": "pilot: identity == 1 (identity = 0)"
-  },
-  {
-   "publicTitle": "Move atlas 4a night four: stale targets mended",
-   "publicEst": "~2 h 30 to 3 h 30",
-   "id": "J169",
-   "title": "The move atlas, rung 4a, night four -- J168's night mended on the merged tree of D485 (the random seat re-targets or refuses a play whose targets went stale instead of handing the engine an illegal cast; the redaction checker accepts the viewer's own token that ceased to exist): J168's s06, s10 and s13 RE-CHECKED under D485's checker by resuming their finished atlases (no game replayed); J168's s06 and s10 moved aside, never deleted, and RE-BRANCHED fresh on D485's tree at the same decks and seeds (every cut on, chunk 25); s05 kept as J168 left it, its labels marked biased by its lost Suplex and Abrade casts and kept out of the headline sizing read (D486's later night re-branches it); a new check from the frames: no option of a re-branched spine loses its own forced cast in most of its branches; the Report over all 13 spines, labels contract v3. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). Never pooled with J156's, J157's, J158's or J162's labels",
-   "status": "done",
-   "finished": "2026-10-25T23:35:41-04:00",
-   "headline": "branches 72075 · atlas.spinesDone 13 · atlas.labels 97 · atlas.confident 27 · atlas.confidentPer7Worker10hNight 30.7 · atlas.confidentPer7Unbiased 32 · atlas.lostCastsD485 0 · atlas.lostCastOptionsD485 0 · atlas.lostCastOptions 5 · atlas.retargetedRows 744 · atlas.retargeted 756 · atlas.recheckJ169Ok 3 · atlas.timeoutShare 0 · atlas.chooseSourceGuardRows 537 · atlas.problems 0",
-   "numbers": {
-    "branches": 72075,
-    "atlas.spinesDone": 13,
-    "atlas.labels": 97,
-    "atlas.confident": 27,
-    "atlas.confidentPer7Worker10hNight": 30.7,
-    "atlas.confidentPer7Unbiased": 32,
-    "atlas.lostCastsD485": 0,
-    "atlas.lostCastOptionsD485": 0,
-    "atlas.lostCastOptions": 5,
-    "atlas.retargetedRows": 744,
-    "atlas.retargeted": 756,
-    "atlas.recheckJ169Ok": 3,
-    "atlas.timeoutShare": 0,
-    "atlas.chooseSourceGuardRows": 537,
-    "atlas.problems": 0
-   }
   }
  ],
  "runner": {
