@@ -1,21 +1,21 @@
 {
  "schema": 1,
- "updated": "2026-11-15T10:58:09-05:00",
- "heartbeat": "2026-11-15T10:58:09-05:00",
+ "updated": "2026-11-15T11:02:14-05:00",
+ "heartbeat": "2026-11-15T11:02:14-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.95,
-  "memUsedGb": 13,
+  "load1": 6.38,
+  "memUsedGb": 5.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5308,
-  "pressure": 0,
+  "swapUsedMb": 5139,
+  "pressure": 0.44,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -25,21 +25,21 @@
    "id": "J221",
    "title": "J217's match on the dev deck set (D548): one fixed 4,800-game match (2,400 mirrored pairs, D398, tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-wide (b95340935592, search-v3-declined-instant with stackwin=1, passwin=1 and dactiv=1) against search-v3-declined-instant (af6771947a25, the live seat's config as search-v4 since D546), J217's players at J217's hashes, in a ladder folder of its own under --host j221 on deal blocks no job has played, 199,900,000-199,900,599, at --game-timeout 1800, read by D519's four readings at 4,800 games for J221 alone with D544's completeness parts and exposure condition, the dev set and the rebuilt pairs added; plus a pooled read of J217 and J221 registered before any game; the outcome fixes whether the PC session recommends search-v3-wide to the owner (STANDS, WITHDRAWN or OPEN). Never pooled with J215, J216, J218, J219 or J220. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-11-15T01:31:06-05:00",
-   "elapsed": 34023,
-   "done": 4752,
+   "elapsed": 34269,
+   "done": 4792,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 526.2,
-   "eta": "2026-11-15T11:03:37-05:00",
+   "ratePerHour": 560,
+   "eta": "2026-11-15T11:03:06-05:00",
    "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-15T10:57:49-05:00",
-   "memGb": 7.27,
+   "dataUpdated": "2026-11-15T11:02:04-05:00",
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -247,7 +247,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J221-run1"
+   "detail": "lab-J221-run2"
   }
  ],
  "queue": [],
