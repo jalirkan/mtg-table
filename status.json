@@ -1,21 +1,21 @@
 {
  "schema": 1,
- "updated": "2026-11-16T01:40:38-05:00",
- "heartbeat": "2026-11-16T01:40:38-05:00",
+ "updated": "2026-11-16T01:44:20-05:00",
+ "heartbeat": "2026-11-16T01:44:20-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.35,
-  "memUsedGb": 7.1,
+  "load1": 1.54,
+  "memUsedGb": 4.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4882,
+  "swapUsedMb": 4865,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -25,21 +25,21 @@
    "id": "J220",
    "title": "The cheaper clock (D547): one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set tools/ai-bench/pairs-confirm.txt, no stopping rule) of search-v3-declined-instant-t1-x2 (5319a60d7e3b, a new player: D545's search-v3-declined-instant-t1-x3 at ms=3000 -- the pair with turns=1 and a 3 s clock, attacks following turns) against B = search-v3-declined-instant (af6771947a25, the live seat as search-v4 since D546), in a ladder folder of its own under --host j220 on deal blocks no job has played, 302,900,000-302,900,599, at --game-timeout 1800, read by D519's four readings at 4,800 games as D547 writes them for this match, with D547's completeness parts (A's ms of play a rollout at least 1.3 times B's). Never pooled. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-11-15T11:05:51-05:00",
-   "elapsed": 52487,
-   "done": 4760,
+   "elapsed": 52709,
+   "done": 4792,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 315,
-   "eta": "2026-11-16T01:48:16-05:00",
+   "ratePerHour": 368.3,
+   "eta": "2026-11-16T01:45:38-05:00",
    "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-16T01:39:45-05:00",
-   "memGb": 2.41,
+   "dataUpdated": "2026-11-16T01:42:56-05:00",
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -80,7 +80,7 @@
     "bs.registered": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 52434
+    "elapsed_s": 52688
    },
    "liveHeadline": [
     "cm.played",
@@ -142,7 +142,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J220-run1"
+   "detail": "lab-J220-run2"
   }
  ],
  "queue": [],
