@@ -1,4 +1,4 @@
-## D549 — the wide windows and the deeper horizon together: `search-v3-wide-t1-x2` against the live seat's config, one fixed 4,800-game match on the dev deck set, read by D519's four readings written before any game; the reading fixes whether the PC session recommends the combined player in place of its two parts, and moves no seat (J222)
+## D549 — the wide windows and the deeper horizon together: `search-v3-wide-t1-x2` against the live seat's config, one fixed 4,800-game match on the dev deck set, read by D519's four readings written before any game; a SHOWN or SMALL GAIN names the combined player a live-seat candidate beside its two parts, amends D548 point 9, and moves no seat (J222)
 
 *Branch `pc/d549-wide-deep`, off main `afe4f3e63` (D548's merge). Reads `results/J220/` and `results/J221/` on
 `pc-results` and the `j218`, `j220` and `j221` result rows in the lab checkout's `var/`, read-only. One player appended
@@ -64,10 +64,15 @@ this file; nothing else under `bridge/src`, `tools/ai-bench` or `tools/ai-ladder
    and `elo` ≥ +15; **SMALL GAIN** `lo` > 0.5 and `elo` < +15; **INCONCLUSIVE AT 4,800** `lo` ≤ 0.5 and `eloHi` ≥ +15;
    **NOT SHOWN** `lo` ≤ 0.5 and `eloHi` < +15. Beside it, deciding nothing: indistinguishable, a measured loss, a
    measured gain.
-7. **What it decides: the PC session's recommendation.** **SHOWN or SMALL GAIN**: `search-v3-wide-t1-x2` is the one
-   live-seat candidate the PC session recommends to the owner, in place of `search-v3-wide` and
-   `search-v3-declined-instant-t1-x2` separately, with its point, interval and cost (search seconds a game, ms a
-   decision) beside both parts' numbers. **INCONCLUSIVE AT 4,800 or NOT SHOWN**: the match recommends nothing; the two
+7. **What it decides: what the PC session puts to the owner. It amends D548 point 9.** **SHOWN or SMALL GAIN**:
+   `search-v3-wide-t1-x2` is a live-seat candidate the PC session puts to the owner beside
+   `search-v3-declined-instant-t1-x2` and `search-v3-wide`, with its point, interval and cost (search seconds a game,
+   ms a decision) beside both parts' numbers. The match does not claim the combination beats either part: no match
+   between them was played, and point 8 holds. Which of the three the PC session recommends is said in the summary
+   from cost and is not a reading of this match. On SHOWN or SMALL GAIN this amends D548 point 9: its STANDS
+   recommendation of `search-v3-wide` becomes one candidate of three. One dev-set reading is enough to name a
+   candidate, as D545 named `t1-x3` from J218 on the dev set alone; promotion still reads the confirm set (D318).
+   **INCONCLUSIVE AT 4,800 or NOT SHOWN**: the match recommends nothing; the two
    parts stand on their own evidence (J217 and J221, J220), and the report describes rollouts a decision, the share of
    decisions short of two rounds and the three window counters a game beside J220's and J221's so the interaction
    can be read. **No reading** (NOT PLAYED, NOT READ, INCOMPLETE): OPEN, nothing recommended, the parts stand.
@@ -97,7 +102,8 @@ this file; nothing else under `bridge/src`, `tools/ai-bench` or `tools/ai-ladder
     a full replay after a memory stop fits at 5 workers (about 21.7 h) and at 4 (27.1 h, 28.1 h at J218's excess over
     the fit), and 2 h after the stop is left for a batch running past it, one game at the 3,600 s cap and its grace
     beside the batch's others. The timeout, 3,600 s: J221's 1,732 s game, with A thinking about 2.4 times as long,
-    would run about 3,000 s; it cuts only a stuck game. The pilot about 15 minutes.
+    would run about 3,030 s (scaled by both sides' thinking), about 19% under the cap: that it cuts only a stuck game is
+    an estimate. The pilot about 15 minutes.
 
 **Under D509: the atlas's seat and the live seat are unchanged.** One player appended; nothing `SearchConfig.parse`,
 `parseLive` or the atlas's seat reads moves. **Hidden information and threads**: nothing new (D544's and D545's
