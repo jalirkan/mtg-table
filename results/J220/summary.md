@@ -20,13 +20,13 @@ of the clock bought the same gain within the noise:
 
 | player | clock | Elo [95%] | search s a game A / B | ms a decision A / B | rollouts a decision A / B | short of two rounds A / B |
 |---|---|---|---|---|---|---|
-| t1-x2 (J220, confirm set) | 2 s | +14.2 [+7.8, +20.6] | 51.9 / 20.9 (x2.48) | 2,084 / 848 | 16.54 / 16.48 | 4.29% / 2.67% |
-| t1-x3 (J218, dev set) | 3 s | +15.9 [+9.4, +22.5] | 70.4 / 22.3 (x3.15) | - | 18.47 / 15.81 | 2.43% / 3.08% |
+| t1-x2 (J220, confirm set) | 3 s | +14.2 [+7.8, +20.6] | 51.9 / 20.9 (x2.48) | 2,084 / 848 | 16.54 / 16.48 | 4.29% / 2.67% |
+| t1-x3 (J218, dev set) | 4.5 s | +15.9 [+9.4, +22.5] | 70.4 / 22.3 (x3.15) | - | 18.47 / 15.81 | 2.43% / 3.08% |
 
-**What the 2 s clock does.** It restores the live seat's number of rollouts at the deeper horizon: 16.54 a
+**What the 3 s clock does.** It restores the live seat's number of rollouts at the deeper horizon: 16.54 a
 decision against the live seat's 16.48, each rollout 115 ms of play against 45 (x2.56). At the live seat's own
-1 s clock the deeper horizon had starved the search (J212's `search-v2-t1`: 11.5 rollouts, 11.8% of decisions
-short of two rounds, -1.7 Elo). The third second (J218) adds two rollouts a decision and, by these two
+1.5 s clock the deeper horizon had starved the search (J212's `search-v2-t1`: 11.5 rollouts, 11.8% of decisions
+short of two rounds, -1.7 Elo). The extra 1.5 s (J218, a 4.5 s clock) adds two rollouts a decision and, by these two
 matches, nothing that can be told from zero.
 
 **The cost.** 51.9 against 20.9 search seconds a game (x2.48), 2,084 against 848 ms a searched decision.
