@@ -1,15 +1,15 @@
 {
  "schema": 1,
- "updated": "2026-11-16T11:35:13-05:00",
- "heartbeat": "2026-11-16T11:35:13-05:00",
+ "updated": "2026-11-16T11:35:35-05:00",
+ "heartbeat": "2026-11-16T11:35:35-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 10.3,
-  "memUsedGb": 14.4,
+  "load1": 10.69,
+  "memUsedGb": 14.5,
   "memTotalGb": 30.5,
   "swapUsedMb": 6077,
   "pressure": 0,
@@ -27,19 +27,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-16T11:09:22-05:00",
-   "elapsed": 1551,
+   "elapsed": 1573,
    "done": 56,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 134.7,
-   "eta": "2026-11-17T22:48:56-05:00",
-   "workers": 6,
+   "ratePerHour": 129,
+   "eta": "2026-11-18T00:22:00-05:00",
+   "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-16T11:34:19-05:00",
-   "memGb": 6.73,
+   "memGb": 6.77,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -129,6 +129,12 @@
      "kind": "drop",
      "workers": 6,
      "pressure": 7.2
+    },
+    {
+     "at": "2026-11-16T11:35:35-05:00",
+     "kind": "raise",
+     "workers": 7,
+     "pressure": 0
     }
    ],
    "detail": "lab-J222-run1"
