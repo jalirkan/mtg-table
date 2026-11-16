@@ -1,0 +1,2 @@
+==== J222 pilot3 started 2026-11-16T11:10:56-05:00 in unit lab-J222-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+{"files":["tools/ai-ladder/players.json"],"count":1,"rc":0,"exact":1,"playersAdd":2,"playersDel":1,"onePlayer":1,"playersBefore":56,"playersAfter":57,"files0":[],"sameAsJ220":1}
