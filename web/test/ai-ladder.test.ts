@@ -1485,6 +1485,45 @@ test('D547: search-v3-declined-instant-a1 is the pair with aturns=1, search-v3-d
   assert.equal(by.get('search-v2-no-b')!.hash, '59505e241363');
 });
 
+test('D549: search-v3-wide-t1-x2 is search-v3-wide with turns=1 and budgetMs=3000, and so search-v3-declined-instant-t1-x2 with the three window keys, at its own hash', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const wideRaw = raw.players.find((p) => p.name === 'search-v3-wide')!;
+  const x2Raw = raw.players.find((p) => p.name === 'search-v3-declined-instant-t1-x2')!;
+  // the hash was computed by the ladder's own resolvePlayer and configHash on the lane (ai-ladder cfg and list)
+  const wr = raw.players.find((p) => p.name === 'search-v3-wide-t1-x2')!;
+  const w = by.get('search-v3-wide-t1-x2');
+  assert.ok(w?.cfg, 'search-v3-wide-t1-x2 is registered and playable');
+  assert.equal(wr.kind, wideRaw.kind);
+  assert.deepEqual(wr.params, { ...wideRaw.params, turns: 1, budgetMs: 3000 }, "its params are search-v3-wide's with turns=1 and budgetMs=3000");
+  assert.deepEqual(wr.params, { ...x2Raw.params, stackwin: 'on', passwin: 'on', dactiv: 'on' }, "and so search-v3-declined-instant-t1-x2's with the three window keys");
+  assert.ok(!('aturns' in wr.params), 'aturns is left unset, so attacks follow turns (SearchConfig.horizonFor)');
+  const wRest: Record<string, unknown> = { ...w!.resolved };
+  delete wRest.turns;
+  delete wRest.budgetMs;
+  const wideRest: Record<string, unknown> = { ...by.get('search-v3-wide')!.resolved };
+  delete wideRest.turns;
+  delete wideRest.budgetMs;
+  assert.deepEqual(wRest, wideRest, "every other resolved param is search-v3-wide's");
+  assert.equal(w!.resolved.turns, 1);
+  assert.equal(w!.resolved.budgetMs, 3000);
+  assert.equal(w!.resolved.maxRounds, 12, 'the round cap stays 12');
+  const WIDE = by.get('search-v3-wide')!.cfg!;
+  assert.equal(w!.cfg, WIDE.replace('ms=1500,', 'ms=3000,').replace('turns=0,', 'turns=1,'), "its seat config is search-v3-wide's with ms=3000 and turns=1");
+  assert.equal(w!.cfg, 'Default+outlets+search:ms=3000,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1');
+  assert.equal(w!.cfg, by.get('search-v3-declined-instant-t1-x2')!.cfg + ',stackwin=1,passwin=1,dactiv=1', "and t1-x2's with the three keys appended");
+  assert.doesNotMatch(w!.cfg!, /aturns|lands/, 'no aturns key and no lands key in the seat config');
+  assert.equal(w!.hash, '709c83cc4d48', "search-v3-wide-t1-x2's config hash (D549)");
+  assert.equal(reg.filter((y) => y.hash === '709c83cc4d48').length, 1, 'one registered player has the hash 709c83cc4d48');
+  assert.match(wr.note ?? '', /D549/);
+  assert.match(wr.note ?? '', /never the live seat/);
+  // the players it is built from and the match's B keep their hashes
+  assert.equal(by.get('search-v3-wide')!.hash, 'b95340935592');
+  assert.equal(by.get('search-v3-declined-instant-t1-x2')!.hash, '5319a60d7e3b');
+  assert.equal(by.get('search-v3-declined-instant')!.hash, 'af6771947a25');
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
