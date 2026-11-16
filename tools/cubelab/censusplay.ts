@@ -20,8 +20,9 @@
 // through Bootstrap.createAiPlayer (D107); `search` is the live search seat, built as `RecordMatch
 // --policy search` builds it (the outlet policy on, SearchConfig.parseLive(null): the live seat's
 // version at the 1.5 s budget -- search-v2 until D539, search-v3 (its blocks left to Forge) until D546, search-v4
-// (declined spells and instant-speed windows searched too) since -- so a census folder whose games straddle D539 or
-// D546 holds two different `search` pilots under one name).  A search seat's row carries its game's searched and changed decisions and its mean
+// (declined spells and instant-speed windows searched too) until D550, search-v5 (the stack and pass windows and the
+// declined activations searched too) since -- so a census folder whose games straddle D539, D546 or D550 holds two
+// different `search` pilots under one name).  A search seat's row carries its game's searched and changed decisions and its mean
 // ms per decision (search.{p,a,b}.us, as the ladder's match file counts them), and its raw counters.
 //
 // REPLAY (--replay <games.jsonl>): exactly the games listed there -- the same game numbers, deck ids

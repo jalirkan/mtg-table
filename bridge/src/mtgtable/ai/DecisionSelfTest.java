@@ -148,6 +148,7 @@ public final class DecisionSelfTest {
         budgetAndRoundsOnly();
         knobAndCurveArms();
         horizonArms();
+        liveSeatWide();
         liveSeatDeclinedInstant();
         liveSeatNoBlock();
         searchCandidates();
@@ -528,19 +529,20 @@ public final class DecisionSelfTest {
             check(threw, "refused: " + bad);
         }
         // D412: the live seat ran search-v2 (search-v1 + anytime=1); D539: search-v3 (search-v2 + what=pa,
-        // blocks left to Forge); D546: it is search-v4 (search-v3 + declined=1,instant=1).  The bench's parse is
-        // unchanged by any of them.
+        // blocks left to Forge); D546: search-v4 (search-v3 + declined=1,instant=1); D550: it is search-v5
+        // (search-v4 + stackwin=1,passwin=1,dactiv=1).  The bench's parse is unchanged by any of them.
         final SearchConfig live = SearchConfig.parseLive("");
-        check("search-v4".equals(SearchConfig.LIVE_VERSION) && live.anytime
-                && (def.toString().replace(",what=pab", ",what=pa") + ",anytime=1,declined=1,instant=1").equals(live.toString()),
-                "the live seat's default is search-v4 (search-v1's text with what=pa, plus anytime=1, declined=1 and "
-                        + "instant=1): " + live);
+        check("search-v5".equals(SearchConfig.LIVE_VERSION) && live.anytime
+                && (def.toString().replace(",what=pab", ",what=pa")
+                        + ",anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1").equals(live.toString()),
+                "the live seat's default is search-v5 (search-v1's text with what=pa, plus anytime=1, declined=1, "
+                        + "instant=1, stackwin=1, passwin=1 and dactiv=1): " + live);
         check(SearchConfig.parseLive(null).toString().equals(live.toString()), "no --ai-search text is the same seat");
         check(SearchConfig.parseLive("ms=3000").anytime && SearchConfig.parseLive("ms=3000").budgetMs == 3000,
                 "a budget from the picker (--ai-search ms=N) keeps the anytime loop");
-        check(!SearchConfig.parseLive("anytime=0,what=pab,declined=0,instant=0").anytime
-                && SearchConfig.parseLive("anytime=0,what=pab,declined=0,instant=0").toString().equals(def.toString()),
-                "anytime=0,what=pab,declined=0,instant=0 is search-v1's loop again");
+        final String v1Back = "anytime=0,what=pab,declined=0,instant=0,stackwin=0,passwin=0,dactiv=0";
+        check(!SearchConfig.parseLive(v1Back).anytime && SearchConfig.parseLive(v1Back).toString().equals(def.toString()),
+                v1Back + " is search-v1's loop again");
         check(!SearchConfig.parse("").anytime && !SearchConfig.parse("ms=1500").anytime,
                 "the bench's parse keeps anytime off (search-v1 and every ladder player mean what they meant)");
 
@@ -599,12 +601,12 @@ public final class DecisionSelfTest {
         check(!def.mull && !def.targets && !live.mull && !live.targets, "mull and targets are off by default, live seat included");
         check(SearchConfig.parse("anytime=1").toString().equals(def.toString() + ",anytime=1")
                 && !live.toString().contains("mull") && !live.toString().contains("targets"),
-                "search-v2's config string is unchanged, and the live seat's (search-v4, D546) names neither: " + live);
+                "search-v2's config string is unchanged, and the live seat's (search-v5, D550) names neither: " + live);
         check(def.mullMs == SearchConfig.MULL_MS && def.mullTurns == SearchConfig.MULL_TURNS && SearchConfig.MULL_MS == 6000
                 && SearchConfig.MULL_TURNS == 3, "the mulligan's defaults: 6000 ms, 3 turns a seat (game turn 6)");
         final SearchConfig m = SearchConfig.parseLive("mull=1");
         check(m.mull && !m.targets && m.anytime && m.toString().equals(live.toString().replace(",anytime=1,", ",anytime=1,mull=1,")),
-                "the live seat + mull=1 prints as the live seat plus the switch (before D540's keys): " + m);
+                "the live seat + mull=1 prints as the live seat plus the switch (before D540's and D544's keys): " + m);
         final SearchConfig t = SearchConfig.parse("anytime=1,targets=1");
         check(t.targets && !t.mull && t.toString().equals(SearchConfig.parse("anytime=1").toString() + ",targets=1"),
                 "targets=1: search-v2 plus the switch: " + t);
@@ -668,7 +670,7 @@ public final class DecisionSelfTest {
         // The same holds wherever the key sits in the text, and leaf=hand is search-v2 itself.
         check(SearchConfig.parse("leaf=eval:" + model + "," + v2Text).toString().equals(ev.toString()), "key order does not matter");
         check(SearchConfig.parse(v2Text + ",leaf=hand").toString().equals(v2.toString()), "leaf=hand is search-v2");
-        // The default stays the hand leaf: the live seat (search-v4 since D546) and parse's defaults name no model.
+        // The default stays the hand leaf: the live seat (search-v5 since D550) and parse's defaults name no model.
         check(SearchConfig.parseLive("").leafModel == null && SearchConfig.defaults().leafModel == null
                 && !SearchConfig.LIVE_DEFAULTS.contains("leaf"), "the live seat's leaf stays hand");
     }
@@ -809,12 +811,79 @@ public final class DecisionSelfTest {
     }
 
     /**
+     * D550: the live seat is search-v5, search-v4 with D544's {@code stackwin=1},
+     * {@code passwin=1} and {@code dactiv=1} -- the windows with the opponent's
+     * item on top of the stack (the stack carried onto every rollout copy), three
+     * empty-stack steps where Forge passes when an aimed play is listed, and the
+     * sorcery-speed activations Forge declines -- which the ladder rates as
+     * {@code search-v3-wide} (J217, J221).  Every public field but those three
+     * equals search-v4's (by reflection), the text is that player's seat config
+     * without its {@code seed=0}, a key the caller names still wins
+     * ({@code stackwin=0,passwin=0,dactiv=0} is search-v4 again, and each key
+     * alone can be named off), the session header's live test names no version
+     * for search-v4's loop, a budget from the picker keeps the three keys, and
+     * {@link SearchConfig#parse} -- the bench's, the cube lab's, the atlas's and
+     * every ladder player's -- still turns none of them on.
+     */
+    private static void liveSeatWide() {
+        final String v3Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1";
+        final String diText = v3Text + ",declined=1,instant=1";
+        final SearchConfig v3 = SearchConfig.parse(v3Text);
+        final SearchConfig di = SearchConfig.parse(diText);
+        final SearchConfig live = SearchConfig.parseLive("");
+        check("search-v5".equals(SearchConfig.LIVE_VERSION)
+                        && "what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1".equals(SearchConfig.LIVE_DEFAULTS),
+                "D550: the live seat is search-v5, LIVE_DEFAULTS what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1");
+        check(live.stackwin && live.passwin && live.dactiv && live.declined && live.instant && !live.lands
+                        && live.priority && live.attacks && !live.blocks && live.anytime,
+                "D550: the live seat searches the stack and pass windows and the declined activations, keeps declined and "
+                        + "instant, not lands, and still leaves blocks to Forge");
+        configOnly("D550: search-v5 against search-v4", di, live, List.of("stackwin", "passwin", "dactiv"));
+        check(live.toString().equals(di.toString() + ",stackwin=1,passwin=1,dactiv=1"),
+                "D550: the live text is search-v4's plus stackwin=1,passwin=1,dactiv=1: " + live);
+        final SearchConfig wide = SearchConfig.parse(diText + ",stackwin=1,passwin=1,dactiv=1");
+        check(wide.toString().equals(live.toString()),
+                "D550: the live seat is search-v3-wide's config (J217's and J221's A side): " + wide);
+        configOnly("D550: the live seat against search-v3-wide", wide, live, List.of());
+        final SearchConfig back = SearchConfig.parseLive("stackwin=0,passwin=0,dactiv=0");
+        check(!back.stackwin && !back.passwin && !back.dactiv && back.declined && back.instant
+                        && back.toString().equals(di.toString()),
+                "D550: --ai-search stackwin=0,passwin=0,dactiv=0 is search-v4 again: " + back);
+        boolean alone = true;
+        final StringBuilder seen = new StringBuilder();
+        for (final String k : List.of("stackwin", "passwin", "dactiv")) {
+            final SearchConfig off = SearchConfig.parseLive(k + "=0");
+            alone &= off.stackwin != "stackwin".equals(k) && off.passwin != "passwin".equals(k)
+                    && off.dactiv != "dactiv".equals(k) && off.toString().equals(live.toString().replace("," + k + "=1", ""));
+            seen.append(' ').append(off);
+        }
+        check(alone, "D550: each of the three keys alone can be named off:" + seen);
+        check(SearchConfig.parseLive("declined=0,instant=0,stackwin=0,passwin=0,dactiv=0").toString().equals(v3.toString()),
+                "D550: --ai-search declined=0,instant=0,stackwin=0,passwin=0,dactiv=0 is search-v3 again");
+        // MtgTable's session header (M62, M85) names LIVE_VERSION when the seat's text is the live parse at its budget
+        check(SearchConfig.parseLive("ms=" + live.budgetMs).toString().equals(live.toString())
+                        && !back.toString().equals(SearchConfig.parseLive("ms=" + back.budgetMs).toString()),
+                "D550: the header's live test holds the live default at its budget and names no version for search-v4's loop");
+        final SearchConfig picked = SearchConfig.parseLive("ms=3000");
+        check(picked.budgetMs == 3000 && picked.stackwin && picked.passwin && picked.dactiv && picked.declined
+                        && picked.instant && !picked.blocks && picked.anytime && picked.horizonFor("p") == 0
+                        && picked.toString().equals(live.toString().replace("ms=1500,", "ms=3000,")),
+                "D550: a budget from the picker (ms=3000) keeps the three keys and the horizon: " + picked);
+        final SearchConfig bench = SearchConfig.parse("");
+        check(!bench.stackwin && !bench.passwin && !bench.dactiv && !SearchConfig.defaults().stackwin
+                        && !SearchConfig.defaults().passwin && !SearchConfig.defaults().dactiv
+                        && !di.stackwin && !di.passwin && !di.dactiv,
+                "D550: parse()'s defaults turn none of the three on (every ladder, bench and lab seat unchanged)");
+    }
+
+    /**
      * D539: search-v3, the live seat from D539 until D546, is search-v2 with
      * {@code what=pa} -- its priority plays and attacks searched, its block
      * declarations left to Forge -- which the ladder rates as
      * {@code search-v2-no-b} (J210, J211).  Since D546 it is the live parse
-     * with D540's two keys named off ({@code declined=0,instant=0}; the live
-     * seat itself is {@link #liveSeatDeclinedInstant}'s).  Every public field
+     * with D540's two keys named off, and since D550 with D544's three too
+     * ({@code declined=0,instant=0,stackwin=0,passwin=0,dactiv=0}; the live
+     * seat itself is {@link #liveSeatWide}'s).  Every public field
      * but {@code blocks} equals search-v2's (by reflection), the text is
      * search-v2-no-b's seat config without its {@code seed=0}
      * ({@link SearchConfig#toString} never prints the seed), a key the caller
@@ -826,7 +895,7 @@ public final class DecisionSelfTest {
     private static void liveSeatNoBlock() {
         final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
         final SearchConfig v2 = SearchConfig.parse(v2Text);
-        final SearchConfig live = SearchConfig.parseLive("declined=0,instant=0");
+        final SearchConfig live = SearchConfig.parseLive("declined=0,instant=0,stackwin=0,passwin=0,dactiv=0");
         check(SearchConfig.LIVE_DEFAULTS.startsWith("what=pa,anytime=1,"),
                 "D539: the live defaults still begin with search-v3's what=pa,anytime=1: " + SearchConfig.LIVE_DEFAULTS);
         check(live.priority && live.attacks && !live.blocks && live.anytime,
@@ -836,9 +905,10 @@ public final class DecisionSelfTest {
                 "D539: search-v3's text is search-v2's with what=pa: " + live);
         final SearchConfig noB = SearchConfig.parse(v2Text.replace(",what=pab", ",what=pa"));
         check(noB.toString().equals(live.toString()), "D539: search-v3 is search-v2-no-b's config (J211's A side): " + noB);
-        final SearchConfig back = SearchConfig.parseLive("what=pab,declined=0,instant=0");
+        final SearchConfig back = SearchConfig.parseLive("what=pab,declined=0,instant=0,stackwin=0,passwin=0,dactiv=0");
         check(back.blocks && back.priority && back.attacks && back.toString().equals(v2.toString()),
-                "D539: --ai-search what=pab,declined=0,instant=0 is search-v2's loop again: " + back);
+                "D539: --ai-search what=pab,declined=0,instant=0,stackwin=0,passwin=0,dactiv=0 is search-v2's loop again: "
+                        + back);
         final SearchConfig picked = SearchConfig.parseLive("ms=3000");
         check(picked.budgetMs == 3000 && !picked.blocks && picked.priority && picked.attacks && picked.anytime
                         && picked.toString().equals(SearchConfig.parseLive("").toString().replace("ms=1500,", "ms=3000,")),
@@ -852,46 +922,50 @@ public final class DecisionSelfTest {
     }
 
     /**
-     * D546: the live seat is search-v4, search-v3 with D540's {@code declined=1}
-     * and {@code instant=1} ({@code lands} off) -- the spells Forge's per-card AI
-     * declines are aimed and become priority candidates, and the empty-stack
-     * windows outside the seat's own main phases where Forge plays are searched --
-     * which the ladder rates as {@code search-v3-declined-instant} (J215, J216).
-     * Every public field but those two equals search-v3's (by reflection), the
-     * text is that player's seat config without its {@code seed=0}, a key the
-     * caller names still wins ({@code declined=0,instant=0} is search-v3 again,
-     * and each key alone can be named off), a budget from the picker keeps both
+     * D546: search-v4, the live seat from D546 until D550, is search-v3 with
+     * D540's {@code declined=1} and {@code instant=1} ({@code lands} off) -- the
+     * spells Forge's per-card AI declines are aimed and become priority
+     * candidates, and the empty-stack windows outside the seat's own main phases
+     * where Forge plays are searched -- which the ladder rates as
+     * {@code search-v3-declined-instant} (J215, J216).  Since D550 it is the live
+     * parse with D544's three keys named off ({@code stackwin=0,passwin=0,dactiv=0};
+     * the live seat itself is {@link #liveSeatWide}'s).  Every public field but
+     * those two equals search-v3's (by reflection), the text is that player's
+     * seat config without its {@code seed=0}, a key the caller names still wins
+     * ({@code declined=0,instant=0} with the three is search-v3 again, and each
+     * of the two alone can be named off), a budget from the picker keeps both
      * keys, and {@link SearchConfig#parse} -- the bench's, the cube lab's, the
      * atlas's and every ladder player's -- still turns neither on.
      */
     private static void liveSeatDeclinedInstant() {
         final String v3Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1";
+        final String noWide = ",stackwin=0,passwin=0,dactiv=0";
         final SearchConfig v3 = SearchConfig.parse(v3Text);
-        final SearchConfig live = SearchConfig.parseLive("");
-        check("search-v4".equals(SearchConfig.LIVE_VERSION)
-                        && "what=pa,anytime=1,declined=1,instant=1".equals(SearchConfig.LIVE_DEFAULTS),
-                "D546: the live seat is search-v4, LIVE_DEFAULTS what=pa,anytime=1,declined=1,instant=1");
+        final SearchConfig live = SearchConfig.parseLive(noWide.substring(1));
+        check(SearchConfig.LIVE_DEFAULTS.startsWith("what=pa,anytime=1,declined=1,instant=1,"),
+                "D546: the live defaults still begin with search-v4's what=pa,anytime=1,declined=1,instant=1: "
+                        + SearchConfig.LIVE_DEFAULTS);
         check(live.declined && live.instant && !live.lands && live.priority && live.attacks && !live.blocks && live.anytime,
-                "D546: the live seat widens its priority search by declined and instant, not lands, and still leaves blocks to Forge");
+                "D546: search-v4 widens its priority search by declined and instant, not lands, and still leaves blocks to Forge");
         configOnly("D546: search-v4 against search-v3", v3, live, List.of("declined", "instant"));
         check(live.toString().equals(v3.toString() + ",declined=1,instant=1"),
-                "D546: the live text is search-v3's plus declined=1,instant=1: " + live);
+                "D546: search-v4's text is search-v3's plus declined=1,instant=1: " + live);
         final SearchConfig di = SearchConfig.parse(v3Text + ",declined=1,instant=1");
         check(di.toString().equals(live.toString()),
-                "D546: the live seat is search-v3-declined-instant's config (J215's and J216's A side): " + di);
-        configOnly("D546: the live seat against search-v3-declined-instant", di, live, List.of());
-        final SearchConfig back = SearchConfig.parseLive("declined=0,instant=0");
+                "D546: search-v4 is search-v3-declined-instant's config (J215's and J216's A side): " + di);
+        configOnly("D546: search-v4 against search-v3-declined-instant", di, live, List.of());
+        final SearchConfig back = SearchConfig.parseLive("declined=0,instant=0" + noWide);
         check(!back.declined && !back.instant && back.toString().equals(v3.toString()),
-                "D546: --ai-search declined=0,instant=0 is search-v3 again: " + back);
-        final SearchConfig noDec = SearchConfig.parseLive("declined=0");
-        final SearchConfig noIns = SearchConfig.parseLive("instant=0");
+                "D546: --ai-search declined=0,instant=0" + noWide + " is search-v3 again: " + back);
+        final SearchConfig noDec = SearchConfig.parseLive("declined=0" + noWide);
+        final SearchConfig noIns = SearchConfig.parseLive("instant=0" + noWide);
         check(!noDec.declined && noDec.instant && noIns.declined && !noIns.instant
                         && noDec.toString().equals(v3.toString() + ",instant=1")
                         && noIns.toString().equals(v3.toString() + ",declined=1"),
                 "D546: either key alone can be named off: " + noDec + " / " + noIns);
         final SearchConfig picked = SearchConfig.parseLive("ms=3000");
         check(picked.budgetMs == 3000 && picked.declined && picked.instant && !picked.lands && !picked.blocks && picked.anytime
-                        && picked.toString().equals(live.toString().replace("ms=1500,", "ms=3000,")),
+                        && picked.toString().equals(SearchConfig.parseLive("").toString().replace("ms=1500,", "ms=3000,")),
                 "D546: a budget from the picker (ms=3000) keeps both keys: " + picked);
         final SearchConfig bench = SearchConfig.parse("");
         check(!bench.declined && !bench.instant && !bench.lands && !SearchConfig.defaults().declined
@@ -913,7 +987,7 @@ public final class DecisionSelfTest {
     private static void searchCandidates() {
         final String v3Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1";
         final SearchConfig v3 = SearchConfig.parse(v3Text);
-        check(v3.toString().equals(SearchConfig.parseLive("declined=0,instant=0").toString()),
+        check(v3.toString().equals(SearchConfig.parseLive("declined=0,instant=0,stackwin=0,passwin=0,dactiv=0").toString()),
                 "D540: the arms' base is search-v3, the live seat until D546: " + v3);
         check(!v3.declined && !v3.instant && !v3.lands, "D540: search-v3 widens nothing");
         // each key is the name of the one field it sets
@@ -950,14 +1024,17 @@ public final class DecisionSelfTest {
         final SearchConfig bench = SearchConfig.parse("");
         check(live.declined && live.instant && !live.lands && !bench.declined && !bench.instant && !bench.lands,
                 "D540: off in parse()'s defaults; in the live parse declined and instant on since D546, lands off");
-        check(SearchConfig.parseLive("lands=1").lands && SearchConfig.parseLive("lands=1").toString().equals(live.toString() + ",lands=1"),
+        // D550: lands prints before D544's keys, which the live seat names since D550
+        check(SearchConfig.parseLive("lands=1").lands && SearchConfig.parseLive("lands=1").toString()
+                        .equals(live.toString().replace(",instant=1,", ",instant=1,lands=1,")),
                 "D540: a live seat may name a key (no measurement-only refusal): " + SearchConfig.parseLive("lands=1"));
     }
 
     /**
      * D544: {@code stackwin=1}, {@code passwin=1} and {@code dactiv=1}, each a key of its own: each differs from its base
      * in its one field, prints the base's text plus the key, round-trips, and is off in {@link SearchConfig#parse}'s
-     * defaults, in {@link SearchConfig#LIVE_DEFAULTS} and in the live parse.  The union player's text is
+     * defaults (and was in {@link SearchConfig#LIVE_DEFAULTS} and the live parse until D550, which turned all three on
+     * in the live seat alone, search-v5: {@link #liveSeatWide}).  The union player's text is
      * search-v3-declined-instant's plus the three, in D544's order.  Then the opponent's conditional pass
      * ({@link RolloutController.Forced#takePass(String)}): given once, only on the stack it was armed on, disarmed
      * either way, and never on a controller nothing armed.  A refusal's detail (the skeptic's read): ids and words kept,
@@ -984,7 +1061,8 @@ public final class DecisionSelfTest {
                 threw = true;
             }
             check(threw, "D544: " + k + "= takes 0 or 1");
-            check(!SearchConfig.LIVE_DEFAULTS.contains(k), "D544: the live defaults do not name " + k);
+            // D550: the live defaults name all three (search-v5)
+            check(SearchConfig.LIVE_DEFAULTS.contains("," + k + "=1"), "D544, D550: the live defaults name " + k + "=1");
         }
         final SearchConfig wide = SearchConfig.parse(diText + ",dactiv=1,passwin=1,stackwin=1");
         check(wide.toString().equals(v3.toString() + ",declined=1,instant=1,stackwin=1,passwin=1,dactiv=1"),
@@ -995,8 +1073,8 @@ public final class DecisionSelfTest {
                 "D544: stackwin=1 survives the other switches' copies");
         final SearchConfig live = SearchConfig.parseLive("");
         final SearchConfig bench = SearchConfig.parse("");
-        check(!live.stackwin && !live.passwin && !live.dactiv && !bench.stackwin && !bench.passwin && !bench.dactiv,
-                "D544: off in parse()'s defaults and in the live parse");
+        check(live.stackwin && live.passwin && live.dactiv && !bench.stackwin && !bench.passwin && !bench.dactiv,
+                "D544: off in parse()'s defaults; in the live parse all three on since D550");
 
         final RolloutController.Forced f = new RolloutController.Forced();
         check(!f.takePass("s1/1;"), "D544: nothing armed, no conditional pass");
