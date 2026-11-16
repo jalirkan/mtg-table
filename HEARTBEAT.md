@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-16T14:25:32-05:00
+- time: 2026-11-16T14:30:14-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
-- running: J222 commands 1/2, 648/4800 games, 280.3/h, ETA 2026-11-17T05:14:26-05:00, 6 worker(s), 7 core(s)
+- running: J222 commands 1/2, 664/4800 games, 247.1/h, ETA 2026-11-17T07:14:32-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 11.7; memory 12.6/30.5 GB, swap 6519 MB, pressure 0.3% (lab budget 23.4 GB)
+- load: 11.17; memory 11.9/30.5 GB, swap 7571 MB, pressure 4.72% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J220 done at 2026-11-16T01:44:34-05:00: cm.played 4800 · cm.score 0.52 · cm.lo 0.511 · cm.hi 0.53 · cm.elo 14.2 · cm.eloLo 7.8 · cm.eloHi 20.6 · v.shown 0 · v.smallGain 1 · v.inconclusive4800 0 · v.notShown 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 0 · v.measuredLoss 0 · v.measuredGain 1 · v.liveSeatCandidate 1 · v.cheaperRolloutNext 0 · v.aSecPerGame 51.866 · v.bSecPerGame 20.925 · v.costRatio 2.479 · v.noCost 0 · v.owedDecision 0 · v.aMs 2084.181 · v.bMs 848.492 · v.aRolloutsPerDecision 16.54 · v.bRolloutsPerDecision 16.48 · v.aShortShare 0.043 · v.bShortShare 0.027 · v.playMsRatio 2.562 · bs.min 302900000 · bs.max 302900599
