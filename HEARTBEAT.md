@@ -2,17 +2,19 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-16T01:44:20-05:00
+- time: 2026-11-16T01:44:35-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
-- running: J220 commands 2/2, 4792/4800 games, 368.3/h, ETA 2026-11-16T01:45:38-05:00, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 1.54; memory 4.9/30.5 GB, swap 4865 MB, pressure 0% (lab budget 23.4 GB)
+- state: idle
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 1.2; memory 4.9/30.5 GB, swap 4865 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J221 done at 2026-11-15T11:02:28-05:00: cm.played 4800 · cm.score 0.505 · cm.lo 0.498 · cm.hi 0.512 · cm.elo 3.6 · cm.eloLo -1.3 · cm.eloHi 8.6 · v.shown 0 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 1 · v.notRead 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 1 · v.measuredLoss 0 · v.measuredGain 0 · v.pooledScore 0.508 · v.pooledLo 0.502 · v.pooledHi 0.513 · v.pooledElo 5.3 · v.pooledEloLo 1.6 · v.pooledEloHi 9 · v.recStands 1 · v.recWithdrawn 0 · v.recOpen 0 · v.recByAlone 0 · v.recByPooled 1 · v.stackwinWindowsPerGame 1.541 · v.passwinWindowsPerGame 0.418 · v.dactivWindowsPerGame 1.769 · v.unionChangedPerGame 0.303 · v.refusalShare 0.069 · v.aSecPerGame 23.376 · v.bSecPerGame 21.347 · v.costRatio 1.095 · v.noCost 1 · bs.min 199900000 · bs.max 199900599
+- last finished: J220 done at 2026-11-16T01:44:34-05:00: cm.played 4800 · cm.score 0.52 · cm.lo 0.511 · cm.hi 0.53 · cm.elo 14.2 · cm.eloLo 7.8 · cm.eloHi 20.6 · v.shown 0 · v.smallGain 1 · v.inconclusive4800 0 · v.notShown 0 · v.notPlayed 0 · v.incomplete 0 · v.indistinguishable 0 · v.measuredLoss 0 · v.measuredGain 1 · v.liveSeatCandidate 1 · v.cheaperRolloutNext 0 · v.aSecPerGame 51.866 · v.bSecPerGame 20.925 · v.costRatio 2.479 · v.noCost 0 · v.owedDecision 0 · v.aMs 2084.181 · v.bMs 848.492 · v.aRolloutsPerDecision 16.54 · v.bRolloutsPerDecision 16.48 · v.aShortShare 0.043 · v.bShortShare 0.027 · v.playMsRatio 2.562 · bs.min 302900000 · bs.max 302900599
 
 ## Messages
+
+- FOLLOW-UP READY [J220@2026-11-16T01:44:34-05:00] (the runner, for the cloud session): J220 is done; write and post the template morning-read. It decides: D547 points 3, 4 and 6, from the match line and its batch counters alone. A complete match reads exactly one of D519's four readings at 4,800 games: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 4,800 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15); complete includes the line's and every row's set being tools/ai-bench/pairs-confirm.txt, no lands counter above 0 on either side, and A's ms of play a finished rollout at least 1.3 times B's. INCOMPLETE (owed a repost alone under a new job id) for any failed part; NOT PLAYED when the pilot's gate kept the match out. SHOWN or SMALL GAIN names search-v3-declined-instant-t1-x2 a live-seat candidate for the owner under a separate decision and a seat-queue row, its cost beside it and beside t1-x3's; INCONCLUSIVE AT 4,800 is information; NOT SHOWN says the deeper horizon is not shown at 3 s on the confirm set (the clock and the deck set are not separated against J218), and the next depth lane is a cheaper deep rollout, not a clock between. This job never changes the live seat. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J221@2026-11-15T11:02:28-05:00] (the runner, for the cloud session): J221 is done; write and post the template morning-read. It decides: D548 points 5 to 9, from the match line, its result rows and its batch counters alone. A complete match that is not NOT READ reads exactly one of D519's four readings at 4,800 games for J221 alone: SHOWN (lo > 0.5 and elo >= +15), SMALL GAIN (lo > 0.5 and elo < +15), INCONCLUSIVE AT 4,800 (lo <= 0.5 and eloHi >= +15), NOT SHOWN (lo <= 0.5 and eloHi < +15); complete includes the line's and every row's set being tools/ai-bench/pairs-dev.txt and the rows' mirrored pairs reproducing the line. NOT READ when the three keys together changed fewer than 0.25 decisions a game on A's side; INCOMPLETE (owed a repost alone under a new job id) for any other failed part; NOT PLAYED when the pilot's gate kept the match out. Beside it the pooled line of J217 and J221: score, se, lo, hi and Elo from the two matches' pair counts, scores and standard errors (stratified), J217's side as literals. The PC session's recommendation of search-v3-wide for the live seat STANDS when J221 reads SHOWN or SMALL GAIN, or the pooled lo is above 0.5 and J221 is not a measured loss (eloHi < 0); it is WITHDRAWN when J221 is a measured loss or the pooled lo is at most 0.5; it is OPEN when J221 gives no reading (NOT READ, NOT PLAYED or INCOMPLETE). A seat change is the owner's, under a separate decision and the seat queue (D509). This job never changes the live seat. Ledger: LEDGER.md. Delete this line once posted.
 
