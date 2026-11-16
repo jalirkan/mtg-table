@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-16T11:16:18-05:00",
- "heartbeat": "2026-11-16T11:16:18-05:00",
+ "updated": "2026-11-16T11:17:02-05:00",
+ "heartbeat": "2026-11-16T11:17:02-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.35,
-  "memUsedGb": 9,
+  "load1": 2.48,
+  "memUsedGb": 7.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5812,
+  "swapUsedMb": 5780,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -25,9 +25,9 @@
    "id": "J222",
    "title": "The wide windows and the deeper horizon together (D549): one fixed 4,800-game match (2,400 mirrored pairs, D398, the dev set tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-wide-t1-x2 (709c83cc4d48, a new player: search-v3-wide's params with turns=1 and budgetMs=3000, so search-v3-declined-instant-t1-x2 with stackwin=1, passwin=1 and dactiv=1) against search-v3-declined-instant (af6771947a25, the live seat's config as search-v4 since D546), in a ladder folder of its own under --host j222 on deal blocks no job has played, 508,900,000-508,900,599, at --game-timeout 3600, read by D519's four readings at 4,800 games with D548's completeness parts and exposure condition and D547's lands and horizon-trace parts; a SHOWN or SMALL GAIN names the combined player a live-seat candidate the PC session puts to the owner beside its two parts (amending D548 point 9), never a claim that it beats either. Never pooled with J217, J218, J220 or J221. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "pilot 6/7",
+   "phase": "pilot 7/7",
    "started": "2026-11-16T11:09:22-05:00",
-   "elapsed": 416,
+   "elapsed": 460,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -39,7 +39,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-16T11:09:22-05:00",
-   "memGb": 1.3,
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -124,7 +124,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J222-pilot6"
+   "detail": "lab-J222-pilot7"
   }
  ],
  "queue": [],
