@@ -1,18 +1,18 @@
 {
  "schema": 1,
- "updated": "2026-11-17T11:00:19-05:00",
- "heartbeat": "2026-11-17T11:00:19-05:00",
+ "updated": "2026-11-17T11:02:15-05:00",
+ "heartbeat": "2026-11-17T11:02:15-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.55,
-  "memUsedGb": 12.1,
+  "load1": 8.69,
+  "memUsedGb": 11.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 6916,
-  "pressure": 0.23,
+  "swapUsedMb": 8130,
+  "pressure": 1.41,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -27,19 +27,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-17T06:39:54-05:00",
-   "elapsed": 15625,
+   "elapsed": 15741,
    "done": 952,
    "total": 4800,
    "unit": "games",
    "ratePerHour": 229,
-   "eta": "2026-11-18T03:48:33-05:00",
-   "workers": 5,
+   "eta": "2026-11-18T03:50:30-05:00",
+   "workers": 4,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-17T10:59:02-05:00",
-   "memGb": 5.09,
+   "memGb": 4.91,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -127,12 +127,6 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [
-    {
-     "at": "2026-11-17T06:51:26-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 7.2
-    },
     {
      "at": "2026-11-17T07:03:17-05:00",
      "kind": "raise",
@@ -246,6 +240,12 @@
      "kind": "drop",
      "workers": 5,
      "pressure": 3.5
+    },
+    {
+     "at": "2026-11-17T11:02:15-05:00",
+     "kind": "drop",
+     "workers": 4,
+     "pressure": 1.4
     }
    ],
    "detail": "lab-J223-run1"
