@@ -119,7 +119,7 @@ import java.util.Locale;
  *
  * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
  * {@link #parseLive}, so the live seat (search-v2 then, search-v3 from D539,
- * search-v4 since D546) is unchanged unless the text names them:
+ * search-v4 from D546, search-v5 since D550) is unchanged unless the text names them:
  * <ul>
  * <li>{@code mull=1} -- the opening hand: at {@code mulliganKeepHand} keep is
  *     rolled out against mulligan, and at the London mulligan's bottom choice
@@ -148,7 +148,8 @@ import java.util.Locale;
  * default in {@link #parse} and printed only when on, so every registered config
  * text and every ladder hash are unchanged unless the text names them; the live
  * seat turns {@code declined} and {@code instant} on since D546
- * ({@link #LIVE_DEFAULTS}, search-v4), and {@code lands} stays off there too:
+ * ({@link #LIVE_DEFAULTS}: search-v4, and search-v5 since D550), and
+ * {@code lands} stays off there too:
  * <ul>
  * <li>{@code declined=1} -- a castable spell Forge's per-card judgment declines
  *     for any reason (not only an untargeted {@code CantPlayAi}), aimed by
@@ -164,7 +165,9 @@ import java.util.Locale;
  *     instead of leaving the land drop to Forge.</li>
  * </ul>
  *
- * <p>D544's three, likewise off by default and printed only when on:
+ * <p>D544's three, likewise off by default in {@link #parse} and printed only when on, so every registered config
+ * text and every ladder hash are unchanged unless the text names them; the live seat turns all three on since D550
+ * ({@link #LIVE_DEFAULTS}, search-v5):
  * <ul>
  * <li>{@code stackwin=1} -- a window with the opponent's item on top of the
  *     stack and nothing waiting is searched, the stack carried onto every copy
@@ -664,33 +667,45 @@ public final class SearchConfig {
      * {@code instant=1} (D540's two keys, {@code lands} off) -- spells Forge's
      * per-card AI declines become candidates, and empty-stack windows outside
      * the seat's own main phases where Forge plays are searched -- adopted on
-     * J215's and J216's matches and the owner's yes (D541, D543, D546).  On the
-     * AI ladder search-v2's config is the player {@code search-v1-anytime}
-     * (D388), search-v3's {@code search-v2-no-b} (D535) and search-v4's
-     * {@code search-v3-declined-instant} (D541); every name and hash stays as
-     * it is (a ladder name is permanent).
+     * J215's and J216's matches and the owner's yes (D541, D543, D546), and the
+     * live seat until D550; {@code search-v5} is search-v4 with D544's
+     * {@code stackwin=1}, {@code passwin=1} and {@code dactiv=1} -- windows with
+     * the opponent's item on top of the stack are searched with the stack
+     * carried onto every rollout copy, three empty-stack steps where Forge
+     * passes are searched when an aimed play is listed, and the sorcery-speed
+     * activations Forge declines become candidates -- adopted on J217's and
+     * J221's matches and the owner's yes (D544, D548, D550).  On the AI ladder
+     * search-v2's config is the player {@code search-v1-anytime} (D388),
+     * search-v3's {@code search-v2-no-b} (D535), search-v4's
+     * {@code search-v3-declined-instant} (D541) and search-v5's
+     * {@code search-v3-wide} (D544); every name and hash stays as it is (a
+     * ladder name is permanent).
      */
-    public static final String LIVE_VERSION = "search-v4";
+    public static final String LIVE_VERSION = "search-v5";
 
     /**
-     * The live seat's defaults on top of {@link #parse}'s (D412, D539, D546),
-     * prepended so a key the caller names wins: {@code --ai-search
-     * declined=0,instant=0} is search-v3 again, {@code --ai-search
-     * what=pab,declined=0,instant=0} search-v2's loop, and {@code --ai-search
-     * anytime=0,what=pab,declined=0,instant=0} search-v1's.  {@link #parse}
-     * itself keeps every default as it was, {@code what=pab} and the D540 keys
-     * off included, because the bench, the cube lab, the move atlas and every
-     * ladder player's seat config are parsed by it and must keep meaning what
-     * they meant when their games were played.
+     * The live seat's defaults on top of {@link #parse}'s (D412, D539, D546,
+     * D550), prepended so a key the caller names wins: {@code --ai-search
+     * stackwin=0,passwin=0,dactiv=0} is search-v4 again, {@code --ai-search
+     * declined=0,instant=0,stackwin=0,passwin=0,dactiv=0} search-v3,
+     * {@code --ai-search what=pab,declined=0,instant=0,stackwin=0,passwin=0,dactiv=0}
+     * search-v2's loop, and {@code --ai-search
+     * anytime=0,what=pab,declined=0,instant=0,stackwin=0,passwin=0,dactiv=0}
+     * search-v1's.  {@link #parse} itself keeps every default as it was,
+     * {@code what=pab} and the D540 and D544 keys off included, because the
+     * bench, the cube lab, the move atlas and every ladder player's seat config
+     * are parsed by it and must keep meaning what they meant when their games
+     * were played.
      */
-    public static final String LIVE_DEFAULTS = "what=pa,anytime=1,declined=1,instant=1";
+    public static final String LIVE_DEFAULTS = "what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1";
 
     /**
      * The game's AI seat's parse ({@code MtgTable --ai-search}, D314): as
-     * {@link #parse} over {@link #LIVE_DEFAULTS} (D412, D539, D546: the live seat
-     * runs {@link #LIVE_VERSION}, the anytime loop with no block search and with
-     * D540's declined spells and instant-speed windows, unless the text says
-     * otherwise),
+     * {@link #parse} over {@link #LIVE_DEFAULTS} (D412, D539, D546, D550: the
+     * live seat runs {@link #LIVE_VERSION}, the anytime loop with no block search,
+     * with D540's declined spells and instant-speed windows and with D544's stack
+     * windows, pass windows and declined sorcery-speed activations, unless the
+     * text says otherwise),
      * and the bench-only {@code oracle} is refused -- a seat that plays a
      * person never sees their hidden cards (D312, D350) -- and so are D523's
      * measurement-only {@code rollout=random} and {@code random-self}, and

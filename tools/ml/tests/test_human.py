@@ -222,6 +222,9 @@ class CollectTest(unittest.TestCase):
             # D546 (M84): and the next one
             "human-ws-6": {"policy": "search", "version": "search-v4", "budgetMs": 1500,
                            "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1,declined=1,instant=1"},
+            # D550 (M85): and the one after it
+            "human-ws-7": {"policy": "search", "version": "search-v5", "budgetMs": 1500,
+                           "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1"},
         }
         for gid, ai in cfgs.items():
             ls = as_person(p, gid)
@@ -239,6 +242,8 @@ class CollectTest(unittest.TestCase):
                                                         "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1"})
         self.assertEqual(by["human-ws-6"]["aiSearch"], {"version": "search-v4", "budgetMs": 1500,
                                                         "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1,declined=1,instant=1"})
+        self.assertEqual(by["human-ws-7"]["aiSearch"], {"version": "search-v5", "budgetMs": 1500,
+                                                        "config": "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1"})
         self.assertTrue(all(e["coach"] is None for e in by.values()))   # no ForgeCoach record: unknown
 
     def _coach_doc(self, games):

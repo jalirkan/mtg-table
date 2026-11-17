@@ -129,7 +129,7 @@ import mtgtable.ai.SearchConfig;
  *       AI, {@link Bootstrap#createAiPlayer}, exactly as before) or
  *       {@code search}: the live search seat, {@code MtgTable --ai-policy
  *       search}'s -- D310's outlet policy and {@link SearchConfig#parseLive}'s
- *       search-v4 (D546; search-v3 from D539, search-v2 before) in front of the seat's profile, through
+ *       search-v5 (D550; search-v4 from D546, search-v3 from D539, search-v2 before) in front of the seat's profile, through
  *       {@link Bootstrap#createAiSeat} (D440, watching two bots: the cube lab's
  *       {@code watch}).  Like the profile, it belongs to the DECK.  It changes
  *       nothing on the wire: the handshake names the profile, as it always
