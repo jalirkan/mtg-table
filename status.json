@@ -1,21 +1,21 @@
 {
  "schema": 1,
- "updated": "2026-11-17T05:37:00-05:00",
- "heartbeat": "2026-11-17T05:37:00-05:00",
+ "updated": "2026-11-17T05:38:05-05:00",
+ "heartbeat": "2026-11-17T05:38:05-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.63,
-  "memUsedGb": 6.7,
+  "load1": 2.76,
+  "memUsedGb": 5.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 6084,
-  "pressure": 0,
+  "swapUsedMb": 6058,
+  "pressure": 2.82,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -25,21 +25,21 @@
    "id": "J222",
    "title": "The wide windows and the deeper horizon together (D549): one fixed 4,800-game match (2,400 mirrored pairs, D398, the dev set tools/ai-bench/pairs-dev.txt, no stopping rule) of search-v3-wide-t1-x2 (709c83cc4d48, a new player: search-v3-wide's params with turns=1 and budgetMs=3000, so search-v3-declined-instant-t1-x2 with stackwin=1, passwin=1 and dactiv=1) against search-v3-declined-instant (af6771947a25, the live seat's config as search-v4 since D546), in a ladder folder of its own under --host j222 on deal blocks no job has played, 508,900,000-508,900,599, at --game-timeout 3600, read by D519's four readings at 4,800 games with D548's completeness parts and exposure condition and D547's lands and horizon-trace parts; a SHOWN or SMALL GAIN names the combined player a live-seat candidate the PC session puts to the owner beside its two parts (amending D548 point 9), never a claim that it beats either. Never pooled with J217, J218, J220 or J221. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-11-16T11:09:22-05:00",
-   "elapsed": 66458,
-   "done": 4784,
+   "elapsed": 66523,
+   "done": 4792,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 297.2,
-   "eta": "2026-11-17T05:40:13-05:00",
+   "ratePerHour": 313.5,
+   "eta": "2026-11-17T05:39:37-05:00",
    "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-17T05:36:07-05:00",
-   "memGb": 1.26,
+   "dataUpdated": "2026-11-17T05:37:12-05:00",
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -245,7 +245,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J222-run1"
+   "detail": "lab-J222-run2"
   }
  ],
  "queue": [],
