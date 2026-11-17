@@ -1,14 +1,15 @@
 ## D551 — the combination on the confirm set, against the wide seat: `search-v3-wide-t1-x2` against `search-v3-wide`, one fixed 4,800-game match on the confirm deck set, read by D519's four readings written before any game; a SHOWN or SMALL GAIN is the PC session's recommendation of a 3 s live seat to the owner, and no seat moves (J223)
 
 *Branch `pc/d551-confirm-wide-deep`, off D550's lane head `cc417e4d1` (on main `6fd2e726d`, D549's merge and J222's
-pin), so that PLAN's rows line up and the two lanes merge in order. Reads J222 (D549; `results/J222/` on
+pin), so that PLAN's rows line up and the two lanes merge in order; main `bfa3c6a01`, D550's merge, was merged in
+before the pilot dry-run (lane head `1fedac54f`). Reads J222 (D549; `results/J222/` on
 `pc-results`: `summary.md`, `report.md`, `match-J222.json`, `STATUS`; and the `j222-ladder` match's own result rows in
 the lab checkout's `var/`, read-only) and the result rows of J217, J220 and J221 for the confirm set's widths, window
 rates and game lengths. No player, config, hash, script or test changes: both players are registered (D544, D549),
 and this file and PLAN's rows are the whole change. `node tools/decisions.mjs next` printed D551 on this lane.*
 
-**Status: registered; text only, no Java, build or game on the lane (*Verification*); unplayed. J223 plays it,
-alone, after D550's and this lane's merges.**
+**Status: registered; text only, no Java, build or game on the lane but the coordinator's pilot dry-run
+(*Verification*); unplayed. J223 plays it, alone, after this lane's merge (D550 merged first, as `bfa3c6a01`).**
 
 **2026-11-17**
 
@@ -22,7 +23,7 @@ alone, after D550's and this lane's merges.**
   of two rounds, ×2.585 the play time a rollout; the three keys 0.478 changed decisions a game. Under D549 point 7 the
   combination is a live-seat candidate put to the owner beside its two parts, with no claim that it beats either.
 - **D550 adopts `search-v3-wide`** (`b95340935592`) as the live seat, search-v5, at the 1.5 s clock (the owner's yes,
-  2026-11-16; its lane `pc/live-seat-wide`, head `cc417e4d1`, verified, awaiting its review and the gate). J222's
+  2026-11-16; merged as `bfa3c6a01` on 2026-11-17 after a review that changed wording only and a green gate). J222's
   summary recommended, from cost and not from its reading: `search-v3-wide` if the table keeps 1.5 s,
   `search-v3-wide-t1-x2` if it takes 3 s, and `t1-x2` alone at neither clock; the PC session recommended the 3 s clock.
 - **No match has been played between the combination and `search-v3-wide`, on any set.** J222 read the combination
@@ -40,7 +41,7 @@ alone, after D550's and this lane's merges.**
    J220 play it), at `--game-timeout 3600`, stopping itself at `--hours 29`:
    - A = `search-v3-wide-t1-x2` (`709c83cc4d48`, D549 point 1):
      `Default+outlets+search:ms=3000,cands=6,turns=1,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1`;
-   - B = `search-v3-wide` (`b95340935592`, D544), the live seat once D550 merges:
+   - B = `search-v3-wide` (`b95340935592`, D544), the live seat since D550 merged (`bfa3c6a01`):
      `Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1`.
 
    A's seat config is B's with `ms=1500` made `ms=3000` and `turns=0` made `turns=1` and nothing else, so the match
@@ -59,8 +60,8 @@ alone, after D550's and this lane's merges.**
    check); `DecisionSelfTest.java` is the build's self-test (514 → 526 checks), which no game runs; `players.json`
    changes the notes of two players and no name, kind or params, and adds none. From J220's pin `847e50a29` to J222's,
    `players.json` alone, with D549's one player appended (J222's own check). So J220, J221, J222 and J223 play one
-   search code. The pilot checks this by content (D548 point 2's form, `sd`). **If D550's review changes any of its
-   code before it merges, this check fails the pilot, and this point is rewritten before J223 is posted.**
+   search code. The pilot checks this by content (D548 point 2's form, `sd`). **D550's review changed no code (its
+   fixes were wording, `2e099cab2`), and the pilot dry-run on main's merge read `sd.exact` 1 (*Verification*).**
 3. **The deals.** `--host j223` in `var/j223-ladder`, emptied by its step: `hostBase('j223')` is 405,000,000, so the
    match plays **blocks 405,900,000–405,900,599**, 40 batches for each confirm pair, on a first run and on a retry.
    **The pilot's host is `j223-pilot3`, base 548,000,000**, whose first block 548,900,000 deals confirm pair 20,
@@ -218,9 +219,6 @@ SHOWN 54.9% [55.7%]; +20.7 100% [100%], SHOWN 95.9% [97.9%].
 **What is unverified.**
 
 - **The cost and the hours**: from J217's, J220's and J222's ratios on two sets; the match measures them.
-- **The code check against D550's merge**: written against D550's lane head `cc417e4d1`; a change in its review
-  fails the pilot (point 2).
-- **The decision self-test count, 526**: D550's lane build, not yet a full gate on main.
 - **That the wide windows open as often for A at 3 s on the confirm decks, and the gate's 0.2%**: from J217's rates at
   1.5 s against the pair.
 - **That bases 405 and 548 are unplayed everywhere**: read on 2026-11-17 from the rows and job files named in point 3;
@@ -254,7 +252,25 @@ coordinator's brief):**
   were killed within about three minutes, and everything it wrote (`bridge/out`, `var/ai-ladder`,
   `var/ai-ladder-pilot`, the build's self-test folders, one result row on base 548 inside this worktree's own
   `var/`) was deleted. Nothing outside this worktree was touched, and the bases' scan in point 3 was read before it.
-- Not run on the lane — the coordinator's: `./tools/check-forge.sh`, `./bridge/build.sh` (expect the decision
-  self-test at 526 and 0 failures), `./tools/ai-bench.sh --selftest` (476 and 0), the pilot dry-run on a copy of the
-  draft pinned to this lane's head (expected: 58 of 59 checks, `merged == 1` the one that fails off `main`), the
-  independent review and the full gate at the merge.
+- **The coordinator's, after D550's merge (2026-11-17 06:15-06:30 EST, the lab idle):** main `bfa3c6a01` merged
+  into the lane (`1fedac54f`; D550's gate on main had the decision self-test at 526 and 0 failures). **The pilot
+  dry-run** on a copy of the draft pinned to `1fedac54f` (`./tools/runner.sh dry-run … --pilot-only --workers 6`, in
+  the runner's overlay, nothing written to the worktree or the lab): **58 of 59 checks pass, `merged == 1` the one
+  that fails off `main`**; the build's decision self-test 526 and 0, the ai-bench self-test 476 and 0, the code check
+  `sd.exact` 1 with 6 files and 6 code lines, the bases 405,000,000 and 548,000,000 (pair 20). The 4 ladder games on
+  `synergy-900000001` (2-2, 0 errors, 0 timeouts, 412 s): A 127 searched decisions at 2,044 ms, B 159 at 858 ms; A
+  64.9 s and B 34.1 s of search a game; play time a rollout 131.1 ms against 48.4 ms (×2.709, the trace's 1.3 passed);
+  A's windows 7 stack, 1 pass, 14 declined-activation; B's 15, 1 and 10 (reported, not gated). The 4 recorded games on
+  `modern-era-900000001`: every searched decision at horizon 1 (65 and 16), no land searched, A's windows 9, 2 and 4.
+  The gate: `play` 1, `wideOpen` 1, `deeper` 1, 8 games, 0 errors or timeouts, 1 refusal in 17 stack offers, 0
+  retries, short share 0.111, longest game 131.9 s.
+- **The review** (an independent read of this file, PLAN's rows and the draft against D549, D550 and the lab's rows,
+  2026-11-17): the draft and this decision agree point for point; the bases, the time arithmetic, the window rates
+  and the trace's and NOT READ's margins were recomputed and hold; this worktree's `var/` is empty and bases 405 and
+  548 have no row anywhere (the slip above left none). Its fixes were this file's, PLAN's and the draft's sentences
+  written before D550 merged, now in the past tense. Two notes, recorded and not acted on: B's pass windows could
+  join the completeness part beside its stack and declined-activation windows (B opened 1 in the pilot's 4 ladder
+  games; the part stays as registered); and SMALL GAIN can be as little as about +6 Elo for a doubled clock, so the
+  summary states the size and the cost beside point 7's word, and the clock stays the owner's.
+- At the merge (the coordinator's): the full gate from a deleted `bridge/out` on the merged tree, its line in the
+  merge commit's message.
