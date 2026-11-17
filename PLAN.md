@@ -11917,11 +11917,13 @@ It closes the cube lab's 65 and 66 with J220's and J221's reads and adds its 67 
 <a id="d550-live-seat-wide"></a>
 ## The live seat searches the stack and pass windows and the activations Forge declines: search-v5 (2026-11-16, D550)
 
-**Status: written on the lane as text and code with no Java, build, game or test run (J222 held the machine,
-`alone: yes`); built, tested and played after J222 ends (D550's *Verification*, owed: the decision self-test at 526
-checks by hand count, seat-identity's four golden games, the ladder's listing identical to main's, the touched test
-files, a three-game `MtgTable --ai-policy search` session and three `RecordMatch` games with the window counters);
-then an independent review and the full gate before the merge.** Branch `pc/live-seat-wide` off main `6fd2e726d`
+**Status: written on the lane as text and code with no Java while J222 held the machine, then built, tested and
+played on the lane after J222 ended (D550's *Verification*, 2026-11-17: the decision self-test 526 checks and 0
+failures, seat-identity's four golden games, the ladder's listing identical to main's, the touched test files green, a
+three-game `MtgTable --ai-policy search` session whose start line and headers say search-v5 with the three keys, 49
+searched decisions and the longest 1,584 ms, three `RecordMatch` games with 8 dactiv windows and no stack window, and
+a mirror diagnostic with 2 stack windows and 1 changed decision); an independent review and the full gate before the
+merge.** Branch `pc/live-seat-wide` off main `6fd2e726d`
 (D549's merge, J222's pin). `docs/decisions/D550-live-seat-wide.md` is the decision.
 
 - **The evidence**: J217 (D544) on the confirm set and J221 (D548) on the dev set, `search-v3-wide` against the live

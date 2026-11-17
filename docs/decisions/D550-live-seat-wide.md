@@ -5,8 +5,8 @@ seat's version and defaults) and reads J217 (D544) and J221 (D548) (`results/J21
 `pc-results`: `summary.md`, `verdict.json`). Code: `SearchConfig`'s two live constants and the comments that name the
 live version, the decision self-test, the ladder's two notes, the watch bots' player id, protocol amendment M85 and
 the docs that say which search the game plays — the same places D546 changed, and no other. Written as text while
-J222 (`alone: yes`) held the machine, with no Java, build, game or test run: the *Verification* section is what is
-owed after J222 ends, and nothing in this file claims a run that did not happen.*
+J222 (`alone: yes`) held the machine, with no Java, build, game or test run; built, tested and played on the lane
+after J222 ended (*Verification*, 2026-11-17).*
 
 **2026-11-16**
 
@@ -119,7 +119,10 @@ owed after J222 ends, and nothing in this file claims a run that did not happen.
    SHOWN or SMALL GAIN names `search-v3-wide-t1-x2` a candidate (D549 point 7) as an increment over search-v4 and
    over neither of its parts; the increment over search-v5 (the deeper horizon at a 3 s clock on top of the wide
    windows) is what a later match against `search-v3-wide` would measure. D549's readings stand as registered;
-   this decision does not amend them.
+   this decision does not amend them. J222 read SHOWN, +20.7 Elo [+14.1, +27.3] for `search-v3-wide-t1-x2` over
+   `search-v3-declined-instant` on the dev set (its summary on `pc-results`, `2633774bd`), so the combination is a
+   live-seat candidate whose confirm-set match comes next (D551, J223), and D550, which adopts `search-v3-wide` at the
+   1.5 s clock as the owner approved, does not wait for it.
 8. **A `census-play` folder begun before D550 with a `search` pilot is never resumed or extended** (D539's rule as
    D546 extended it): `plan.json` binds the pilot as the string `search`, so a folder whose games straddle D550 would
    hold search-v4 and search-v5 under one name. A run after D550 starts a folder of its own; no reading pools the two.
@@ -236,12 +239,11 @@ other seat, can time it.
 
 **What is unverified.**
 
-- **Everything this lane would run.** No Java was compiled, no self-test, test suite or game was run (J222 held the
-  machine, `alone: yes`). The decision self-test's new count is computed by hand: 514 on main plus `liveSeatWide`'s
-  12 checks is **526**; every rewritten check in `liveSeatDeclinedInstant`, `liveSeatNoBlock`, `searchWeek3`,
-  `searchCandidates` and `wideWindows` keeps its count. The watch runner's self-test gains one check (search-v5 by
-  name; search-v6 refused), `ai-ladder.test.ts` one test (D550's), `test_human.py` one game id inside an existing
-  test. All of it is *Verification*'s, owed.
+- **The lane's code was written blind and verified after** (J222 held the machine while it was written): the
+  decision self-test's count of 526 was computed by hand before the build printed it (*Verification*). Not run on the
+  lane: the ai-bench self-test and the full gate (the coordinator's), and no independent review yet.
+- **A pass window at the live seat**: none was searched in the nine games played here (*Verification*); the key is
+  measured only by J217's and J221's 0.42 a game on cube decks.
 - **Against a person.** Every number is the search against search-v4, on 60 deck pairs drafted from six cubes; how
   the three keys play against the owner, on Pacho SHIELD or Doom Legion, is not measured — and the stack carry was
   measured against an opponent whose spells are a cube's, not the owner's MSH and MSC cards. The refusal share (0.069
@@ -257,36 +259,54 @@ other seat, can time it.
 - **The listing's cost in a stack window** has no time limit (D544); measured only as the search seconds above.
 - The seconds are this machine's (D388), on 7 workers.
 
-**Verification (owed, after J222 ends and the lab prints idle; one JVM at a time, in this lane's worktree).** In
-order, each with what it must show:
+**Verification (the lane, 2026-11-17 05:45-06:30 EST, at `6322c3c34`, after J222 ended; `~/code/lab/lab-status/status.json`
+read first: state `idle`, `running` and `queue` empty; one JVM at a time, in this lane's worktree, whose
+`forge-home` was made first by `./tools/make-forge-home.sh`).**
 
-1. `./tools/check-forge.sh` — the pinned jar `3c0a7c38…8e5dd9`.
-2. `./bridge/build.sh` from a deleted `bridge/out` — `build OK`; the lint and its self-test unchanged (no new rule);
-   **`decision selftest: 526 check(s), 0 failure(s)`** (514 on main plus `liveSeatWide`'s 12; if the count differs,
-   find why before going on); every other self-test at 0 failures.
-3. `git diff main -- bridge/src/mtgtable/ai/SearchConfig.java` — javadoc and the two constants only.
-4. `./tools/cubelab.sh seat-identity` (gate step 12m) — all 4 games the golden's; no fixture edited.
-5. `./tools/ai-ladder.sh list` on the lane and on main — identical line for line (only notes changed;
-   `search-v3-wide` `b95340935592`, `search-v3-declined-instant` `af6771947a25`).
-6. The single test files the change touches: `node --test web/test/ai-ladder.test.ts` (D550's new test among them),
-   `node --test web/test/cubelab-watch.test.ts`, `node --test web/test/claude-md.test.ts`, `node
-   tools/watch-runner-selftest.mjs`, `node tools/match-launcher-selftest.mjs`, `MTG_TABLE_ML_NO_DEFAULT_HUMAN=1 python3
-   -m unittest discover -s tools/ml/tests -p 'test_human.py'`, `node tools/decisions.mjs check`,
-   `./tools/public-check.sh`, `npm --prefix web run build`.
-7. **The live seat, read off a real session** (no gate step plays a `parseLive` seat): `./bridge/run.sh
-   mtgtable.MtgTable --transport auto --ai-policy search --deck decks/pacho-shield.dck --ai-deck decks/doom-legion.dck
-   --games 3 --seed 64775`, with `MTGTABLE_DISTILL_ROWS` on — the start line `ai policy = search
+1. `./tools/check-forge.sh`: the pinned jar, `3c0a7c38…8e5dd9`, `forge jar OK`.
+2. `./bridge/build.sh` from a deleted `bridge/out`: **`build OK`**. The lint's self-test 33 rules, 79 firing cases, 93
+   checks; the lint 97 files under `bridge/src` and 4 under `tools/`, 33 rules (unchanged: no new rule). **The
+   decision self-test 526 checks, 0 failures** (514 on main plus `liveSeatWide`'s 12, the hand count); `TableSelfTest`
+   114 and `StalledGameSelfTest` 156, the grade self-test 132 and the distill self-test 38, each 0 failures; every other
+   self-test the build runs at 0 failures.
+3. `git diff main -- bridge/src/mtgtable/ai/SearchConfig.java`: the only lines that are not javadoc are the two
+   constants before and after.
+4. `./tools/cubelab.sh seat-identity` (gate step 12m): **all 4 games are the golden's** (forge B in 15, digest
+   `78f3a94998355ea8`; search A in 13, 92 lines, `c68c2a849b7b0d54`; explore A in 18, `82d6d18c57bbd861`; plain B in
+   14); no fixture edited.
+5. `./tools/ai-ladder.sh list` on the lane and on main (`6fd2e726d`): 61 lines each, **identical**;
+   `search-v3-wide` `b95340935592` and `search-v3-declined-instant` `af6771947a25` among them.
+6. After `npm --prefix web ci`: `node --test web/test/ai-ladder.test.ts` **62 of 62** (D550's case among them),
+   `web/test/cubelab-watch.test.ts` 13 of 13, `web/test/claude-md.test.ts` 5 of 5; `node tools/watch-runner-selftest.mjs`
+   **160 checks, 0 failures**; `node tools/match-launcher-selftest.mjs` 238 checks; `test_human.py` 15 tests OK
+   (ws-7, `search-v5`, inside the M62 test); `node tools/decisions.mjs check` OK (464 decisions, next D551);
+   `./tools/public-check.sh` OK; `npm --prefix web run build` (`tsc --noEmit`, then vite) clean.
+7. **The live seat, read off a real session**: `MTGTABLE_DISTILL_ROWS=var/d550/rows ./bridge/run.sh mtgtable.MtgTable
+   --transport auto --ai-policy search --deck decks/pacho-shield.dck --ai-deck decks/doom-legion.dck --games 3 --seed
+   64775`. The start line is `ai policy = search
    (ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1;
-   search-v5, D412, D539, D546, D550)`; every session header's `ai` `{policy: search, version: search-v5, budgetMs:
-   1500, config: …,stackwin=1,passwin=1,dactiv=1}`; three games to the end, `MTGTABLE OK`, `emit errors 0`, `REVEAL
-   count 0`; `node tools/check-redaction.mjs` passing on all three frame logs; the longest searched decision.
+   search-v5, D412, D539, D546, D550)`, and each of the three games' session headers carries `ai` = `{policy: search,
+   version: search-v5, budgetMs: 1500, config: …,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1}`. Three games to
+   the end, the AI winning each by AllOpponentsLost (games of 14, 16 and 16 turns), `MTGTABLE OK`, `emit errors 0`,
+   `REVEAL count 0`, `UNIMPL members none`, one notice swept (an engine string that named a concealed card, blanked as
+   §6 says); `tools/check-redaction.mjs` **PASS** on all three frame logs. The AI's searched decisions over the three
+   games: **49** (33 priority, 16 attacks, 0 blocks), 8 overriding Forge (6 priority, 2 attacks), 36.7 s of search in
+   all, the median 487 ms, **the longest 1,584 ms**. Forge printed `SVar 'Any' not found` for Helicarrier Strike and
+   Quantum Reduction (24 lines), which older logs on main carry too: Forge's own warning, not this lane's.
 8. **The exact counters**: `./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --ai-deck
-   decks/doom-legion.dck --ai-policy search --seed <s> --out var/d550/rec-<s>.jsonl` for `<s>` in 64775, 64776,
-   64777 (the watch bots' path through the same `parseLive(null)`, seat 0 plain Forge) — `RECORD OK`, the redaction
-   check passing,
-   the start line `search = search-v5, D440`, and the counters `search.p.stackwin.windows`, `.refused` (with reasons),
-   `search.p.passwin.windows`, `search.p.dactiv.windows` and every key's `.retry`, reported as read.
-9. An independent review of the lane's diff, then the full gate on the merged tree (the coordinator's).
+   decks/doom-legion.dck --ai-policy search --seed <s> --out var/d550/rec-<s>.jsonl`, `<s>` = 64775, 64776, 64777: each
+   `RECORD OK` and the redaction check PASS; the start line `policies = seat 0 plain, seat 1 search (search =
+   search-v5, D440)`; the search seat won two (14 and 18 turns) and lost one (17), the same results D546's run had.
+   Its counters, summed: **`search.p.dactiv.windows` 8** (8 listed, 8 candidates, none picked), `search.p.instant.windows`
+   2, **no `stackwin` or `passwin` window and no refusal** (Doom Legion holds four instants, Doom Blade, Dark Deed,
+   Hour of Defeat and Visions of Villainy; in these three games none was a window's candidate while the player's spell
+   was on the stack, and why was not traced), no retry for any key, 0 searched blocks; 34 priority and 18 attack
+   decisions considered. **Because no stack window opened**, the same command with `--ai-deck decks/pacho-shield.dck`
+   (the mirror, whose deck carries instants) was run on the same three seeds as a diagnostic: each `RECORD OK` and
+   PASS; the search seat won two (16 and 14 turns) and lost one (15); **`search.p.stackwin.windows` 2** (4
+   candidates, **1 changed decision**, the opponent's pass granted in 1, `search.wide.oppPassed` 1), 0 refused, still
+   no pass window, `search.p.dactiv.sameHost` 3 and `.memoryRestored` 2, `search.p.instant.windows` 9, no retry.
+9. **Not run on the lane**: the ai-bench self-test, an independent review and the full gate (the coordinator's).
 
 **Follow-up.** The cube lab's 63 widens: ForgeCoach's words for the live seat should say search-v5 and what it does
 (stack and pass windows, declined activations), not search-v3; nothing breaks meanwhile. The seat queue
