@@ -1,0 +1,12 @@
+==== J223 pilot4 started 2026-11-17T06:41:42-05:00 in unit lab-J223-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+ok   every key of A's above its floor, the union at 3 changes in 8 games; B's own windows open and summed beside A's
+ok   B with no stack window in any game: bWideOpen 0, A unchanged
+ok   B with search.p.declined.windows 4 in one game: bD540 1, its D544 counters its own (bNew 4), bWideOpen 1
+ok   A with search.p.lands.windows 1 in one game: A not lands-clean
+ok   the union at exactly 0.25 a game (2 in 8) is exposed; passwin 1 in 8 is above 0.10; dactiv 0 is under its floor
+ok   the union at 1 change in 8 is not exposed
+ok   2 stack windows refused against 6 searched: a share of 0.25, by reason
+ok   A with no attack search: kindsOk 0
+ok   B with a lands counter above 0 in one game: bLands 1, landsClean 0, bWideOpen 1
+ok   B with no declined-activation window in any game: bWideOpen 0
+{"ok":1,"cases":10,"passed":10}
