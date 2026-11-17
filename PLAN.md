@@ -11962,7 +11962,9 @@ merge.** Branch `pc/live-seat-wide` off main `6fd2e726d`
   down as D546 wrote its own clock tell.
 - **The atlas's seat (D509)**: unchanged — no atlas seat goes through `parseLive`, and seat-identity's golden is
   not touched; the decision names the five `bridge/src` files the next atlas night's `seat_code` check must admit.
-- **J222** runs on, untouched: its pin, names and hashes are fixed; its B is no longer the live seat (point 7).
+- **J222** ran on, untouched, and read SHOWN on 2026-11-17 (+20.7 Elo [+14.1, +27.3], dev set; point 7): its pin,
+  names and hashes were fixed; its B is no longer the live seat. Row 67 is closed by the next decision, which plays
+  the combination against `search-v3-wide` on the confirm set.
 - **Two notes are stale after this lane**, both true when written: `search-v3-declined-instant-a1`'s and
   `search-v3-declined-instant-t1-x2`'s in `tools/ai-ladder/players.json` call their base "the live seat search-v4
   since D546". Neither is in a hash.
