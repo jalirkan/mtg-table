@@ -43,7 +43,8 @@ after J222 ended (*Verification*, 2026-11-17).*
   (about +3), J221 below J217, and the two sets agree within their widths. The pooled line holds the match that
   triggered the replication and leans upward by that selection (D548 point 8 said so before any J221 game).
 - **The owner's word**: yes, 2026-11-16 11:20 EST, to adopting `search-v3-wide` as the live seat.
-- **J222 is running** (D549; posted 2026-11-16 11:09, pinned to `6fd2e726d`, `alone: yes`): `search-v3-wide-t1-x2`
+- **J222 is running** as this is written, and read SHOWN on 2026-11-17 (point 7) (D549; posted 2026-11-16 11:09,
+  pinned to `6fd2e726d`, `alone: yes`): `search-v3-wide-t1-x2`
   (`709c83cc4d48`) against `search-v3-declined-instant` (`af6771947a25`) by their ladder names. See point 7.
 
 **Decision.**
@@ -67,7 +68,8 @@ after J222 ended (*Verification*, 2026-11-17).*
    `census-play`'s `--policy-a/-b search` pilots (D447); and `tools/llm-seat/run-match.mjs --ai-policy search`. It
    takes effect when the engine restarts.
 3. **What a player sees.** Three more kinds of moment where the AI may think before it answers, each at the same
-   budget as before (about 1.5 s at most a decision; D546's played session's longest was 1,931 ms):
+   budget as before (1.5 s of search a decision, so up to about two seconds; D546's played session's longest was
+   1,931 ms, this lane's 1,584 ms):
    - **When the player's spell or ability is on top of the stack** (`stackwin`, D544 point 3), on either turn and in
      any step, and the AI holds a castable aimed play or Forge itself wants to respond: Forge's answer, passing and
      the AI's aimed plays (counter-magic among them) are rolled out with the stack carried onto every copy. Where
@@ -231,7 +233,8 @@ other seat, can time it.
   4,800-game reads are of the union, and the owner's yes is to `search-v3-wide`.
 - **Adopting `search-v3-declined-instant-t1-x2` (J220, +14.2 at ×2.48) or waiting for J222.** The owner's yes names
   the wide player; the deeper horizon doubles the clock, which a person feels at every searched decision, and J222's
-  combination is unread. Nothing here closes either: they stay candidates under their own decisions.
+  combination, unread when this was written, has since read SHOWN on the dev set only (point 7); its confirm-set
+  match is still to come. Nothing here closes either: they stay candidates under their own decisions.
 - **Registering `search-v5` as a ladder name.** It would be a second name for `b95340935592`; the ladder rates by hash
   and seeds batches by name.
 - **Renaming the watch bots' id without the old ones as aliases.** A stored `playerB: "search-v4"` from ForgeCoach
@@ -240,10 +243,15 @@ other seat, can time it.
 **What is unverified.**
 
 - **The lane's code was written blind and verified after** (J222 held the machine while it was written): the
-  decision self-test's count of 526 was computed by hand before the build printed it (*Verification*). Not run on the
-  lane: the ai-bench self-test and the full gate (the coordinator's), and no independent review yet.
-- **A pass window at the live seat**: none was searched in the nine games played here (*Verification*); the key is
-  measured only by J217's and J221's 0.42 a game on cube decks.
+  decision self-test's count of 526 was computed by hand before the build printed it (*Verification*). The
+  independent review, the ai-bench self-test (476 checks, 0 failures on `cc417e4d1`) and the full gate came after,
+  at the merge; the gate's line is in the merge commit.
+- **A pass window at the live seat**: none was searched in the six games here whose counters were read, the three
+  `RecordMatch` games against Doom Legion and the three of the Pacho SHIELD mirror (*Verification*); the three
+  `MtgTable` games have no counters (it reads neither), so whether one opened there is unknown. The key is measured
+  only by J217's and J221's 0.42 a game on cube decks.
+- **A stack window at the live seat**: none opened in the three `RecordMatch` games against Doom Legion; the only
+  ones seen on these decks are the mirror diagnostic's 2, with 1 changed decision (*Verification*, step 8).
 - **Against a person.** Every number is the search against search-v4, on 60 deck pairs drafted from six cubes; how
   the three keys play against the owner, on Pacho SHIELD or Doom Legion, is not measured — and the stack carry was
   measured against an opponent whose spells are a cube's, not the owner's MSH and MSC cards. The refusal share (0.069
@@ -259,7 +267,7 @@ other seat, can time it.
 - **The listing's cost in a stack window** has no time limit (D544); measured only as the search seconds above.
 - The seconds are this machine's (D388), on 7 workers.
 
-**Verification (the lane, 2026-11-17 05:45-06:30 EST, at `6322c3c34`, after J222 ended; `~/code/lab/lab-status/status.json`
+**Verification (the lane, 2026-11-17 05:42-05:54 EST, at `6322c3c34`, after J222 ended; `~/code/lab/lab-status/status.json`
 read first: state `idle`, `running` and `queue` empty; one JVM at a time, in this lane's worktree, whose
 `forge-home` was made first by `./tools/make-forge-home.sh`).**
 
@@ -306,7 +314,11 @@ read first: state `idle`, `running` and `queue` empty; one JVM at a time, in thi
    PASS; the search seat won two (16 and 14 turns) and lost one (15); **`search.p.stackwin.windows` 2** (4
    candidates, **1 changed decision**, the opponent's pass granted in 1, `search.wide.oppPassed` 1), 0 refused, still
    no pass window, `search.p.dactiv.sameHost` 3 and `.memoryRestored` 2, `search.p.instant.windows` 9, no retry.
-9. **Not run on the lane**: the ai-bench self-test, an independent review and the full gate (the coordinator's).
+9. **At the merge (the coordinator's)**: an independent review of the diff and this evidence, which found nothing
+   in the code and three wordings here and in PLAN, corrected in the commit after `cc417e4d1` (the counted games are
+   six, not nine; the stack window's only evidence on these decks is the mirror's; J222 has been read);
+   `./tools/ai-bench.sh --selftest` on `cc417e4d1`, 476 checks, 0 failures; and the full gate on the merged tree,
+   its line in the merge commit.
 
 **Follow-up.** The cube lab's 63 widens: ForgeCoach's words for the live seat should say search-v5 and what it does
 (stack and pass windows, declined activations), not search-v3; nothing breaks meanwhile. The seat queue
