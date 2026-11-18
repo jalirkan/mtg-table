@@ -1,21 +1,21 @@
 {
  "schema": 1,
- "updated": "2026-11-18T00:36:37-05:00",
- "heartbeat": "2026-11-18T00:36:37-05:00",
+ "updated": "2026-11-18T00:38:57-05:00",
+ "heartbeat": "2026-11-18T00:38:57-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.62,
-  "memUsedGb": 8.7,
+  "load1": 1.56,
+  "memUsedGb": 6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 6445,
+  "swapUsedMb": 6331,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -25,21 +25,21 @@
    "id": "J223",
    "title": "The combination on the confirm set, against the wide seat (D551): one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set tools/ai-bench/pairs-confirm.txt, no stopping rule) of search-v3-wide-t1-x2 (709c83cc4d48, D549's player: search-v3-wide's params with turns=1 and budgetMs=3000) against search-v3-wide (b95340935592, D544's player, the live seat since D550 merged), so the deeper horizon and the doubled clock together with the wide windows on both sides, in a ladder folder of its own under --host j223 on deal blocks no job has played, 405,900,000-405,900,599, at --game-timeout 3600, read by D519's four readings at 4,800 games with D549's completeness parts (B's keys-off part replaced by B's windows above 0) and exposure condition; a SHOWN or SMALL GAIN is the PC session's recommendation to the owner of a 3 s live seat, search-v3-wide-t1-x2. Never pooled with J217, J218, J220, J221 or J222. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-11-17T06:39:54-05:00",
-   "elapsed": 64602,
-   "done": 4784,
+   "elapsed": 64742,
+   "done": 4792,
    "total": 4800,
    "unit": "games",
    "ratePerHour": 320.9,
-   "eta": "2026-11-18T00:39:36-05:00",
+   "eta": "2026-11-18T00:40:26-05:00",
    "workers": 6,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-18T00:34:21-05:00",
-   "memGb": 2.64,
+   "dataUpdated": "2026-11-18T00:37:31-05:00",
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -248,7 +248,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J223-run1"
+   "detail": "lab-J223-run2"
   }
  ],
  "queue": [],
