@@ -11,7 +11,7 @@
 //   decks   --cube <cube.md> --count N --seed S --out <dir> [--k 1,2,3] [--max-share-k1 0.25]
 //           the same rules on one cube's own list: k on 1-3, no cross-band slice, a repeat cap at k = 1, card-shares.tsv (D456)
 //   census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search] [--policy-b plain|search]
-//           [--replay <games.jsonl>] [--game-timeout 300]   random pairings, Bo1, numbers only; resumable (censusplay.ts, D447)
+//           [--replay <games.jsonl>] [--game-timeout 300 + 1,800 a search pilot (D552)]   random pairings, Bo1, numbers only; resumable (censusplay.ts, D447)
 //           [--record none|rows|full] [--rows-check-every N]   rows: both seats' decision rows + a per-turn ledger (default); full: + frame logs (D450)
 //   census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--mixed-pilots]   win rate across the spectrum, per card (censusread.ts, D447)
 //   census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   the game again from its recipe, asserted the same (D450)
@@ -60,7 +60,7 @@
 //                                                              of a J145-shaped read, --generations 1; knobs balanceMinGames=400
 //                                                              balanceSwaps=1 balanceBand=0.05 (--evolve)
 //   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|forge-ranks|llm:<model>|human-picks:<f>] [--drafter-b ...]
-//           [--player-a <Profile>|search-v5] [--player-b ...] [--pace 600] [--out <dir>]   (D440, D443, watch.ts)
+//           [--player-a <Profile>|search-v6] [--player-b ...] [--pace 600] [--out <dir>]   (D440, D443, watch.ts)
 //           [--llm-max-usd 1] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   an llm: drafter's cap for the watch (D442)
 //           ONE grid draft (run --drafts 1 --games 0), draft.json, then a paced best of N recorded from seat 0's eyes
 //   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
@@ -138,7 +138,7 @@ function usage(msg?: string): never {
                         [--balance <balance.json>]   (D469: balance mode, --generations 1)
        tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3]
                         [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<f>] [--drafter-b ...]   (one side at most not lab)
-                        [--player-a <Profile>|search-v5] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
+                        [--player-a <Profile>|search-v6] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
                         [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   (D440, D442, D443)
                         [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff]   (D446; both lab drafters)
        tools/cubelab.sh census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   (D445, no engine)
@@ -150,7 +150,8 @@ function usage(msg?: string): never {
        tools/cubelab.sh decks --cube <cube.md> --count N --seed S --out <dir> [--k 1,2,3] [--max-share-k1 0.25]
                         [--census <tsv>] [--pool <tsv>] [--scripts <cardsfolder.zip>]   (D456: one cube's pool, no engine)
        tools/cubelab.sh census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search]
-                        [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout 300]   (D447)
+                        [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout <sec>]   (D447;
+                        the timeout's default 300 s, plus 1,800 s for each search pilot, D552)
                         [--record none|rows|full] [--rows-check-every N]   (D450; default rows: decision rows + ledger)
        tools/cubelab.sh census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   (D450)
        tools/cubelab.sh atlas (--deck-a <dck> --deck-b <dck> | --pair auto [--ladder var/ai-ladder]) --seed S --jobs K --out <dir>

@@ -225,7 +225,7 @@ public final class MtgTable {
         if (!"plain".equals(a.aiPolicy)) {
             System.out.println("ai policy     = " + a.aiPolicy + ("search".equals(a.aiPolicy)
                     ? "  (" + SearchConfig.parseLive(a.aiSearch) + (a.aiSearch.isBlank()
-                            ? "; " + SearchConfig.LIVE_VERSION + ", D412, D539, D546, D550" : "") + ")" : ""));
+                            ? "; " + SearchConfig.LIVE_VERSION + ", D412, D539, D546, D550, D552" : "") + ")" : ""));
         }
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
@@ -345,13 +345,15 @@ public final class MtgTable {
         // default, and every gate step) is Forge's own AI, exactly as before;
         // "outlets" puts D310's sacrifice-outlet policy in front of it; "search"
         // adds D312's determinized rollout search behind the policy.  Opt-in only.
-        // Its defaults are SearchConfig.parseLive's: search-v5, the anytime loop
+        // Its defaults are SearchConfig.parseLive's: search-v6, the anytime loop
         // (D388, adopted for the live seat by D412) with block declarations left
         // to Forge (what=pa, D539), with the spells Forge declines and the
         // instant-speed windows Forge plays in searched (declined=1,instant=1,
         // D540, adopted by D546), and with the stack windows, three steps Forge
         // passes in and the sorcery-speed activations Forge declines searched
-        // (stackwin=1,passwin=1,dactiv=1, D544, adopted by D550).
+        // (stackwin=1,passwin=1,dactiv=1, D544, adopted by D550), at 3,000 ms a
+        // searched decision with rollouts to the end of the next turn
+        // (ms=3000,turns=1, D549, adopted by D552).
         final LobbyPlayer aiLobby = "plain".equals(a.aiPolicy)
                 ? Bootstrap.createAiPlayer(a.aiName, 0, aiProfile)
                 : Bootstrap.createAiSeat(a.aiName, 0, aiProfile, null, PolicyLobbyPlayerAi.Outlets.ON,
@@ -1081,11 +1083,11 @@ public final class MtgTable {
         // names the policy, and only this says a search seat's version and
         // budget.  Omitted for plain Forge, so no plain recording changes.  The
         // search's config is its own knobs (no card, no deck).  `version` is the
-        // live default's name (search-v5 since D550; search-v4 from D546,
-        // search-v3 from D539 and search-v2 from D412 until then) when the seat
-        // runs it, at any budget; null when other knobs were changed (so
-        // --ai-search stackwin=0,passwin=0,dactiv=0, search-v4's loop, names
-        // none).
+        // live default's name (search-v6 since D552; search-v5 from D550,
+        // search-v4 from D546, search-v3 from D539 and search-v2 from D412
+        // until then) when the seat runs it, at any budget; null when other
+        // knobs were changed (so --ai-search ms=1500,turns=0, search-v5's loop,
+        // names none).
         if (!"plain".equals(a.aiPolicy)) {
             o.key("ai").obj().n("policy", a.aiPolicy);
             if ("search".equals(a.aiPolicy)) {
@@ -1390,7 +1392,7 @@ public final class MtgTable {
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
                         + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
                         + "[--deck2|--ai-deck <path>] [--ai-profile Default|Cautious|Reckless|Experimental] "
-                        + "[--ai-policy plain|outlets|search] [--ai-search ms=1500,turns=0,...] "
+                        + "[--ai-policy plain|outlets|search] [--ai-search ms=3000,turns=1,...] "
                         + "[--seed <n>] [--seat 0|1] [--ai-name <name>] "
                         + "[--game-id <id>] [--port <n>] [--keep-open] [--lan] [--site-dir <path>] [--games <n>] "
                         + "[--game-timeout <sec>] [--idle-timeout <sec>] "

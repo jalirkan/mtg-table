@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 //   tools/cubelab.sh census-play --decks <dir> --pairs M --seed S --jobs K --out <dir>
-//                                [--policy-a plain|search] [--policy-b plain|search] [--game-timeout 300]
+//                                [--policy-a plain|search] [--policy-b plain|search]
+//                                [--game-timeout 300, plus 1,800 for each search pilot (D552)]
 //   tools/cubelab.sh census-play --decks <dir> --replay <games.jsonl> --jobs K --out <dir> [--policy-a ...] [--policy-b ...]
 //
 // THE PAIRING (pairingOf).  The decks of the folder (decks.jsonl, `cubelab.sh decks`) are laid out as
@@ -19,10 +20,11 @@
 // THE PILOTS.  --policy-a / --policy-b: `plain` (default) is Forge's own AI under the Default profile
 // through Bootstrap.createAiPlayer (D107); `search` is the live search seat, built as `RecordMatch
 // --policy search` builds it (the outlet policy on, SearchConfig.parseLive(null): the live seat's
-// version at the 1.5 s budget -- search-v2 until D539, search-v3 (its blocks left to Forge) until D546, search-v4
+// version at its default budget -- search-v2 until D539, search-v3 (its blocks left to Forge) until D546, search-v4
 // (declined spells and instant-speed windows searched too) until D550, search-v5 (the stack and pass windows and the
-// declined activations searched too) since -- so a census folder whose games straddle D539, D546 or D550 holds two
-// different `search` pilots under one name).  A search seat's row carries its game's searched and changed decisions and its mean
+// declined activations searched too) until D552, all at 1.5 s, search-v6 (3 s a decision, rollouts to the end of the
+// next turn) since -- so a census folder whose games straddle D539, D546, D550 or D552 holds two different `search`
+// pilots under one name).  A search seat's row carries its game's searched and changed decisions and its mean
 // ms per decision (search.{p,a,b}.us, as the ladder's match file counts them), and its raw counters.
 //
 // REPLAY (--replay <games.jsonl>): exactly the games listed there -- the same game numbers, deck ids
@@ -37,7 +39,8 @@
 //
 // ENGINE ERRORS (a worker died, or gave no game row) are retried ONCE, on fresh workers after the run's
 // other games, and the row written is the retry's, marked `retried: true`; a game that errs twice keeps
-// its engineError and counts as played (census-read leaves it out).  A timeout is a result, never retried.
+// its engineError and counts as played (census-read leaves it out).  A timeout is a result, never retried,
+// so --game-timeout's default grows with the search pilots (defaultGameTimeoutSec, D552).
 //
 // RESUMABLE.  plan.json holds the options; a second run with the same --out and the same options
 // skips every game whose row is in games.jsonl (a torn last line is cut off first) and plays the
@@ -88,6 +91,16 @@ export type RecordMode = (typeof RECORD_MODES)[number];
 
 export const POLICIES = ['plain', 'search'] as const;
 export type Policy = (typeof POLICIES)[number];
+
+/**
+ * D552 (the review's fix): --game-timeout's default.  300 s for two plain pilots, plus 1,800 s for EACH search pilot
+ * (RecordMatch's per-seat allowance): 2,100 s with one, 3,900 s with two.  The live seat thinks about 57 s a game
+ * since D552 (J223), and a timeout is a result that is never retried, so a 300 s cap would cut search games and move
+ * the census's numbers.  An explicit --game-timeout still wins.
+ */
+export function defaultGameTimeoutSec(policyA: Policy, policyB: Policy): number {
+  return 300 + 1800 * [policyA, policyB].filter((p) => p === 'search').length;
+}
 export const SEED_STRIDE = 1_000_000;
 
 export interface PlannedGame { g: number; seed: number; a: string; b: string }
@@ -282,7 +295,7 @@ export async function censusPlayCommand(repo: string, f: Map<string, string[]>, 
   if (record === 'full' && rowsCheckEvery > 0) throw new Error('census-play: --rows-check-every is for --record rows: in full mode its zone swaps would be written into the frame logs (the id check covers full mode)');
   if (record === 'none' && f.has('rows-check-every')) throw new Error('census-play: --rows-check-every needs --record rows');
   const jobs = Number(one('jobs') ?? '1');
-  const timeout = Number(one('game-timeout') ?? '300');
+  const timeout = Number(one('game-timeout') ?? String(defaultGameTimeoutSec(policyA, policyB)));
   if (!Number.isInteger(jobs) || jobs < 1 || !Number.isInteger(timeout) || timeout < 10) throw new Error('census-play: --jobs wants a positive whole number and --game-timeout one of 10 or more');
   const { decks, sha } = readDecks(decksDir);
   const byId = new Map(decks.map((d) => [d.id, d]));

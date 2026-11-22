@@ -92,10 +92,11 @@ import mtgtable.eval.PositionEvaluator;
  * ({@link SearchConfig#parseLive}) runs {@code anytime=1} by default since D412,
  * and since D539 {@code what=pa} too: its block declarations are Forge's, unsearched
  * ({@link #chooseBlock} returns at once; search-v3); since D546 D540's
- * {@code declined=1} and {@code instant=1} (search-v4); and since D550 D544's
- * {@code stackwin=1}, {@code passwin=1} and {@code dactiv=1}
- * ({@link SearchConfig#LIVE_VERSION} search-v5).  The bench's parse keeps all
- * seven at their old defaults.
+ * {@code declined=1} and {@code instant=1} (search-v4); since D550 D544's
+ * {@code stackwin=1}, {@code passwin=1} and {@code dactiv=1} (search-v5); and
+ * since D552 D549's {@code ms=3000} and {@code turns=1}
+ * ({@link SearchConfig#LIVE_VERSION} search-v6).  The bench's parse keeps all
+ * nine at their old defaults.
  *
  * <p>Threads and randomness: everything runs on the calling game thread
  * (Forge's own AI eval threads aside, as in any default decision); no hop, no

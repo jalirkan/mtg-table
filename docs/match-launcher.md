@@ -41,10 +41,10 @@ absent means an older helper — treat it as running. `"engine_start": 1`
 
 **The opponent AI (D333).** With `"match": 1`, `/health` also carries
 `"aiPolicies": ["plain","outlets","search"]` and
-`"aiSearchMs": {"min":500,"max":5000,"default":1500}`: `POST /match` then takes
+`"aiSearchMs": {"min":500,"max":5000,"default":3000}` (the default 1500 until D552): `POST /match` then takes
 `aiPolicy` and `aiSearchMs` (below). No `aiPolicies` key: an older helper — offer
 no choice and send neither key. **Since D414 the default is the search AI**
-(search-v5 since D550; search-v4 from D546, search-v3 from D539, search-v2 before): `play.sh` starts it unless `--ai-plain`, so a request with no
+(search-v6 since D552; search-v5 from D550, search-v4 from D546, search-v3 from D539, search-v2 before): `play.sh` starts it unless `--ai-plain`, so a request with no
 `aiPolicy` plays it, and ForgeCoach's pickers start on it whenever `aiPolicies`
 lists `"search"` (plain Forge one tap away).
 
@@ -80,7 +80,7 @@ ordinary **Play vs Forge** calls when `engine` is `"idle"`, then it connects to
   setup, but against that AI — `"plain"`, `"outlets"` or `"search"`, exactly as
   `/match`'s `aiPolicy`. It replaces `--ai-policy` and `--ai-search` (a search
   budget too) and **stays the last setup's**, like a profile. Absent: the last
-  setup's AI, which a bare `play.sh` starts as search-v5 (D414, D550);
+  setup's AI, which a bare `play.sh` starts as search-v6 (D414, D552);
 - anything else (not JSON, not an object, an unknown profile or policy, a seed
   that is negative, fractional, a string, `null` or past 2^53 − 1): **400** with
   `problems`, and nothing starts.
@@ -172,7 +172,7 @@ Content-Type: application/json
 | `aiProfile` | string | optional, default `"Default"`; one of the engine's `.ai` files — `Default`, `Cautious`, `Reckless`, `Experimental` — any case. A profile is not a difficulty |
 | `games` | integer | optional, default `3`; 1–9: the match is played to this many games (`hello_ok.gameCount`) |
 | `aiPolicy` | string | optional (D333); exactly `"plain"` (Forge's own AI), `"outlets"` (with D310's sacrifice-outlet policy) or `"search"` (D312's look-ahead search behind it), passed as `MtgTable --ai-policy`. Absent: the AI `play.sh` was started with (`--ai-search` included); the seat reads it back in `hello_ok.match.aiPolicy` (amendment M56) |
-| `aiSearchMs` | integer | optional (D333), only with `"aiPolicy": "search"`; 500–5000, the search's budget per searched decision (`--ai-search ms=<n>`); absent: the bridge's default, 1500 |
+| `aiSearchMs` | integer | optional (D333), only with `"aiPolicy": "search"`; 500–5000, the search's budget per searched decision (`--ai-search ms=<n>`); absent: the bridge's default, 3000 since D552 (1500 before) |
 
 The body is at most **64 KB**. Unknown keys are ignored.
 

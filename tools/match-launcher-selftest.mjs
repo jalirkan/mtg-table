@@ -129,7 +129,7 @@ console.log('ai profile    = ' + (flag('--ai-profile') || 'Default'));
 // D333: as the bridge, a policy line only when it is not plain (--ai-search implies search; the last flag wins).
 let pol = 'plain';
 argv.forEach((a, i) => { if (a === '--ai-policy') pol = argv[i + 1]; else if (a === '--ai-search') pol = 'search'; });
-if (pol !== 'plain') console.log('ai policy     = ' + pol + (pol === 'search' ? '  (' + (flag('--ai-search') || 'ms=1500') + ')' : ''));
+if (pol !== 'plain') console.log('ai policy     = ' + pol + (pol === 'search' ? '  (' + (flag('--ai-search') || 'ms=3000') + ')' : ''));
 console.log('seed          = ' + (flag('--seed') || '0'));
 console.log('games/match   = ' + (flag('--games') || '1'));
 if (you.name.startsWith('Crash') || ai.name.startsWith('Crash')) { console.error('ENGINE CRASHED (a fake one)'); ev({ crashed: true }); bye(1); }
@@ -244,7 +244,7 @@ try {
   check('/health advertises match: 1', r.status === 200 && r.json?.match === 1 && r.json?.helper === 1, r.body);
   check('play.sh --no-auto-review: the helper reviews nothing by itself', r.json?.autoReview === 0, r.body);
   check('/health advertises the AI policies and the search budget (D333)', JSON.stringify(r.json?.aiPolicies) === '["plain","outlets","search"]'
-    && JSON.stringify(r.json?.aiSearchMs) === '{"min":500,"max":5000,"default":1500}', r.body);
+    && JSON.stringify(r.json?.aiSearchMs) === '{"min":500,"max":5000,"default":3000}', r.body);
   const first = starts();
   check('one engine started', first.length === 1);
   check('the first run had no inherited MTGTABLE_LAN_TOKEN', first[0]?.token === null);
@@ -297,7 +297,7 @@ try {
   check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
   check('the deck name never reached a command line', !second.some((a) => a.includes('Rock')));
   check('D414: a bare play.sh starts the search AI: one --ai-policy search, no --ai-search', argOf(first[0].argv, '--ai-policy') === 'search'
-    && first[0].argv.filter((a) => a === '--ai-policy').length === 1 && !first[0].argv.includes('--ai-search') && /AI policy: search-v5 \(the default, D414/.test(A.out()), first[0].argv.join(' '));
+    && first[0].argv.filter((a) => a === '--ai-policy').length === 1 && !first[0].argv.includes('--ai-search') && /AI policy: search-v6 \(the default, D414/.test(A.out()), first[0].argv.join(' '));
   check('no aiPolicy: the AI as play.sh started it (search, D414), one --ai-policy, no --ai-search', r.json?.aiPolicy === 'search'
     && second.filter((a) => a === '--ai-policy').length === 1 && argOf(second, '--ai-policy') === 'search' && !second.includes('--ai-search'), `${r.body} ${second.join(' ')}`);
   check('the old engine is gone', !alive(first[0].pid));

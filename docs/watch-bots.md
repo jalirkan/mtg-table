@@ -31,7 +31,7 @@ only when `watch` is 1. It also lists the choices `POST /watch` takes (D443):
 "watchPlayers": [
   { "id": "Cautious", "label": "Forge AI (Cautious)" }, { "id": "Default", "label": "Forge AI (Default)" },
   { "id": "Experimental", "label": "Forge AI (Experimental)" }, { "id": "Reckless", "label": "Forge AI (Reckless)" },
-  { "id": "search-v5", "label": "Search AI (search-v5: Forge AI plus a look-ahead search)" }
+  { "id": "search-v6", "label": "Search AI (search-v6: Forge AI plus a look-ahead search)" }
 ],
 "watchLlmCap": { "maxUsd": 1, "maxCalls": 40, "maxFallbackRate": 0.25 },
 "watchCustom": 1
@@ -80,14 +80,16 @@ The body:
   line; `llm:<model>` asks Claude once a pick (D439) and spends (below).
 - `playerA`, `playerB` — who plays each drafter's deck: an id from
   `watchPlayers`, any case — a Forge AI profile (`Default`, `Cautious`,
-  `Reckless`, `Experimental`) or `search-v5` (the live search seat: Default plus
+  `Reckless`, `Experimental`) or `search-v6` (the live search seat: Default plus
   the outlet policy and the anytime search, its block declarations Forge's own
   since D539, the spells Forge declines and its instant-speed plays searched
-  since D546, and the stack and pass windows and the activations Forge declines
-  searched since D550; the AI ladder's `search-v3-wide`; the older `"search"`,
-  `"search-v2"`, its id until D539, `"search-v3"`, its id from D539 until D546,
-  and `"search-v4"`, its id from D546 until D550, are the same seat and are
-  answered as `search-v5`). Default `Default`. A profile is a style,
+  since D546, the stack and pass windows and the activations Forge declines
+  searched since D550, and up to about 3 s a decision with its rollouts played
+  to the end of the next turn since D552; the AI ladder's
+  `search-v3-wide-t1-x2`; the older `"search"`, `"search-v2"`, its id until
+  D539, `"search-v3"`, its id from D539 until D546, `"search-v4"`, its id from
+  D546 until D550, and `"search-v5"`, its id from D550 until D552, are the same
+  seat and are answered as `search-v6`). Default `Default`. A profile is a style,
   not a difficulty (D107): never label one harder.
 - `pace` — milliseconds the recorder waits at a frame where something happened
   (a quarter of it after one that only moved the phase strip); 0 … 5000, default
@@ -200,7 +202,11 @@ draft step 4–9 s (the first watch of a cube boots the engine to look its cards
 up; later ones reuse the cache); a game between two Forge profiles about 9 s at
 `pace: 0`; with a `search` seat about 40 s at `pace: 0` and a minute at
 `pace: 150`. A best of three, Reckless against search at `pace: 150`: 137 s in
-all. At the default 600 ms expect a few minutes a game.
+all. At the default 600 ms expect a few minutes a game. (Those search numbers are
+from before D552, when the search seat thought 1.5 s a decision; it thinks up to
+about 3 s since, about 2 s on average, so a game with a `search` seat takes
+longer: 56.8 against 23.1 s of search a game a seat in J223's cube games, about
+34 s more; not re-measured here.)
 
 ## Following a game
 

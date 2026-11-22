@@ -51,7 +51,7 @@ import {
   coloursOf, cubeCtx, cubeNameOf, cubePool, drawCubeRun, drawDeck, makeupOf, repeatCapCount, CUBE_KS, DEFAULT_MAX_SHARE_K1, REPEAT_CAP_FLOOR,
   ENGINE_UNPLAYABLE_FILE, loadEngineUnplayable, parseEngineUnplayable,
 } from '../../tools/cubelab/deckcensus.ts';
-import { pairingOf, planExtension, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
+import { defaultGameTimeoutSec, pairingOf, planExtension, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
 import { cardsTsv, censusReadCommand, dedupe, readCensus, shareBin, spectrumMd, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { openForgeScripts } from '../../tools/forge-scripts.ts';
@@ -390,6 +390,13 @@ test('the search summary: searched, changed and ms a decision over p + a + b, as
   assert.equal(s.msPerDecision, 1000);
   assert.equal(searchSummary(undefined), undefined);
   assert.equal(searchSummary({})!.msPerDecision, null);
+});
+
+test('D552 review: --game-timeout\'s default is 300 s plus 1,800 s for each search pilot', () => {
+  assert.equal(defaultGameTimeoutSec('plain', 'plain'), 300);
+  assert.equal(defaultGameTimeoutSec('search', 'plain'), 2100);
+  assert.equal(defaultGameTimeoutSec('plain', 'search'), 2100);
+  assert.equal(defaultGameTimeoutSec('search', 'search'), 3900);
 });
 
 // ---------------------------------------------------------------- the read, on planted effects

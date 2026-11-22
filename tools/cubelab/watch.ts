@@ -5,7 +5,7 @@
 //   tools/cubelab.sh watch cubes/fair-fight-cube-180.md [--format grid] [--seed S] [--games 3]
 //       [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<x.picks.json>] [--drafter-b ...]
 //       [--shape-a|--shape-b <shape>] (D446; both sides the lab drafter)
-//       [--player-a <Profile>|search-v5] [--player-b ...] [--pace 600] [--out <dir>]
+//       [--player-a <Profile>|search-v6] [--player-b ...] [--pace 600] [--out <dir>]
 //       [--ratings <tsv>] [--game-timeout <sec>]
 //       [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]
 //
@@ -56,15 +56,16 @@
 // decklist, never what B holds.
 //
 // A player is a Forge AI profile (an .ai file: Default, Cautious, Reckless,
-// Experimental) or `search` -- search-v5, the live search seat (Default plus
+// Experimental) or `search` -- search-v6, the live search seat (Default plus
 // D310's outlets plus D412's anytime search, its blocks left to Forge since
 // D539, D540's declined spells and instant-speed windows searched since D546,
-// D544's stack and pass windows and declined activations since D550; the
-// ladder's search-v3-wide), seated by RecordMatch's --policy search.
-// `search-v5` names it too, and so do `search-v2`, its name before D539,
-// `search-v3`, its name from D539 until D546, and `search-v4`, its name from
-// D546 until D550, so a request stored then still starts (it plays the live
-// seat, search-v5).
+// D544's stack and pass windows and declined activations since D550, at 3 s a
+// decision to the end of the next turn since D552; the ladder's
+// search-v3-wide-t1-x2), seated by RecordMatch's --policy search.
+// `search-v6` names it too, and so do `search-v2`, its name before D539,
+// `search-v3`, its name from D539 until D546, `search-v4`, its name from D546
+// until D550, and `search-v5`, its name from D550 until D552, so a request
+// stored then still starts (it plays the live seat, search-v6).
 //
 // match.json is rewritten whole (a temp file renamed over it) after every change,
 // so a reader never sees half of one; draft.json is written once.  The coach
@@ -89,16 +90,16 @@ import { RESERVED_SEED_MIN, VERIFY_SEED_MIN } from './seeds.ts';
 export type Side = 'A' | 'B';
 export type WatchStatus = 'drafting' | 'playing' | 'done' | 'error' | 'stopped';
 
-/** One seat's player: a Forge profile, or `search` (search-v5 on the Default profile, D550). */
+/** One seat's player: a Forge profile, or `search` (search-v6 on the Default profile, D552). */
 export interface Player { player: string; profile: string; policy: 'plain' | 'search' }
 
-/** The live search seat's version, as RecordMatch prints it (SearchConfig.LIVE_VERSION; search-v2 until D539, search-v3 until D546, search-v4 until D550). */
-export const SEARCH_VERSION = 'search-v5';
+/** The live search seat's version, as RecordMatch prints it (SearchConfig.LIVE_VERSION; search-v2 until D539, search-v3 until D546, search-v4 until D550, search-v5 until D552). */
+export const SEARCH_VERSION = 'search-v6';
 
-/** `--player-a` / `--player-b`: a profile name (any case) or `search` / `search-v5` (or `search-v2` / `search-v3` / `search-v4`, its names until D550). */
+/** `--player-a` / `--player-b`: a profile name (any case) or `search` / `search-v6` (or `search-v2` / `search-v3` / `search-v4` / `search-v5`, its names until D552). */
 export function parsePlayer(text: string, profiles: string[]): Player {
   const t = text.trim();
-  if (/^search(-v[2345])?$/i.test(t)) return { player: 'search', profile: 'Default', policy: 'search' };
+  if (/^search(-v[23456])?$/i.test(t)) return { player: 'search', profile: 'Default', policy: 'search' };
   const p = profiles.find((x) => x.toLowerCase() === t.toLowerCase());
   if (!p) throw new Error(`player "${text}" is not search or one of the profiles ${profiles.join(', ')}`);
   return { player: p, profile: p, policy: 'plain' };
@@ -107,12 +108,13 @@ export function parsePlayer(text: string, profiles: string[]): Player {
 /**
  * The seat spec `run` records for this player (run.json's profiles; games 0 plays none).  A search player's
  * mirrors the live seat by hand -- SearchConfig.LIVE_DEFAULTS, `what=pa,anytime=1,declined=1,instant=1,stackwin=1,
- * passwin=1,dactiv=1` since D550 (`what=pa,anytime=1,declined=1,instant=1` from D546, `what=pa,anytime=1` from D539,
- * `anytime=1` from D412) -- because a seat spec is parsed by SearchConfig.parse, whose own defaults are the bench's.
+ * passwin=1,dactiv=1,ms=3000,turns=1` since D552 (`what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,
+ * dactiv=1` from D550, `what=pa,anytime=1,declined=1,instant=1` from D546, `what=pa,anytime=1` from D539, `anytime=1`
+ * from D412) -- because a seat spec is parsed by SearchConfig.parse, whose own defaults are the bench's.
  */
 export function seatSpecOf(p: Player): string {
   return p.policy === 'search'
-    ? `${p.profile}+outlets+search:what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1`
+    ? `${p.profile}+outlets+search:what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1,ms=3000,turns=1`
     : p.profile;
 }
 
@@ -455,6 +457,14 @@ export interface WatchOptions {
 const OURS = /^(lab|draft\.json|match\.json|watch\.log|(.+-)?g\d+\.(jsonl|log)|deck-[AB]\.dck|\.child-groups|.*\.tmp)$/;
 
 /** The game seed for game n of a watch: a pure function of the watch's seed. */
+/**
+ * The backstop for one RecordMatch game, in seconds: RecordMatch.gameTimeoutSec's own wait (600 s, 3,000 dwells of
+ * the pace, 1,800 s for EACH search seat since D552's review) plus 180 s for the JVM to say why.
+ */
+export function recordLimitSec(paceMs: number, searchSeats: number): number {
+  return 600 + (paceMs * 3000) / 1000 + 1800 * searchSeats + 180;
+}
+
 export const gameSeed = (seed: number, n: number): number => seed * 10 + n;
 
 function writeJson(file: string, v: unknown): void {
@@ -622,7 +632,7 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
         const fd = fs.openSync(logFile, 'w');
         child = spawn(path.join(env.repo, 'bridge/run.sh'), args, { cwd: env.repo, stdio: ['ignore', fd, fd], env: { ...process.env, MTG_TABLE_CONFIG: env.homes[0] } });
         // RecordMatch has its own timeout; this is the backstop for a JVM that hangs past it.
-        const limitMs = (600 + (o.paceMs * 3000) / 1000 + (o.players.A.policy === 'search' || o.players.B.policy === 'search' ? 1800 : 0) + 180) * 1000;
+        const limitMs = recordLimitSec(o.paceMs, [o.players.A, o.players.B].filter((p) => p.policy === 'search').length) * 1000;
         const timer = setTimeout(() => child?.kill('SIGKILL'), limitMs);
         child.on('exit', (c) => { clearTimeout(timer); fs.closeSync(fd); child = null; resolve({ code: c, stdout: fs.readFileSync(logFile, 'utf8') }); });
       });

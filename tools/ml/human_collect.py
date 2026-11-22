@@ -59,7 +59,8 @@ D414 added three labels:
   (protocol amendment M62): `{version, budgetMs, config}` -- `version` is the
   live default's name when the seat ran it (`search-v2` from D412, `search-v3`
   from D539, amendment M82, `search-v4` from D546, amendment M84, `search-v5`
-  since D550, amendment M85; any `search-v<n>` is carried as written), else
+  from D550, amendment M85, `search-v6` since D552, amendment M86; any
+  `search-v<n>` is carried as written), else
   null; `budgetMs` its
   wall-clock budget per searched decision; `config` the seat's whole config string
   (no card, no deck).  Null for plain Forge, for outlets, and for a log older than

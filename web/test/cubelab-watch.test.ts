@@ -43,7 +43,7 @@ import { defaultRatings, type DraftRecord } from '../../tools/cubelab/run.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 import { fakeDraftModel, type DraftModel } from '../../tools/cubelab/llmdraft.ts';
 import {
-  draftProblems, parsePlayer, parseSummary, parseWatchDrafters, resultOf, seatSpecOf, sideboardOf, transitionProblem, watch, WATCH_LLM_CAPS, watchDeck, watchPicks,
+  draftProblems, parsePlayer, parseSummary, parseWatchDrafters, recordLimitSec, resultOf, seatSpecOf, sideboardOf, transitionProblem, watch, WATCH_LLM_CAPS, watchDeck, watchPicks,
   type WatchDraft, type WatchGame, type WatchMatch,
 } from '../../tools/cubelab/watch.ts';
 
@@ -244,19 +244,28 @@ test('players: a profile in any case, or search; RecordMatch\'s summary read bac
   assert.deepEqual(parsePlayer('reckless', profiles), { player: 'Reckless', profile: 'Reckless', policy: 'plain' });
   assert.deepEqual(parsePlayer('search', profiles), { player: 'search', profile: 'Default', policy: 'search' });
   assert.deepEqual(parsePlayer('Search-V2', profiles), { player: 'search', profile: 'Default', policy: 'search' });
-  // D550: the live seat is search-v5; search-v2, search-v3 and search-v4, its names before, still name it
+  // D552: the live seat is search-v6; search-v2, search-v3, search-v4 and search-v5, its names before, still name it
   assert.deepEqual(parsePlayer('search-v3', profiles), { player: 'search', profile: 'Default', policy: 'search' });
   assert.deepEqual(parsePlayer('Search-V4', profiles), { player: 'search', profile: 'Default', policy: 'search' });
   assert.deepEqual(parsePlayer('Search-V5', profiles), { player: 'search', profile: 'Default', policy: 'search' });
-  assert.throws(() => parsePlayer('search-v6', profiles), /not search or one of/);
+  assert.deepEqual(parsePlayer('Search-V6', profiles), { player: 'search', profile: 'Default', policy: 'search' });
+  assert.throws(() => parsePlayer('search-v7', profiles), /not search or one of/);
   assert.throws(() => parsePlayer('Godlike', profiles), /not search or one of/);
   assert.equal(seatSpecOf(parsePlayer('search', profiles)),
-    'Default+outlets+search:what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1');
+    'Default+outlets+search:what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1,ms=3000,turns=1');
   assert.equal(seatSpecOf(parsePlayer('Cautious', profiles)), 'Cautious');
   const out = 'player turns   = 18 (round 9)\nwinner         = AI-Seat1, reason = AllOpponentsLost\ngame wall time = 9 ms\nRECORD OK\n';
   assert.deepEqual(parseSummary(out), { winner: 'B', reason: 'AllOpponentsLost', turns: 18, ok: true });
   assert.equal(parseSummary('winner         = (draw), reason = Draw\nRECORD OK\n').winner, 'draw');
   assert.deepEqual(parseSummary('RECORD FAILED: x\n'), { winner: null, reason: null, turns: null, ok: false });
+});
+
+test('D552 review: the backstop is RecordMatch\'s wait plus 180 s, and the search allowance is a seat\'s', () => {
+  // RecordMatch.gameTimeoutSec: 600 s, 3,000 dwells of the pace, 1,800 s for each search seat (the decision self-test)
+  assert.equal(recordLimitSec(0, 0), 600 + 180);
+  assert.equal(recordLimitSec(0, 1), 2400 + 180);
+  assert.equal(recordLimitSec(0, 2), 4200 + 180);
+  assert.equal(recordLimitSec(600, 2), 4200 + 1800 + 180);
 });
 
 // ------------------------------------------------------------ the drafters (D443) and an llm: drafter's stop
