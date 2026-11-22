@@ -486,23 +486,52 @@ test('D550: the live seat is search-v5 = search-v4 + stackwin=1,passwin=1,dactiv
   assert.equal(di.hash, 'af6771947a25', 'search-v3-declined-instant (search-v4) keeps its hash');
   assert.equal(reg.filter((x) => x.hash === wide.hash).length, 1, 'no second name is registered for the live config');
   assert.equal(by.get('search-v5'), undefined, 'the ladder rates search-v5 as search-v3-wide; no alias is registered');
-  // The engine side: LIVE_VERSION and LIVE_DEFAULTS name it; parse()'s own defaults leave the three keys off.
+  // The engine side: LIVE_DEFAULTS still begins with search-v5's seven keys (since D552 the live seat is search-v6, the
+  // D552 test below); parse()'s own defaults leave the three keys off.
   const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
-  assert.match(java, /LIVE_VERSION = "search-v5";/);
   const live = /LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!;
-  assert.equal(live, 'what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1',
-    "the live seat adds search-v4's four keys and D544's stackwin, passwin and dactiv");
-  for (const kv of live.split(',')) {
+  assert.ok(live.startsWith('what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1,'),
+    "the live seat still adds search-v4's four keys and D544's stackwin, passwin and dactiv first");
+  for (const kv of live.split(',').slice(0, 7)) {
     assert.ok(wide.cfg!.split(/[:,]/).includes(kv), `${kv} is in search-v3-wide's seat config`);
   }
   for (const kv of ['stackwin=1', 'passwin=1', 'dactiv=1']) assert.ok(!di.cfg!.split(/[:,]/).includes(kv), `${kv} is not in search-v4's`);
-  assert.doesNotMatch(live, /lands|turns|ms=/, 'lands stays off, and the horizon and the clock are the default ones');
+  assert.doesNotMatch(live, /lands/, 'lands stays off');
   assert.doesNotMatch(KINDS.search!.cfg(resolveParams('search', {})), /stackwin|passwin|dactiv/, "the ladder's own defaults leave the three off");
   const wideRaw = raw.players.find((p) => p.name === 'search-v3-wide')!;
-  assert.match(wideRaw.note ?? '', /not the live seat then.*D550.*search-v5/, "search-v3-wide's note says it is the live seat's config since D550");
+  assert.match(wideRaw.note ?? '', /not the live seat then.*D550.*search-v5.*until D552/, "search-v3-wide's note says it was the live seat's config from D550 until D552");
   assert.match(raw.players.find((p) => p.name === 'search-v3-declined-instant')!.note ?? '', /until D550/);
-  // J222's two players (D549) are untouched by the adoption
+  // J222's and J223's A (D549, D551) keeps its hash
   assert.equal(by.get('search-v3-wide-t1-x2')!.hash, '709c83cc4d48');
+});
+
+test('D552: the live seat is search-v6 = search-v5 + ms=3000,turns=1, which the ladder already rates as search-v3-wide-t1-x2', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const wide = by.get('search-v3-wide')!, deep = by.get('search-v3-wide-t1-x2')!;
+  assert.equal(deep.cfg, wide.cfg!.replace('ms=1500,', 'ms=3000,').replace(',turns=0,', ',turns=1,'),
+    'search-v3-wide-t1-x2 is search-v5 with ms=3000 and turns=1 and nothing else');
+  // the hashes J223's games were played under (results/J223/verdict.json: ah, bh)
+  assert.equal(deep.hash, '709c83cc4d48', 'search-v3-wide-t1-x2 keeps its hash');
+  assert.equal(wide.hash, 'b95340935592', 'search-v3-wide (search-v5) keeps its hash');
+  assert.equal(reg.filter((x) => x.hash === deep.hash).length, 1, 'no second name is registered for the live config');
+  assert.equal(by.get('search-v6'), undefined, 'the ladder rates search-v6 as search-v3-wide-t1-x2; no alias is registered');
+  // The engine side: LIVE_VERSION and LIVE_DEFAULTS name it; parse()'s own defaults keep 1500 ms and turns=0.
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  assert.match(java, /LIVE_VERSION = "search-v6";/);
+  const live = /LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!;
+  assert.equal(live, 'what=pa,anytime=1,declined=1,instant=1,stackwin=1,passwin=1,dactiv=1,ms=3000,turns=1',
+    "the live seat adds search-v5's seven keys and D549's clock and horizon");
+  for (const kv of live.split(',')) {
+    assert.ok(deep.cfg!.split(/[:,]/).includes(kv), `${kv} is in search-v3-wide-t1-x2's seat config`);
+  }
+  for (const kv of ['ms=3000', 'turns=1']) assert.ok(!wide.cfg!.split(/[:,]/).includes(kv), `${kv} is not in search-v5's`);
+  assert.doesNotMatch(live, /lands|aturns|maxrounds/, 'lands stays off, aturns unset (attacks follow turns), the round cap 12');
+  assert.match(java, /int ms = 1500;/, "parse()'s own budget stays 1500, so every ladder, bench and lab seat means what it meant");
+  assert.match(java, /int turns = 0;/, "parse()'s own horizon stays 0");
+  const deepRaw = raw.players.find((p) => p.name === 'search-v3-wide-t1-x2')!;
+  assert.match(deepRaw.note ?? '', /not the live seat then.*D552.*search-v6/, "search-v3-wide-t1-x2's note says it is the live seat's config since D552");
 });
 
 test('addPlayer never overwrites', () => {
@@ -849,7 +878,7 @@ test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
   const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
   assert.equal(Number(/MULL_MS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullMs!.default);
   assert.equal(Number(/MULL_TURNS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullTurns!.default);
-  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v5 since D550) does not turn them on');
+  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v6 since D552) does not turn them on');
 });
 
 test('D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled', () => {
@@ -1450,8 +1479,9 @@ test('D544: search-v3-wide is search-v3-declined-instant with stackwin, passwin 
   assert.deepEqual(resolveParams('search', { stackwin: 'off', passwin: 'off', dactiv: 'off' }), plain);
   assert.doesNotMatch(KINDS.search!.cfg(plain), /stackwin|passwin|dactiv/);
   const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
-  // D550 turned all three on in the live seat (search-v5, the D550 test), in D544's order and after D540's two.
-  assert.match(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /,instant=1,stackwin=1,passwin=1,dactiv=1$/, 'the live seat turns all three on since D550');
+  // D550 turned all three on in the live seat (search-v5, the D550 test), in D544's order and after D540's two;
+  // D552's ms=3000,turns=1 (search-v6) follow them.
+  assert.match(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /,instant=1,stackwin=1,passwin=1,dactiv=1(,|$)/, 'the live seat turns all three on since D550');
   for (const k of ['stackwin', 'passwin', 'dactiv']) assert.ok(java.includes(`case "${k}"`), `SearchConfig parses ${k}=`);
   // every player it is built from keeps its hash
   assert.equal(by.get('search-v3-declined-instant')!.hash, 'af6771947a25');
@@ -1548,7 +1578,7 @@ test('D549: search-v3-wide-t1-x2 is search-v3-wide with turns=1 and budgetMs=300
   assert.equal(w!.hash, '709c83cc4d48', "search-v3-wide-t1-x2's config hash (D549)");
   assert.equal(reg.filter((y) => y.hash === '709c83cc4d48').length, 1, 'one registered player has the hash 709c83cc4d48');
   assert.match(wr.note ?? '', /D549/);
-  assert.match(wr.note ?? '', /never the live seat/);
+  assert.match(wr.note ?? '', /not the live seat then.*D552.*search-v6/, 'measurement when written; the live seat since D552');
   // the players it is built from and the match's B keep their hashes
   assert.equal(by.get('search-v3-wide')!.hash, 'b95340935592');
   assert.equal(by.get('search-v3-declined-instant-t1-x2')!.hash, '5319a60d7e3b');

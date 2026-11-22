@@ -11,11 +11,11 @@
 //
 //   GET  /health           + "watch": 0|1, "watchRunning": "<id>"|null, and (D443) the choices:
 //                          "watchDrafters": [{id, label, costNote?}]  (lab, forge-ranks, llm:haiku, llm:sonnet)
-//                          "watchPlayers":  [{id, label}]             (each forge-home/res/ai/*.ai, search-v5)
+//                          "watchPlayers":  [{id, label}]             (each forge-home/res/ai/*.ai, search-v6)
 //                          "watchLlmCap":   {maxUsd, maxCalls, maxFallbackRate}   (one watch's llm: cap)
 //   POST /watch            {"cube": "fair-fight-cube-180", "seed"?: 1..799999999, "games"?: 1|3|5|7,
 //                           "drafterA"?: <a watchDrafters id>, "drafterB"?: ...   (default "lab"; one side at most not lab),
-//                           "playerA"?: <a watchPlayers id, any case; "search", "search-v2", "search-v3" and "search-v4" too>, "playerB"?: ..., "pace"?: 0..5000,
+//                           "playerA"?: <a watchPlayers id, any case; "search", "search-v2", "search-v3", "search-v4" and "search-v5" too>, "playerB"?: ..., "pace"?: 0..5000,
 //                           "cubeDoc"?: {"title": <1-80 chars>, "markdown": <a cube document, at most 256 KB>}}
 //                          (D444: with cubeDoc, "cube" is "my-<slug>" (^my-[a-z0-9-]{1,60}$), a cube of the
 //                          caller's own -- ForgeCoach's cube builder -- that is not in cubes/: the markdown is
@@ -137,7 +137,7 @@ export function watchDrafters(cap = DEFAULT_WATCH_LLM_CAP) {
 export function watchPlayers(profiles) {
   return [
     ...profiles.map((p) => ({ id: p, label: `Forge AI (${p})` })),
-    { id: 'search-v5', label: 'Search AI (search-v5: Forge AI plus a look-ahead search)' },
+    { id: 'search-v6', label: 'Search AI (search-v6: Forge AI plus a look-ahead search)' },
   ];
 }
 
@@ -148,7 +148,7 @@ export function watchPlayers(profiles) {
  * search-v5 (D550), so a request stored before D550 still starts.
  */
 function playerOf(v, profiles) {
-  if (/^search(-v[2345])?$/i.test(v)) return { id: 'search-v5', arg: 'search-v5', player: 'search', profile: 'Default', policy: 'search' };
+  if (/^search(-v[23456])?$/i.test(v)) return { id: 'search-v6', arg: 'search-v6', player: 'search', profile: 'Default', policy: 'search' };
   const p = profiles.find((x) => x.toLowerCase() === v.toLowerCase());
   return p ? { id: p, arg: p, player: p, profile: p, policy: 'plain' } : null;
 }

@@ -20,7 +20,7 @@
 //                 times; exitsAt null = play.sh never gives up, --idle-exit-after 0).
 //                 No "engine" key when "match" is 0.  (D333) With "match": 1 also
 //                 "aiPolicies": ["plain","outlets","search"] and
-//                 "aiSearchMs": {"min":500,"max":5000,"default":1500}: POST /match takes them.
+//                 "aiSearchMs": {"min":500,"max":5000,"default":3000}: POST /match takes them.
 //   POST /engine/start  (D308)  wake a sleeping engine on the last match setup (play.sh's
 //                 startup decks if there was no /match).  No body, or (D381) the JSON
 //                 {"aiProfile"?: one of the .ai profiles, any case}: the woken engine plays
@@ -40,7 +40,7 @@
 //                 from then on), so plain Play vs Forge can pick the opponent as /match's
 //                 picker does; running already: nothing restarts, and a warning when it plays
 //                 another policy.  /health carries "engine_start_policy": 1.  A wake with no
-//                 policy plays the last setup's, which play.sh starts as search-v5 (D414, D550).
+//                 policy plays the last setup's, which play.sh starts as search-v6 (D414, D552).
 //   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","aiPolicy","games"}}
@@ -51,7 +51,7 @@
 //                  "aiProfile"?: "Default"|"Cautious"|"Reckless"|"Experimental"  (default "Default"),
 //                  "games"?: 1..9                                                 (default 3),
 //                  "aiPolicy"?: "plain"|"outlets"|"search"    (D333; absent = as play.sh was started),
-//                  "aiSearchMs"?: 500..5000                    (D333; only with "search"; default 1500)}
+//                  "aiSearchMs"?: 500..5000                    (D333; only with "search"; default 3000, D552)}
 //                 -> 200 {"ok":true,"yourDeck":{"name","path","cards"},"aiDeck":{"name","cards"},
 //                         "aiProfile","aiPolicy","games","ms","warnings":[string]}
 //                    once the new engine answers /health; the seat socket of the old
@@ -114,9 +114,9 @@ export const MAX_GAMES = 9;
 export const DEFAULT_GAMES = 3;
 export const KEEP_MATCH_DIRS = 5;
 // D333: the AI seat's controller (MtgTable --ai-policy, D314) and the search's
-// budget per decision (--ai-search ms=<n>; the bridge's own default is 1500).
+// budget per decision (--ai-search ms=<n>; the bridge's own default is 3000 since D552, 1500 before).
 export const AI_POLICIES = ['plain', 'outlets', 'search'];
-export const AI_SEARCH_MS = { min: 500, max: 5000, default: 1500 };
+export const AI_SEARCH_MS = { min: 500, max: 5000, default: 3000 };
 
 // A deck's name: what the .dck's Name= says and what hello_ok prints.  Letters,
 // digits, spaces and plain punctuation; never a control character, `|`, `[`,

@@ -129,7 +129,7 @@ import mtgtable.ai.SearchConfig;
  *       AI, {@link Bootstrap#createAiPlayer}, exactly as before) or
  *       {@code search}: the live search seat, {@code MtgTable --ai-policy
  *       search}'s -- D310's outlet policy and {@link SearchConfig#parseLive}'s
- *       search-v5 (D550; search-v4 from D546, search-v3 from D539, search-v2 before) in front of the seat's profile, through
+ *       search-v6 (D552; search-v5 from D550, search-v4 from D546, search-v3 from D539, search-v2 before) in front of the seat's profile, through
  *       {@link Bootstrap#createAiSeat} (D440, watching two bots: the cube lab's
  *       {@code watch}).  Like the profile, it belongs to the DECK.  It changes
  *       nothing on the wire: the handshake names the profile, as it always
@@ -167,7 +167,10 @@ public final class RecordMatch {
 
     /** Give up rather than hang forever if the engine wedges. */
     private static final long GAME_TIMEOUT_SEC = 600L;
-    /** D440: the extra time a game with a search seat may take (the live search spends ~1.5 s a searched decision). */
+    /**
+     * D440: the extra time a game with a search seat may take (the live search spends up to ~3 s a searched decision
+     * since D552, ~2 s on average; D552 kept the 30 minutes: the lab's longest game at this clock was J222's 1,113 s).
+     */
     private static final long SEARCH_TIMEOUT_SEC = 1_800L;
 
     // ==================================================================
@@ -365,7 +368,7 @@ public final class RecordMatch {
 
         // A paced game is SUPPOSED to take minutes: allow 3,000 dwells on top of
         // the engine's own cap (the longest committed game is 605 frames).
-        // D440: a search seat thinks up to ~1.5 s a decision on top of that.
+        // D440: a search seat thinks up to ~3 s a decision on top of that (D552).
         final long timeoutSec = GAME_TIMEOUT_SEC + (a.paceMs * 3_000L) / 1_000L
                 + (a.searches() ? SEARCH_TIMEOUT_SEC : 0L);
         final boolean finished = done.await(timeoutSec, TimeUnit.SECONDS);
