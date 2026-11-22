@@ -1222,6 +1222,9 @@ hits an engine error is retried once on fresh workers at the end of the run and 
 a second error stays on the row. `census-play.json` is the tally (decisive, drawn, timeouts, engine errors,
 retried, the first player's rate, games an hour per session). `--policy-a` /
 `--policy-b search` seat the live search seat (`RecordMatch --policy search`'s: search-v6 at 3 s since D552, search-v5 at 1.5 s from D550, search-v4 from D546, search-v3 from D539, search-v2 before it);
+`--game-timeout`'s default is 300 s plus 1,800 s for each search pilot (2,100 s with one, 3,900 s with two;
+D552's review: a search-v6 pilot thinks about a minute a game, and a timeout is a result that is never retried),
+and a `--game-timeout` given on the command line wins;
 `--replay <games.jsonl>` plays exactly the listed games — numbers, sides, seeds — under this run's
 pilots. Plain against plain, a replay gave the same winner and turn count in all five games tried
 (D447's smoke).

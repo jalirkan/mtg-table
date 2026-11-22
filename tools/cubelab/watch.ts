@@ -457,6 +457,14 @@ export interface WatchOptions {
 const OURS = /^(lab|draft\.json|match\.json|watch\.log|(.+-)?g\d+\.(jsonl|log)|deck-[AB]\.dck|\.child-groups|.*\.tmp)$/;
 
 /** The game seed for game n of a watch: a pure function of the watch's seed. */
+/**
+ * The backstop for one RecordMatch game, in seconds: RecordMatch.gameTimeoutSec's own wait (600 s, 3,000 dwells of
+ * the pace, 1,800 s for EACH search seat since D552's review) plus 180 s for the JVM to say why.
+ */
+export function recordLimitSec(paceMs: number, searchSeats: number): number {
+  return 600 + (paceMs * 3000) / 1000 + 1800 * searchSeats + 180;
+}
+
 export const gameSeed = (seed: number, n: number): number => seed * 10 + n;
 
 function writeJson(file: string, v: unknown): void {
@@ -624,7 +632,7 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
         const fd = fs.openSync(logFile, 'w');
         child = spawn(path.join(env.repo, 'bridge/run.sh'), args, { cwd: env.repo, stdio: ['ignore', fd, fd], env: { ...process.env, MTG_TABLE_CONFIG: env.homes[0] } });
         // RecordMatch has its own timeout; this is the backstop for a JVM that hangs past it.
-        const limitMs = (600 + (o.paceMs * 3000) / 1000 + (o.players.A.policy === 'search' || o.players.B.policy === 'search' ? 1800 : 0) + 180) * 1000;
+        const limitMs = recordLimitSec(o.paceMs, [o.players.A, o.players.B].filter((p) => p.policy === 'search').length) * 1000;
         const timer = setTimeout(() => child?.kill('SIGKILL'), limitMs);
         child.on('exit', (c) => { clearTimeout(timer); fs.closeSync(fd); child = null; resolve({ code: c, stdout: fs.readFileSync(logFile, 'utf8') }); });
       });

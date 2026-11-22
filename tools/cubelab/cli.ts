@@ -11,7 +11,7 @@
 //   decks   --cube <cube.md> --count N --seed S --out <dir> [--k 1,2,3] [--max-share-k1 0.25]
 //           the same rules on one cube's own list: k on 1-3, no cross-band slice, a repeat cap at k = 1, card-shares.tsv (D456)
 //   census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search] [--policy-b plain|search]
-//           [--replay <games.jsonl>] [--game-timeout 300]   random pairings, Bo1, numbers only; resumable (censusplay.ts, D447)
+//           [--replay <games.jsonl>] [--game-timeout 300 + 1,800 a search pilot (D552)]   random pairings, Bo1, numbers only; resumable (censusplay.ts, D447)
 //           [--record none|rows|full] [--rows-check-every N]   rows: both seats' decision rows + a per-turn ledger (default); full: + frame logs (D450)
 //   census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--mixed-pilots]   win rate across the spectrum, per card (censusread.ts, D447)
 //   census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   the game again from its recipe, asserted the same (D450)
@@ -150,7 +150,8 @@ function usage(msg?: string): never {
        tools/cubelab.sh decks --cube <cube.md> --count N --seed S --out <dir> [--k 1,2,3] [--max-share-k1 0.25]
                         [--census <tsv>] [--pool <tsv>] [--scripts <cardsfolder.zip>]   (D456: one cube's pool, no engine)
        tools/cubelab.sh census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search]
-                        [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout 300]   (D447)
+                        [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout <sec>]   (D447;
+                        the timeout's default 300 s, plus 1,800 s for each search pilot, D552)
                         [--record none|rows|full] [--rows-check-every N]   (D450; default rows: decision rows + ledger)
        tools/cubelab.sh census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   (D450)
        tools/cubelab.sh atlas (--deck-a <dck> --deck-b <dck> | --pair auto [--ladder var/ai-ladder]) --seed S --jobs K --out <dir>

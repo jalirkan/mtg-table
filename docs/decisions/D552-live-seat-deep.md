@@ -9,8 +9,9 @@ protocol amendment M86 and the docs that say which search the game plays — D55
 budget. Built, tested and played on the lane, the lab idle (`lab-status`: `idle` since J223 ended, queue empty) and
 the scenery GPU job running beside it (*Verification*).*
 
-**Status: built, tested and played on the lane (*Verification*); not merged. The independent review and the full
-gate are the owner's session's, at the merge.**
+**Status: built, tested and played on the lane (*Verification*); the independent review done and its fixes applied
+(step 10); not merged. One real game on the board (step 10's RESULT) and the full gate are the owner's session's, at
+the merge.**
 
 **2026-11-21**
 
@@ -32,6 +33,7 @@ gate are the owner's session's, at the merge.**
   | searched decisions | 131,239 | 130,855 | |
   | rollouts a decision | 16.12 | 16.00 | |
   | budget fallbacks | 1.16% [0.95%, 1.38%] | 0.56% [0.46%, 0.66%] | |
+  | step timeouts | 165 | 40 | |
 
   Both sides had the wide windows open and used them (A: stack windows 1.479 a game, pass 0.472, declined activations
   1.822; B: 1.495, 0.471, 1.742); no land was searched on either side.
@@ -100,17 +102,41 @@ gate are the owner's session's, at the merge.**
    D546 and D550 extended it): its `plan.json` binds the pilot as the string `search`, so a folder straddling D552
    would hold search-v5 and search-v6 under one name.
 9. **The clocks, watchdogs and budgets that could assume 1.5 s** (the brief's first question; each read on this
-   lane's tree). Only one thing had to change, the match launcher's advertised default (point 3); the rest hold, and
-   the two RecordMatch comments that said "~1.5 s" now say "~3 s":
+   lane's tree). Three things change: the match launcher's advertised default (point 3), and, from the independent
+   review, RecordMatch's search allowance and `census-play`'s default game timeout, which now grow with the number of
+   search seats (below); the rest hold, and the two RecordMatch comments that said "~1.5 s" now say "~3 s":
    - `MtgTable.GAME_TIMEOUT_SEC` (900 s, the null and auto transports only; a human seat has no game clock, D286):
      holds. This lane's three auto-seat games at search-v6 took 40.0, 61.8 and 64.8 s of wall time.
    - `AutoTransport.STUCK_MS` (60 s with no frame, then the automated seat concedes): would need about twenty
      full-budget decisions in a row with no frame between them; none of this lane's games conceded (`concedes 0`).
      `STEP_CAP_MS`, `ASK_TIMEOUT_MS` and `SETTLE_MS` time the automated seat's own answers, not the AI's: unaffected.
-   - `RecordMatch`: 600 s a game plus `SEARCH_TIMEOUT_SEC` 1,800 s when a seat searches, plus the pace's dwells:
-     **kept**. A watch with two search seats now thinks about 114 s a game on average (twice J223's 56.8 s); the lab's
-     longest game at this thinking was J222's 1,113 s with one 3 s seat (D551), and J223 played 4,800 games at 3 s with
-     no timeout at a 3,600 s cap. `tools/cubelab/watch.ts`'s backstop mirrors the same sum plus 180 s: kept with it.
+   - `RecordMatch`: 600 s a game plus 3,000 dwells of the pace, plus `SEARCH_TIMEOUT_SEC` 1,800 s **for each search
+     seat** (the review's fix; it was 1,800 s when any seat searched): one search seat keeps 2,400 s at pace 0, two get
+     4,200 s. `RecordMatch.gameTimeoutSec(paceMs, searchSeats)` is the one sum, its start line prints it when a seat
+     searches (`game timeout  = 4200 s (2 search seats x 1800 s, D552)`), and the decision self-test checks 0, 1 and 2
+     seats and a paced case. `tools/cubelab/watch.ts`'s backstop is the same sum plus 180 s (`recordLimitSec`, held
+     to it by `web/test/cubelab-watch.test.ts`). Why: a watch of search-v6 against search-v6 thinks about 114 s a
+     game (twice J223's 56.8 s), about 1.42 times the lab's one-3-s-seat matches (J222 58.5 + 21.5 = 80.0 s, J223
+     56.8 + 23.1 = 79.9 s). The per-game ladder rows (the jobs' own `var/j22<n>-ladder/results/j22<n>.jsonl` in the lab's
+     `mtg-table-lane2` worktree; `pc-results` carries only 8-game batch times, which is why the review could not find
+     them there) put J222's longest game at **1,113 s** (34 turns; the next 783 s; mean 82.3 s) and J223's at **823 s**
+     (29 turns; the next 541 s; mean 82.3 s), both with no timeout at 3,600 s; at 114 s of thinking they scale to about
+     1,580 s and 1,170 s. D551's other two tails, recomputed the same way: J221's longest, **1,732 s** (32 turns) at
+     1.5 s against 1.5 s (44.7 s of thinking), scales to about 4,400 s; J217's one timeout, a 33-turn game cut at
+     **930 s** at 45.1 s, to at least about 2,340 s (a lower bound, since the cap cut it). So the old 2,400 s sat at
+     J217's bound and below J221's; 4,200 s holds every tail but J221's, the one game of its 4,800 past 636 s, which
+     scaled by the mean lands about 5% past it — an estimate, since a tail game's thinking need not scale with the
+     mean. A cut game fails the watch's game in RecordMatch's words; it is not a silent result. (`pc-results`' longest
+     batches, for the record: J222 1,649 s, J223 1,656 s, J221 2,804 s, each of 8 games on one worker.)
+   - `census-play`'s `--game-timeout` (`tools/cubelab/censusplay.ts`): it defaulted to 300 s, a timeout there is a
+     result (a draw) that is never retried, and `CubeLab.liveSearchSeat` seats a `search` pilot at the live defaults,
+     so a search-v6 pilot's ~57 s of search a game (two pilots ~114 s) would have been cut more often and moved the
+     census's numbers silently. **Changed** (the review's fix): the default is now 300 s plus 1,800 s for each search
+     pilot (`defaultGameTimeoutSec`: 2,100 s with one, 3,900 s with two), stated in `census-play`'s help and
+     `docs/guides/cube-lab.md`; an explicit `--game-timeout` still wins, and `plan.json` records the value used (so a
+     folder begun before with a `search` pilot and the old default is refused on resume as another run, which point 8
+     wants anyway). The pool's watchdog, games × (timeout + 40 s) + 120 s, follows it. `census-replay` refuses search
+     pilots, so its 300 s stays.
    - `MtgTable`'s `KEEP_OPEN_MS`, `NEXT_GAME_GRACE_MS`, `NO_CLIENT_GAME_TIMEOUT_SEC`, `QUEUED_NEW_GAME_GRACE_MS`: run
      after `over` or while no client is connected, never while the AI thinks: unaffected. `ABANDON_OVER_MS` and
      `NEXT_AFTER_ABANDON_MS` (60 s): a deferred concede waits for `Game-0`'s next check, now at most one 3 s search
@@ -122,6 +148,12 @@ gate are the owner's session's, at the merge.**
    - The web client: the follow transport's `FOLLOW_STALL_MS` (30 s with no new line) and the arena's cue budget while
      the engine thinks are not tied to the AI's clock; a stall would need ten full-budget decisions in a row with no
      frame. No web test runs the engine. Unaffected.
+   - The board's wedge banner (`web/src/render/wedge.ts`, `WEDGE_QUIET_MS` 2,500 ms of a silent stream): a searched
+     decision now often runs past 2.5 s (this lane's session: 16 of 58 over 3,000 ms). The banner needs every one of
+     its clauses, and the first is that **the viewer holds priority** (`board.priority === hello.you`), with OK and
+     Cancel disabled, nothing selectable, no ask and the game not over; while the AI searches, the AI holds priority,
+     so the banner should not fire. That is an argument from the code, not a measurement: the owner's session plays one
+     real game on the board against search-v6 before the merge (*Verification*, step 10).
    - `scripts/play.sh`'s `/health` polls (60 s to the first answer, the wake's 200 s) come before a game exists:
      unaffected. `tools/llm-seat/run-match.mjs`'s `--health-timeout` likewise.
    - The gate: no job plays a game under the live defaults (point 10), so no job budget, `GATE_*` limit or test timeout
@@ -140,11 +172,13 @@ gate are the owner's session's, at the merge.**
 
 **Under D509: the atlas's seat is unchanged.** This lane changes, under `bridge/src`, D550's five files and no other:
 two string constants and javadoc in `ai/SearchConfig.java`, a comment in `ai/SearchPolicy.java`, comments, the start
-line's words and the usage line's example in `MtgTable.java`, comments in `RecordMatch.java`, and checks in
-`ai/DecisionSelfTest.java`. D550's argument holds on this tree: the constants are read only by `parseLive` (and printed
+line's words and the usage line's example in `MtgTable.java`, comments and (the review's fix) the game wait's sum,
+`gameTimeoutSec` and `searchSeats`, and one start line in `RecordMatch.java`, and checks in
+`ai/DecisionSelfTest.java`; outside it, one javadoc sentence in `tools/cubelab/CubeLab.java` (its search pilot's
+budget, a comment only). D550's argument holds on this tree: the constants are read only by `parseLive` (and printed
 by `MtgTable`'s start line and session header and `RecordMatch`'s start line); `git diff main --
 bridge/src/mtgtable/ai/SearchConfig.java` changes javadoc and the two constants only; no atlas seat goes through
-`parseLive` (`tools/cubelab/CubeLab.java`, untouched, seats the atlas's units by `SearchConfig.parse` and reaches
+`parseLive` (`tools/cubelab/CubeLab.java`, whose code is untouched, seats the atlas's units by `SearchConfig.parse` and reaches
 `liveSearchSeat` only from a census job's `policyA`/`policyB` key, which an atlas job does not carry); the
 seat-identity golden is untouched and its four games are the golden's (*Verification*). The next atlas night's
 `seat_code` check must admit exactly these five files, beside D544's, D546's and D550's; this paragraph is the
@@ -184,8 +218,10 @@ the AI's thinking over a game (J223: 56.8 against 23.1 s on cube decks; this lan
 - **Registering `search-v6` as a ladder name.** A second name for `709c83cc4d48`.
 - **Leaving the match launcher's advertised default at 1500.** It says the bridge's default; a client that pre-filled
   it would play search-v6's horizon at half its clock, a configuration nothing measured.
-- **Raising `RecordMatch`'s 1,800 s.** Nothing measured needs it (point 9); a watch with two 3 s seats is the case
-  closest to it, and it is not measured here either (*What is unverified*).
+- **Keeping `RecordMatch`'s 1,800 s for any number of search seats** (this lane's first draft). The review showed a
+  watch of two search-v6 seats at the old 2,400 s cap with no margin (point 9's tails); the allowance is now a seat's.
+- **A larger allowance (three times a seat, or the ladder's 3,600 s a seat).** J221's one outlier is the only tail
+  past 4,200 s by the scaling, and a cut watch game says so in words; a hung JVM would wait longer for nothing.
 
 **What is unverified.**
 
@@ -195,8 +231,12 @@ the AI's thinking over a game (J223: 56.8 against 23.1 s on cube decks; this lan
 - **Which half carries the gain** (the horizon or the clock): never separated at this base (D551 point 7).
 - **A picked budget below 3,000 ms with `turns=1`** (point 3): unmeasured; the session header names it `search-v6` with
   its own `budgetMs`.
-- **A watch with two search-v6 seats** against `RecordMatch`'s 2,400 s cap: not played here; the argument is J222's
-  and J223's game lengths with one 3 s seat (point 9).
+- **A watch with two search-v6 seats** against `RecordMatch`'s new 4,200 s: one such game played here (step 10b,
+  71 s); the tail argument is J222's, J223's, J221's and J217's game lengths scaled by the mean thinking (point 9).
+- **A `census-play` folder with mixed pilots.** Nothing guards against one: `plan.json` binds the pilot as the string
+  `search`, so a folder whose games straddle a live-seat change holds two pilots under one name (point 8; inherited
+  from D539, D546 and D550). An open follow-up in PLAN's *Open now*.
+- **The wedge banner against a 3 s AI** (point 9): argued from the code, not played on the board on this lane.
 - **The full gate** is the owner's, at the merge; this lane ran the parts named below.
 - The seconds are this machine's (D388), with the scenery GPU job running beside every run here.
 
@@ -255,9 +295,48 @@ made first by `./tools/make-forge-home.sh`).**
 9. **Load**: every run above shared the machine with the scenery GPU job (100% GPU, a few CPU cores); load average
    1.0 to 1.8; the lab idle.
 
+10. **The independent review and its fixes** (2026-11-21, the commit after `53d4dbccc`; the lab still idle,
+    `idle` since 2026-11-18 00:39, queue empty). Each finding was checked before it was fixed:
+    - *RecordMatch's allowance*: the review could not find J222's 1,113 s in `pc-results/results/J222/`, and it is not
+      there — that folder carries 8-game batch times only (its longest batch 1,649 s; J223's run log's `in 1113 s` is a
+      batch). The figure is right: it is J222's longest single game in the job's own ladder rows
+      (`~/code/lab/mtg-table-lane2/var/j222-ladder/results/j222.jsonl`, 4,800 rows, `ms` 1,112,581, 34 turns), as are
+      D551's J221 1,732 s and J217 930 s (the same files for those jobs). The finding's substance holds — two
+      search-v6 seats at the old 2,400 s had no margin — so the allowance is now a seat's (point 9, recomputed from
+      those rows); the decision self-test gains one check and the watch test one case.
+    - *`census-play`'s clock*: right; fixed (point 9), with a test of the default.
+    - *Stale text*: `censusreplay.ts`'s "(1.5 s)", `CubeLab.java`'s "the 1.5 s budget" (a comment; the follow-up this
+      file had for it is gone), `docs/guides/ai-ladder.md`'s `search-v3-wide` ("the live seat's config from D550 until
+      D552") and `search-v3-wide-t1-x2` (J223 and "the live seat's config since D552"). A grep of the tree for
+      `1.5 s`, `1500 ms` and `search-v5` outside the decisions, PLAN's history and the evidence found nothing else
+      that states the live seat today; left as written, as history or as other things: `play.sh`'s and
+      `SearchConfig`'s `ms=1500,turns=0` examples (how to get search-v5 back), `DecisionSelfTest`'s checks that name
+      1500 ms for `parse()`'s defaults and older players, `CoachGrade`'s 1.5 s (the coach's analysis budget, D336, not
+      the seat), and PLAN's and the guides' dated lines about search-v2 to search-v5.
+    - *The cost table's step timeouts*: added (165 against 40, `match-J223.json`'s `aSearch` and `bSearch`).
+    - *Written down*: the census's mixed-pilot guard (*What is unverified*; PLAN's cube lab 69) and the wedge banner
+      (point 9).
+    - `./bridge/build.sh` from a deleted `bridge/out`: **`build OK`** in 15.2 s; the lint's self-test 33 rules, 79
+      firing cases, 93 checks; `./tools/lint-bridge.sh` 97 files under `bridge/src` and 4 under `tools/`, 33 rules;
+      **the decision self-test 538 checks, 0 failures** (537 plus the allowance's one); every other self-test at 0
+      failures (`TableSelfTest` 114, `StalledGameSelfTest` 156, the eval self-test 8,039).
+    - `./tools/ai-ladder.sh list` on the lane and on main `2802940e7`: 61 lines each, byte-identical.
+    - `web/test/cubelab-watch.test.ts` 14 of 14, `cubelab-deck-census.test.ts` 27 of 27, `cubelab-census.test.ts` 12
+      of 12, `cubelab-record-cake.test.ts` 14 of 14, `cubelab-atlas-redaction.test.ts` 1 of 1, `claude-md.test.ts` 5
+      of 5, `ai-ladder.test.ts` 63 of 63; `node tools/watch-runner-selftest.mjs` 161 checks, 0 failures; `node
+      tools/match-launcher-selftest.mjs` 238 checks (80.4 s); `node tools/decisions.mjs check` OK (466 decisions,
+      next D553); `./tools/public-check.sh` OK; `npm --prefix web run build` clean.
+    - **10b, two search seats**: `./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --ai-deck
+      decks/doom-legion.dck --policy search --ai-policy search --seed 64775 --out var/d552/rec2-64775.jsonl`, 73 s:
+      the start line `policies = seat 0 search, seat 1 search (search = search-v6, D440)` and **`game timeout  = 4200
+      s (2 search seats x 1800 s, D552)`**; 16 turns, seat 1 won by AllOpponentsLost, 70.8 s of game wall time,
+      `RECORD OK`, `tools/check-redaction.mjs` PASS; seat 0 46.2 s of search (17 priority and 4 attack decisions
+      considered), seat 1 23.1 s (10 and 5).
+    - **The board, against search-v6** (point 9's wedge banner): one real game by the owner's session before the
+      merge. RESULT: <to be filled by the owner's session>
+
 **Follow-up.** The cube lab's 63 widens: ForgeCoach's words for the live seat should say search-v6 and that it thinks
-about 3 s a decision to the end of the next turn. `tools/cubelab/CubeLab.java`'s comment on `census-play`'s search
-pilot still says "the 1.5 s budget" (line 139); true until D552, left as written because the file is the atlas's and
-this lane does not touch it. Any job draft whose pilot checks the decision self-test's count (`dst.checks == 526`)
-names 537 from this lane's merge on. The seat queue (`~/code/pc-results/study/seat-queue.md`, which this lane does
+about 3 s a decision to the end of the next turn. The census's mixed-pilot guard (*What is unverified*) is the cube
+lab's 69. Any job draft whose pilot checks the decision self-test's count (`dst.checks == 526`) names 538 from this
+lane's merge on. The seat queue (`~/code/pc-results/study/seat-queue.md`, which this lane does
 not write) gets a row for `search-v3-wide-t1-x2` marked landed by D552 at the merge.

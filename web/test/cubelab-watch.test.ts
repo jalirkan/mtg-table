@@ -43,7 +43,7 @@ import { defaultRatings, type DraftRecord } from '../../tools/cubelab/run.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 import { fakeDraftModel, type DraftModel } from '../../tools/cubelab/llmdraft.ts';
 import {
-  draftProblems, parsePlayer, parseSummary, parseWatchDrafters, resultOf, seatSpecOf, sideboardOf, transitionProblem, watch, WATCH_LLM_CAPS, watchDeck, watchPicks,
+  draftProblems, parsePlayer, parseSummary, parseWatchDrafters, recordLimitSec, resultOf, seatSpecOf, sideboardOf, transitionProblem, watch, WATCH_LLM_CAPS, watchDeck, watchPicks,
   type WatchDraft, type WatchGame, type WatchMatch,
 } from '../../tools/cubelab/watch.ts';
 
@@ -258,6 +258,14 @@ test('players: a profile in any case, or search; RecordMatch\'s summary read bac
   assert.deepEqual(parseSummary(out), { winner: 'B', reason: 'AllOpponentsLost', turns: 18, ok: true });
   assert.equal(parseSummary('winner         = (draw), reason = Draw\nRECORD OK\n').winner, 'draw');
   assert.deepEqual(parseSummary('RECORD FAILED: x\n'), { winner: null, reason: null, turns: null, ok: false });
+});
+
+test('D552 review: the backstop is RecordMatch\'s wait plus 180 s, and the search allowance is a seat\'s', () => {
+  // RecordMatch.gameTimeoutSec: 600 s, 3,000 dwells of the pace, 1,800 s for each search seat (the decision self-test)
+  assert.equal(recordLimitSec(0, 0), 600 + 180);
+  assert.equal(recordLimitSec(0, 1), 2400 + 180);
+  assert.equal(recordLimitSec(0, 2), 4200 + 180);
+  assert.equal(recordLimitSec(600, 2), 4200 + 1800 + 180);
 });
 
 // ------------------------------------------------------------ the drafters (D443) and an llm: drafter's stop

@@ -876,6 +876,12 @@ public final class DecisionSelfTest {
                         && SearchConfig.defaults().budgetMs == 1500 && SearchConfig.defaults().horizonTurns == 0
                         && v5.budgetMs == 1500 && v5.horizonTurns == 0,
                 "D552: parse()'s defaults keep 1500 ms and turns=0 (every ladder, bench and lab seat unchanged)");
+        // the review's fix: RecordMatch's search allowance is a seat's, so a watch of two search-v6 seats gets double
+        check(mtgtable.RecordMatch.gameTimeoutSec(0, 0) == 600 && mtgtable.RecordMatch.gameTimeoutSec(0, 1) == 2_400
+                        && mtgtable.RecordMatch.gameTimeoutSec(0, 2) == 4_200
+                        && mtgtable.RecordMatch.gameTimeoutSec(600, 2) == 4_200 + 1_800,
+                "D552: RecordMatch waits 600 s a game plus 1,800 s for each search seat (one 2,400 s, two 4,200 s) plus "
+                        + "3,000 dwells of the pace");
     }
 
     /**

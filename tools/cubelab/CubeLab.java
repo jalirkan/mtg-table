@@ -136,7 +136,8 @@ import mtgtable.ai.SeatSpec;
  * are.  Its {@code policyA} / {@code policyB} ({@code plain}, the default, or
  * {@code search}) seat a side as {@code RecordMatch --policy search} does: the
  * live search seat ({@link Bootstrap#createAiSeat} with the outlet policy on
- * and {@link SearchConfig#parseLive}{@code (null)}, the 1.5 s budget), and each
+ * and {@link SearchConfig#parseLive}{@code (null)}: the live seat's version at its
+ * default budget, 3 s since D552 and 1.5 s before), and each
  * game row of a search seat gains {@code searchA} / {@code searchB}: that seat's
  * {@code search.*} counters for the game.
  *

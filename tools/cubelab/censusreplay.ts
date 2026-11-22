@@ -15,7 +15,7 @@
 // the first row that differs, and writes <out>/replay.json either way.
 //
 // What can break determinism: Forge's AI has a per-decision wall-clock limit (5 s), and a search seat
-// is wall-clock bound (1.5 s), so a replay is exact for plain pilots on a machine that is not starved;
+// is wall-clock bound (3 s a decision since D552, 1.5 s before), so a replay is exact for plain pilots on a machine that is not starved;
 // a search pilot is refused.  The rows mode's leak check (RowsLeakCheck) swaps hidden zones and puts
 // them back; a replay in full mode does not swap, so a match also says the swaps changed nothing.
 

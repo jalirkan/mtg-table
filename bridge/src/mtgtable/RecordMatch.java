@@ -168,10 +168,22 @@ public final class RecordMatch {
     /** Give up rather than hang forever if the engine wedges. */
     private static final long GAME_TIMEOUT_SEC = 600L;
     /**
-     * D440: the extra time a game with a search seat may take (the live search spends up to ~3 s a searched decision
-     * since D552, ~2 s on average; D552 kept the 30 minutes: the lab's longest game at this clock was J222's 1,113 s).
+     * D440: the extra time a game may take for EACH search seat in it (the live search spends up to ~3 s a searched
+     * decision since D552, ~2 s on average).  D552 made it a seat's: one search seat keeps 600 + 1,800 s, two get
+     * 600 + 3,600 s, because two search-v6 seats think about 114 s a game and the lab's longest game at one 3 s seat
+     * against one 1.5 s seat (about 80 s of thinking) was J222's 1,113 s.
      */
     private static final long SEARCH_TIMEOUT_SEC = 1_800L;
+
+    /**
+     * D440, D552: how long {@code main} waits for one game: the engine's cap, 3,000 dwells of the pace, and
+     * {@link #SEARCH_TIMEOUT_SEC} for each search seat (0, 1 or 2).  {@code tools/cubelab/watch.ts}'s backstop
+     * ({@code recordLimitSec}) is this plus 180 s; the decision self-test checks both seat counts.
+     */
+    public static long gameTimeoutSec(final long paceMs, final int searchSeats) {
+        if (searchSeats < 0 || searchSeats > 2) throw new IllegalArgumentException("search seats: 0, 1 or 2, got " + searchSeats);
+        return GAME_TIMEOUT_SEC + (paceMs * 3_000L) / 1_000L + searchSeats * SEARCH_TIMEOUT_SEC;
+    }
 
     // ==================================================================
     // main
@@ -224,6 +236,10 @@ public final class RecordMatch {
         System.out.println("match block   = " + (a.writeMatch() ? "yes (hello_ok.match, amendment M47)" : "no"));
         System.out.println("pace          = " + (a.paceMs > 0 ? a.paceMs + " ms a frame (" + (a.paceMs / 4)
                 + " ms for a frame that only moved the phase strip)" : "none (engine speed)"));
+        if (a.searches()) {
+            System.out.println("game timeout  = " + gameTimeoutSec(a.paceMs, a.searchSeats()) + " s (" + a.searchSeats()
+                    + " search seat" + (a.searchSeats() == 1 ? "" : "s") + " x " + SEARCH_TIMEOUT_SEC + " s, D552)");
+        }
         System.out.println("out           = " + outFile);
 
         // ------------------------------------------------------------------
@@ -368,9 +384,8 @@ public final class RecordMatch {
 
         // A paced game is SUPPOSED to take minutes: allow 3,000 dwells on top of
         // the engine's own cap (the longest committed game is 605 frames).
-        // D440: a search seat thinks up to ~3 s a decision on top of that (D552).
-        final long timeoutSec = GAME_TIMEOUT_SEC + (a.paceMs * 3_000L) / 1_000L
-                + (a.searches() ? SEARCH_TIMEOUT_SEC : 0L);
+        // D440: each search seat thinks up to ~3 s a decision on top of that (D552: the allowance is a seat's).
+        final long timeoutSec = gameTimeoutSec(a.paceMs, a.searchSeats());
         final boolean finished = done.await(timeoutSec, TimeUnit.SECONDS);
         final long gameMs = ms(tGame);
         if (!finished) {
@@ -1107,7 +1122,12 @@ public final class RecordMatch {
         String policy2 = "plain";
 
         boolean searches() {
-            return "search".equals(policy) || "search".equals(policy2);
+            return searchSeats() > 0;
+        }
+
+        /** D552: how many seats search (0, 1 or 2); each adds {@link #SEARCH_TIMEOUT_SEC} to the game's wait. */
+        int searchSeats() {
+            return ("search".equals(policy) ? 1 : 0) + ("search".equals(policy2) ? 1 : 0);
         }
 
         /** A match setup was given, so the handshake says what it is (M47). */
