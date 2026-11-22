@@ -333,7 +333,16 @@ made first by `./tools/make-forge-home.sh`).**
       `RECORD OK`, `tools/check-redaction.mjs` PASS; seat 0 46.2 s of search (17 priority and 4 attack decisions
       considered), seat 1 23.1 s (10 and 5).
     - **The board, against search-v6** (point 9's wedge banner): one real game by the owner's session before the
-      merge. RESULT: <to be filled by the owner's session>
+      merge. RESULT (the PC session, 2026-11-21 22:03-22:13 EST, `./scripts/play.sh --no-open --no-coach` from this
+      worktree, seed random, the board in the app's own browser at `/?ws=1`): one real game against search-v6 on Doom Legion,
+      nine turns by hand (keep; lands; three creatures cast with Auto pay; attackers declared; `T` through the AI's turns),
+      then conceded. The AI cast Doom Blade at my beginning of combat (an instant-window play), Loki and HYDRA Troopers in
+      its second main, and attacked with both on turn 9. A MutationObserver on the page recorded every appearance of the
+      wedge banner (`p.banner--error[role=alert]`, "Nothing to do."): NONE in 316 frames; no `role=alert` at any state I
+      read. Not measured: the per-decision times of this session (a ws session prints its search totals only at exit, and the
+      preview stop killed it first) -- the automated runs above are the timing evidence. One mistake of mine, not the
+      board's: a first attack click by raw coordinates missed the card (the tool's frame was scaled); the attack by the
+      card's own button on turn 8 was accepted.
 
 **Follow-up.** The cube lab's 63 widens: ForgeCoach's words for the live seat should say search-v6 and that it thinks
 about 3 s a decision to the end of the next turn. The census's mixed-pilot guard (*What is unverified*) is the cube
